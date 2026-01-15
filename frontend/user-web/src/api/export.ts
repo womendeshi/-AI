@@ -21,13 +21,35 @@ export const exportApi = {
   /**
    * 触发文件下载
    */
-  downloadExportFile(jobId: number): void {
-    const url = this.getDownloadUrl(jobId)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `project_export_${jobId}.zip`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  async downloadExportFile(jobId: number): Promise<void> {
+    const baseURL = api.defaults.baseURL || '/api'
+    const token = localStorage.getItem('token')
+    const url = `${baseURL}/exports/${jobId}/download`
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status} ${response.statusText}`)
+      }
+
+      const blob = await response.blob()
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `project_export_${jobId}.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      console.error('[Export] Download failed:', error)
+      throw error
+    }
   },
 }

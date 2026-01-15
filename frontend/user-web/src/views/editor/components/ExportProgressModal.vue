@@ -42,9 +42,11 @@ const statusText = computed(() => {
   switch (job.value.status) {
     case 'PENDING':
       return '等待处理中...'
+    case 'RUNNING':
     case 'GENERATING':
       return '正在导出...'
     case 'COMPLETED':
+    case 'SUCCEEDED':
       return '导出完成！'
     case 'FAILED':
       return '导出失败'
@@ -54,7 +56,7 @@ const statusText = computed(() => {
 })
 
 const canDownload = computed(() => {
-  return job.value?.status === 'COMPLETED' && !error.value
+  return (job.value?.status === 'COMPLETED' || job.value?.status === 'SUCCEEDED') && !error.value
 })
 
 // Start polling
@@ -87,11 +89,11 @@ onBeforeUnmount(() => {
 })
 
 // Download handler
-const handleDownload = () => {
+const handleDownload = async () => {
   if (!canDownload.value) return
 
   try {
-    exportApi.downloadExportFile(props.jobId)
+    await exportApi.downloadExportFile(props.jobId)
     window.$message?.success('开始下载导出文件')
 
     // Close modal after a short delay
@@ -110,19 +112,19 @@ const handleClose = () => {
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
     @click.self="handleClose"
   >
     <div
-      class="bg-bg-elevated border border-border-default rounded w-[500px] flex flex-col shadow-2xl pointer-events-auto"
+      class="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-[480px] flex flex-col shadow-2xl"
       @click.stop
     >
       <!-- Modal Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
-        <h2 class="text-lg font-bold text-text-primary">导出进度</h2>
+      <div class="flex items-center justify-between px-6 py-5 border-b border-[#2a2a2a]">
+        <h2 class="text-xl font-bold text-white">导出进度</h2>
         <button
           v-if="!polling"
-          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors"
+          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-hover hover:text-white transition-all"
           @click="handleClose"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,35 +134,35 @@ const handleClose = () => {
       </div>
 
       <!-- Modal Content -->
-      <div class="p-8 flex flex-col items-center space-y-6">
+      <div class="px-8 py-10 flex flex-col items-center">
         <!-- Status Icon -->
-        <div v-if="polling" class="relative">
-          <div class="w-20 h-20 rounded bg-bg-subtle flex items-center justify-center">
-            <svg class="w-10 h-10 text-text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        <div v-if="polling" class="relative mb-6">
+          <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center border-2 border-purple-500/30">
+            <svg class="w-14 h-14 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
         </div>
 
-        <div v-else-if="canDownload" class="relative">
-          <div class="w-20 h-20 rounded bg-green-500/20 flex items-center justify-center">
-            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        <div v-else-if="canDownload" class="relative mb-6">
+          <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center border-2 border-green-500/30">
+            <svg class="w-14 h-14 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
         </div>
 
-        <div v-else-if="error" class="relative">
-          <div class="w-20 h-20 rounded bg-red-500/20 flex items-center justify-center">
-            <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <div v-else-if="error" class="relative mb-6">
+          <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center border-2 border-red-500/30">
+            <svg class="w-14 h-14 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
         </div>
 
         <!-- Status Text -->
-        <div class="text-center">
-          <p class="text-text-primary font-medium text-lg mb-2">{{ statusText }}</p>
+        <div class="text-center mb-6">
+          <p class="text-white font-semibold text-2xl mb-3">{{ statusText }}</p>
           <p v-if="job" class="text-text-tertiary text-sm">
             <template v-if="job.totalItems > 0">
               已完成 {{ job.doneItems }} / {{ job.totalItems }} 项
@@ -169,33 +171,33 @@ const handleClose = () => {
               处理中...
             </template>
           </p>
-          <p v-if="error" class="text-red-400 text-sm mt-2">{{ error }}</p>
+          <p v-if="error" class="text-red-400 text-sm mt-2 px-4">{{ error }}</p>
         </div>
 
         <!-- Progress Bar -->
-        <div v-if="polling" class="w-full">
-          <div class="w-full h-2 bg-bg-hover rounded overflow-hidden">
+        <div v-if="polling" class="w-full mb-6">
+          <div class="w-full h-2.5 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
-              class="h-full text-text-primary transition-all duration-300 rounded"
+              class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300 rounded-full"
               :style="{ width: `${progressPercentage}%` }"
             ></div>
           </div>
-          <p class="text-text-tertiary text-xs text-center mt-2">{{ progressPercentage }}%</p>
+          <p class="text-purple-400 text-sm font-medium text-center mt-3">{{ progressPercentage }}%</p>
         </div>
 
         <!-- Info Text -->
-        <div v-if="polling" class="text-text-tertiary text-xs text-center">
+        <div v-if="polling" class="text-text-tertiary text-xs text-center mb-2">
           导出正在后台处理中,请稍候...
         </div>
 
         <!-- Download Button -->
         <button
           v-if="canDownload"
-          class="w-full px-6 py-3 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+          class="w-full px-6 py-3.5 rounded-xl bg-[#8B5CF6] hover:bg-[#A78BFA] text-white font-semibold transition-all shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] flex items-center justify-center gap-3"
           @click="handleDownload"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           下载导出文件
         </button>
@@ -203,7 +205,7 @@ const handleClose = () => {
         <!-- Retry Button -->
         <button
           v-if="error"
-          class="w-full px-6 py-3 rounded border border-border-default text-text-secondary hover:bg-bg-subtle transition-colors"
+          class="w-full px-6 py-3 rounded-xl border-2 border-[#2a2a2a] text-text-secondary hover:bg-bg-hover hover:text-white hover:border-[#3a3a3a] transition-all font-medium"
           @click="handleClose"
         >
           关闭

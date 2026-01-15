@@ -360,68 +360,103 @@ const handleSaveProfile = async () => {
       v-model:show="showProfileModal"
       preset="card"
       title="编辑个人资料"
-      :style="{ width: '400px', background: '#232323', borderColor: '#333333' }"
+      :style="{ width: '460px', background: '#1a1a1a', borderColor: '#2a2a2a' }"
       :bordered="false"
       class="profile-modal"
     >
-      <div class="space-y-4">
-        <!-- 头像上传 -->
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-20 h-20 rounded-lg bg-bg-hover flex items-center justify-center overflow-hidden">
-            <img
+      <div class="space-y-6 py-2">
+        <!-- 头像区域 -->
+        <div class="flex flex-col items-center gap-4">
+          <!-- 头像预览 -->
+          <div class="relative group">
+            <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center overflow-hidden border-2 border-border-subtle">
+              <img
+                v-if="editAvatarUrl"
+                :src="editAvatarUrl"
+                class="w-full h-full object-cover"
+                alt="avatar preview"
+              />
+              <span v-else class="text-3xl font-bold text-text-primary">
+                {{ editNickname.charAt(0) || '?' }}
+              </span>
+            </div>
+            <!-- 删除头像按钮 -->
+            <button
               v-if="editAvatarUrl"
-              :src="editAvatarUrl"
-              class="w-full h-full object-cover"
-              alt="avatar preview"
-            />
-            <span v-else class="text-2xl font-semibold text-text-primary">
-              {{ editNickname.charAt(0) || '?' }}
-            </span>
+              class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+              @click="editAvatarUrl = ''"
+            >
+              <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
+
+          <!-- 上传按钮 -->
           <NUpload
             accept="image/*"
             :show-file-list="false"
             :custom-request="handleAvatarUpload"
           >
-            <NButton size="small" :loading="uploading">
-              {{ uploading ? '上传中...' : '上传头像' }}
-            </NButton>
+            <button
+              class="px-6 py-2 rounded-lg bg-bg-elevated hover:bg-bg-hover border border-border-default hover:border-[#8B5CF6] text-text-secondary hover:text-[#8B5CF6] text-sm font-medium transition-all"
+              :disabled="uploading"
+            >
+              <span v-if="uploading" class="flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                上传中...
+              </span>
+              <span v-else>更换头像</span>
+            </button>
           </NUpload>
           <p class="text-text-tertiary text-xs">支持 JPG、PNG 格式，最大 5MB</p>
         </div>
 
         <!-- 昵称输入 -->
-        <div>
-          <label class="block text-text-secondary text-sm mb-2">昵称</label>
+        <div class="space-y-2">
+          <label class="block text-text-secondary text-sm font-medium">昵称</label>
           <NInput
             v-model:value="editNickname"
             placeholder="请输入昵称（2-20个字符）"
             maxlength="20"
             show-count
+            size="large"
           />
         </div>
 
         <!-- 错误提示 -->
-        <div v-if="saveError" class="text-error text-sm text-center">
-          {{ saveError }}
+        <div v-if="saveError" class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/30">
+          <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-red-500 text-sm">{{ saveError }}</span>
         </div>
 
         <!-- 操作按钮 -->
         <div class="flex gap-3 pt-2">
-          <NButton
-            class="flex-1"
+          <button
+            class="flex-1 px-4 py-2.5 rounded-lg bg-bg-elevated hover:bg-bg-hover border border-border-default text-text-secondary hover:text-text-primary text-sm font-medium transition-all"
             @click="showProfileModal = false"
           >
             取消
-          </NButton>
-          <NButton
-            type="primary"
-            class="flex-1"
-            :loading="saving"
+          </button>
+          <button
+            class="flex-1 px-4 py-2.5 rounded-lg bg-[#8B5CF6] hover:bg-[#A78BFA] text-white text-sm font-medium transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="saving"
             @click="handleSaveProfile"
           >
-            保存
-          </NButton>
+            <span v-if="saving" class="flex items-center justify-center gap-2">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              保存中...
+            </span>
+            <span v-else>保存</span>
+          </button>
         </div>
       </div>
     </NModal>

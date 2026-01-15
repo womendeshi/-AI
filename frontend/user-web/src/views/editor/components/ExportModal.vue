@@ -188,7 +188,7 @@ const handleClose = () => {
           取消
         </button>
         <button
-          class="px-6 py-2 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-6 py-2 rounded-lg bg-[#8B5CF6] hover:bg-[#A78BFA] text-white font-medium transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!hasSelection"
           @click="handleConfirm"
         >
