@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 简洁灰白设计系统全局样式 */
+/* 深色主题设计系统 - 参考「字字动画」风格 */
 
 * {
   box-sizing: border-box;
@@ -11,54 +11,231 @@
 }
 
 body {
-  font-family: 'AlibabaPuHuiTi-3-55-Regular', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f5f6f7;
-  color: #2c3e50;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 
+    'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  background-color: #1a1a1a;
+  color: #ffffff;
   font-size: 14px;
-  line-height: 1.25rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1;
 }
 
 #app {
   min-height: 100vh;
+  background-color: #1a1a1a;
 }
 
-/* Scrollbar styling */
+/* 滚动条样式 - 深色主题 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(44, 62, 80, 0.2);
+  background: #404040;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(44, 62, 80, 0.3);
+  background: #4d4d4d;
 }
 
-/* 卡片阴影效果 */
-.card-shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+/* 基础组件样式 - 深色主题 */
+
+/* 卡片 */
+.card {
+  background: #232323;
+  border-radius: 8px;
+  border: 1px solid #333333;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 16px;
 }
 
-.card-shadow:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+.card:hover {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
+  border-color: #404040;
 }
 
-/* Image zoom on hover */
-.image-zoom-on-hover {
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  user-select: none;
+}
+
+.btn-primary {
+  background: #8B5CF6;
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #A78BFA;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  background: #7C3AED;
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  background: #2a2a2a;
+  color: #b3b3b3;
+  border: 1px solid #404040;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #333333;
+  border-color: #4d4d4d;
+  color: #ffffff;
+}
+
+.btn-secondary:active:not(:disabled) {
+  background: #404040;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #b3b3b3;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 危险按钮 */
+.btn-danger {
+  background: transparent;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ff4d4f;
+  color: #ffffff;
+}
+
+/* 输入框 - 深色主题 */
+.input {
+  padding: 10px 12px;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #2a2a2a;
+  color: #ffffff;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: #666666;
+}
+
+.input:hover {
+  border-color: #4d4d4d;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.input:disabled {
+  background: #1a1a1a;
+  color: #4d4d4d;
+  cursor: not-allowed;
+}
+
+/* 动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
   transition: transform 0.3s ease;
 }
 
-.group:hover .image-zoom-on-hover {
-  transform: scale(1.05);
+.slide-enter-from {
+  transform: translateY(-10px);
+}
+
+.slide-leave-to {
+  transform: translateY(10px);
+}
+
+/* 工具类 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-truncate-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Naive UI 深色主题覆盖 */
+.n-card {
+  --n-color: #232323 !important;
+  --n-border-color: #333333 !important;
+  --n-title-text-color: #ffffff !important;
+  --n-close-icon-color: #808080 !important;
+  --n-close-icon-color-hover: #ffffff !important;
+}
+
+.n-modal-mask {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.n-input {
+  --n-color: #2a2a2a !important;
+  --n-border-color: #404040 !important;
+  --n-text-color: #ffffff !important;
+  --n-placeholder-color: #666666 !important;
+  --n-caret-color: #8B5CF6 !important;
+  --n-color-focus: #2a2a2a !important;
+  --n-border-color-focus: #8B5CF6 !important;
+  --n-box-shadow-focus: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+}
+
+.n-button--primary-type {
+  --n-color: #8B5CF6 !important;
+  --n-color-hover: #A78BFA !important;
+  --n-color-pressed: #7C3AED !important;
+  --n-text-color: #ffffff !important;
 }

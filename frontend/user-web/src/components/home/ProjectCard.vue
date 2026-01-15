@@ -42,11 +42,11 @@ const projectTitle = computed(() => {
 
 <template>
   <div
-    class="group relative bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-mochi-cyan/50 transition-all cursor-pointer"
+    class="group card cursor-pointer"
     @click="$emit('click')"
   >
     <!-- Cover image -->
-    <div class="relative aspect-video bg-mochi-surface-l1 overflow-hidden">
+    <div class="relative aspect-video bg-bg-subtle overflow-hidden">
       <img
         :src="coverImage"
         :alt="projectTitle"
@@ -54,16 +54,16 @@ const projectTitle = computed(() => {
       >
 
       <!-- Overlay on hover -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
         <div class="absolute bottom-3 left-3 right-3 flex gap-2">
           <button
-            class="flex-1 px-3 py-2 rounded-xl bg-mochi-cyan text-mochi-bg text-xs font-medium hover:brightness-110 transition-all"
+            class="flex-1 btn btn-primary text-xs"
             @click.stop="$emit('click')"
           >
-            编辑项目
+            编辑
           </button>
           <button
-            class="px-3 py-2 rounded-xl bg-white/10 text-white text-xs hover:bg-white/20 transition-all backdrop-blur-sm"
+            class="btn btn-secondary text-xs"
             @click.stop="$emit('delete')"
           >
             删除
@@ -74,15 +74,15 @@ const projectTitle = computed(() => {
 
     <!-- Project info -->
     <div class="p-4">
-      <h3 class="text-white font-medium text-sm mb-2 truncate">{{ projectTitle }}</h3>
-
+      <h3 class="text-sm font-medium text-text-primary mb-2 truncate">{{ projectTitle }}</h3>
       <div class="flex items-center justify-between text-xs">
-        <span class="text-white/40">{{ formatDate(project.updatedAt) }}</span>
-        <NeonTag
+        <span class="text-text-tertiary">{{ formatDate(project.updatedAt) }}</span>
+        <span
           v-if="project.shotCount"
-          :label="`${project.shotCount} 分镜`"
-          variant="cyan"
-        />
+          class="px-2 py-1 rounded bg-bg-subtle text-text-secondary font-medium"
+        >
+          {{ project.shotCount }}
+        </span>
       </div>
     </div>
   </div>

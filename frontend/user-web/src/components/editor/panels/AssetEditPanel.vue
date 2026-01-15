@@ -1935,26 +1935,26 @@ const handleCopyImage = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#1E2025]">
+  <div class="flex flex-col h-full bg-bg-elevated">
     <!-- 顶部导航 -->
-    <div class="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+    <div class="flex items-center gap-3 border-b border-border-default px-4 py-3">
       <button
         @click="$emit('close')"
-        class="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+        class="p-1.5 rounded hover:bg-bg-hover transition-colors"
         title="返回"
       >
-        <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
       </button>
-      <h3 class="text-white text-base font-medium">返回 {{ titleText }}</h3>
+      <h3 class="text-text-primary text-base font-medium">返回 {{ titleText }}</h3>
     </div>
 
     <!-- 主内容区 -->
     <div class="flex-1 overflow-y-auto px-6 py-6">
       <!-- 图片预览区（大虚线框） -->
       <div
-        class="group relative w-full aspect-video rounded-2xl border-2 border-dashed border-white/20 bg-black/20 flex flex-col items-center justify-center mb-6 overflow-hidden"
+        class="group relative w-full aspect-video rounded border-2 border-dashed border-border-default bg-bg-subtle flex flex-col items-center justify-center mb-6 overflow-hidden"
       >
         <template v-if="generatedImageUrl">
           <!-- 已生成的图片 -->
@@ -1968,30 +1968,30 @@ const handleCopyImage = async () => {
             <!-- 下载按钮 -->
             <button
               @click="handleDownloadImage"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="下载图片"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             </button>
             <!-- 复制按钮 -->
             <button
               @click="handleCopyImage"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="复制图片"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </button>
             <!-- 删除按钮 -->
             <button
               @click="handleDeleteGeneratedImage"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="删除图片"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
             </button>
@@ -2012,8 +2012,8 @@ const handleCopyImage = async () => {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <p class="text-white/60 text-sm font-medium mb-1">暂无{{ assetTypeText }}图片</p>
-          <p class="text-white/40 text-xs">编辑下方描述后点击生成</p>
+          <p class="text-text-tertiary text-sm font-medium mb-1">暂无{{ assetTypeText }}图片</p>
+          <p class="text-text-tertiary text-xs">编辑下方描述后点击生成</p>
         </template>
       </div>
 
@@ -2022,10 +2022,10 @@ const handleCopyImage = async () => {
         <button
           @click="activeTab = 'custom'"
           :class="[
-            'px-6 py-2.5 rounded-2xl text-sm font-medium transition-all',
+            'px-6 py-2.5 rounded text-sm font-medium transition-all',
             activeTab === 'custom'
-              ? 'bg-white/10 text-white border border-white/20'
-              : 'bg-transparent text-white/60 border border-transparent hover:bg-white/5'
+              ? 'bg-bg-hover text-text-primary border border-border-default'
+              : 'bg-transparent text-text-tertiary border border-transparent hover:bg-bg-subtle'
           ]"
         >
           新{{ assetTypeText }}
@@ -2033,10 +2033,10 @@ const handleCopyImage = async () => {
         <button
           @click="activeTab = 'local'"
           :class="[
-            'px-6 py-2.5 rounded-2xl text-sm font-medium transition-all',
+            'px-6 py-2.5 rounded text-sm font-medium transition-all',
             activeTab === 'local'
-              ? 'bg-white/10 text-white border border-white/20'
-              : 'bg-transparent text-white/60 border border-transparent hover:bg-white/5'
+              ? 'bg-bg-hover text-text-primary border border-border-default'
+              : 'bg-transparent text-text-tertiary border border-transparent hover:bg-bg-subtle'
           ]"
         >
           本地图片
@@ -2044,10 +2044,10 @@ const handleCopyImage = async () => {
         <button
           @click="activeTab = 'library'"
           :class="[
-            'px-6 py-2.5 rounded-2xl text-sm font-medium transition-all',
+            'px-6 py-2.5 rounded text-sm font-medium transition-all',
             activeTab === 'library'
-              ? 'bg-white/10 text-white border border-white/20'
-              : 'bg-transparent text-white/60 border border-transparent hover:bg-white/5'
+              ? 'bg-bg-hover text-text-primary border border-border-default'
+              : 'bg-transparent text-text-tertiary border border-transparent hover:bg-bg-subtle'
           ]"
         >
           从库选择
@@ -2061,21 +2061,21 @@ const handleCopyImage = async () => {
           <div
             v-if="!referenceImageUrl"
             @click="triggerFileInput"
-            class="w-32 h-32 rounded-2xl border-2 border-dashed border-white/20 bg-black/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/30 transition-all"
+            class="w-32 h-32 rounded border-2 border-dashed border-border-default bg-bg-subtle flex flex-col items-center justify-center cursor-pointer hover:bg-bg-subtle hover:border-border-default transition-all"
           >
-            <svg class="w-8 h-8 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 text-text-tertiary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
-            <p class="text-white/40 text-xs">上传AI参考图</p>
+            <p class="text-text-tertiary text-xs">上传AI参考图</p>
           </div>
-          <div v-else class="relative w-32 h-32 rounded-2xl overflow-hidden group">
+          <div v-else class="relative w-32 h-32 rounded overflow-hidden group">
             <img :src="referenceImageUrl" alt="参考图" class="w-full h-full object-cover">
             <!-- 删除按钮 -->
             <button
               @click="clearReferenceImage"
-              class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              class="absolute inset-0 bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -2092,8 +2092,8 @@ const handleCopyImage = async () => {
         <!-- 右侧：描述输入框 -->
         <div class="flex-1 relative">
           <!-- 解析中覆盖层 -->
-          <div v-if="isParsing" class="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center z-10">
-            <div class="flex items-center gap-2 text-purple-400">
+          <div v-if="isParsing" class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center z-10">
+            <div class="flex items-center gap-2 text-text-secondary">
               <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -2104,14 +2104,14 @@ const handleCopyImage = async () => {
           <textarea
             v-model="aiDescription"
             :placeholder="assetType === 'scene' ? '填写用于AI生图的场景描述' : assetType === 'prop' ? '填写用于AI生图的道具描述' : '填写用于AI生图的角色描述'"
-            class="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#00FFCC]/50 resize-none text-sm"
+            class="w-full h-32 px-4 py-3 bg-bg-subtle border border-border-default rounded text-text-primary placeholder-text-tertiary focus:outline-none focus:border-gray-900/50 resize-none text-sm"
             :disabled="isParsing"
           ></textarea>
           <!-- 解析失败重试按钮 -->
           <button
             v-if="parseError"
             @click="handleRetryParse"
-            class="absolute bottom-3 right-3 px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-lg text-orange-400 text-xs hover:bg-orange-500/30 transition-colors flex items-center gap-1"
+            class="absolute bottom-3 right-3 px-3 py-1 bg-bg-subtle border border-border-default rounded-lg text-text-secondary text-xs hover:bg-bg-hover transition-colors flex items-center gap-1"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -2125,13 +2125,13 @@ const handleCopyImage = async () => {
       <div v-show="activeTab === 'local'" class="mb-6">
         <div
           @click="triggerLocalImageInput"
-          class="w-full h-40 rounded-2xl border-2 border-dashed border-white/20 bg-black/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/30 transition-all"
+          class="w-full h-40 rounded border-2 border-dashed border-border-default bg-bg-subtle flex flex-col items-center justify-center cursor-pointer hover:bg-bg-subtle hover:border-border-default transition-all"
         >
-          <svg class="w-12 h-12 text-white/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-12 h-12 text-text-tertiary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
           </svg>
-          <p class="text-white/60 text-sm font-medium mb-1">上传本地图片</p>
-          <p class="text-white/40 text-xs">支持 JPG、PNG 格式</p>
+          <p class="text-text-tertiary text-sm font-medium mb-1">上传本地图片</p>
+          <p class="text-text-tertiary text-xs">支持 JPG、PNG 格式</p>
         </div>
         <input
           id="local-image-input"
@@ -2145,15 +2145,15 @@ const handleCopyImage = async () => {
       <!-- 从库选择内容 -->
       <div v-show="activeTab === 'library'" class="mb-6">
         <div v-if="loadingLibraryAssets" class="text-center py-8">
-          <div class="inline-block w-6 h-6 border-2 border-[#00FFCC] border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-white/60 text-sm mt-3">正在加载{{ assetTypeText }}库...</p>
+          <div class="inline-block w-6 h-6 border-2 border-gray-900 border-t-transparent rounded animate-spin"></div>
+          <p class="text-text-tertiary text-sm mt-3">正在加载{{ assetTypeText }}库...</p>
         </div>
 
         <div v-else-if="libraryAssets.length === 0" class="text-center py-8">
-          <svg class="w-16 h-16 text-white/20 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-16 h-16 text-text-disabled mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
           </svg>
-          <p class="text-white/40 text-sm">库中暂无{{ assetTypeText }}</p>
+          <p class="text-text-tertiary text-sm">库中暂无{{ assetTypeText }}</p>
         </div>
 
         <div v-else class="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto">
@@ -2165,8 +2165,8 @@ const handleCopyImage = async () => {
           >
             <img :src="asset.thumbnailUrl" :alt="asset.name" class="w-full h-full object-cover">
             <!-- 悬浮时显示信息 -->
-            <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span class="text-white text-xs font-medium px-2 text-center">{{ asset.name }}</span>
+            <div class="absolute inset-0 bg-gray-800 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span class="text-text-primary text-xs font-medium px-2 text-center">{{ asset.name }}</span>
             </div>
           </div>
         </div>
@@ -2176,16 +2176,16 @@ const handleCopyImage = async () => {
       <div v-show="activeTab === 'custom'" class="flex items-center justify-between mb-6">
         <!-- 比例选择 -->
         <div class="flex items-center gap-2">
-          <div class="p-2 bg-white/5 rounded-lg">
-            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="p-2 bg-bg-subtle rounded-lg">
+            <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"></path>
             </svg>
           </div>
           <select
             v-model="aspectRatio"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[#00FFCC]/50 cursor-pointer"
+            class="px-3 py-2 bg-bg-subtle border border-border-default rounded-lg text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
           >
-            <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-[#1E2025]">
+            <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
               {{ option.label }}
             </option>
           </select>
@@ -2196,10 +2196,10 @@ const handleCopyImage = async () => {
           @click="handleAIGenerate"
           :disabled="isGenerating || isParsingCharacter"
           :class="[
-            'px-8 py-3 rounded-2xl font-medium text-sm transition-all flex items-center gap-2',
+            'px-8 py-3 rounded font-medium text-sm transition-all flex items-center gap-2',
             isGenerating || isParsingCharacter
               ? 'bg-gray-500 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-[#00FFCC] to-[#00CC99] text-[#1E2025] hover:opacity-90'
+              : 'bg-gray-800 text-white hover:opacity-90'
           ]"
         >
           <template v-if="isGenerating">
@@ -2219,15 +2219,15 @@ const handleCopyImage = async () => {
       </div>
 
       <!-- 历史记录 -->
-      <div class="border-t border-white/10 pt-6">
-        <h4 class="text-white text-sm font-medium mb-4">历史记录</h4>
+      <div class="border-t border-border-default pt-6">
+        <h4 class="text-text-primary text-sm font-medium mb-4">历史记录</h4>
 
         <div v-if="loadingHistory" class="text-center py-8">
-          <div class="inline-block w-6 h-6 border-2 border-[#00FFCC] border-t-transparent rounded-full animate-spin"></div>
+          <div class="inline-block w-6 h-6 border-2 border-gray-900 border-t-transparent rounded animate-spin"></div>
         </div>
 
         <div v-else-if="allHistory.length === 0" class="text-center py-4">
-          <p class="text-white/40 text-sm">暂无历史生成记录</p>
+          <p class="text-text-tertiary text-sm">暂无历史生成记录</p>
         </div>
 
         <div v-else class="grid grid-cols-4 gap-3 mb-4">
@@ -2238,18 +2238,18 @@ const handleCopyImage = async () => {
           >
             <img :src="record.url" :alt="record.prompt || '历史记录'" class="w-full h-full object-cover" @click="handleHistoryImageClick(record)">
             <!-- 悬浮时显示信息 -->
-            <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <span class="text-white text-xs font-medium">{{ record.source === 'local' ? '本地上传' : `v${record.versionNo}` }}</span>
+            <div class="absolute inset-0 bg-gray-800 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <span class="text-text-primary text-xs font-medium">{{ record.source === 'local' ? '本地上传' : `v${record.versionNo}` }}</span>
             </div>
             <!-- 本地上传标记 -->
-            <div v-if="record.source === 'local'" class="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500/80 rounded text-white text-[10px] pointer-events-none">本地</div>
+            <div v-if="record.source === 'local'" class="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500/80 rounded text-text-primary text-[10px] pointer-events-none">本地</div>
             <!-- 删除按钮（悬浮显示） -->
             <button
               @click.stop="handleDeleteHistory(record)"
-              class="absolute top-1 left-1 w-6 h-6 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 z-10"
+              class="absolute top-1 left-1 w-6 h-6 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 z-10"
               title="删除历史记录"
             >
-              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>

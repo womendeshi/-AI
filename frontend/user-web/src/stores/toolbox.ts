@@ -317,6 +317,7 @@ export const useToolboxStore = defineStore('toolbox', {
     addConversation(item: ConversationItem) {
       this.conversations.push(item)
       console.log('[ToolboxStore] Conversation added:', item)
+      this.saveConversationsToStorage()
     },
 
     /**
@@ -327,7 +328,50 @@ export const useToolboxStore = defineStore('toolbox', {
       if (conversation && conversation.aiResponse) {
         Object.assign(conversation.aiResponse, response)
         console.log('[ToolboxStore] AI response updated:', conversationId, response)
+        this.saveConversationsToStorage()
       }
+    },
+
+    /**
+     * 保存对话到 localStorage
+     */
+    saveConversationsToStorage() {
+      try {
+        // 只保存最近的50条对话
+        const toSave = this.conversations.slice(-50)
+        localStorage.setItem('toolbox_conversations', JSON.stringify(toSave))
+      } catch (e) {
+        console.warn('[ToolboxStore] Failed to save conversations to localStorage:', e)
+      }
+    },
+
+    /**
+     * 从 localStorage 恢复对话
+     */
+    loadConversationsFromStorage() {
+      try {
+        const saved = localStorage.getItem('toolbox_conversations')
+        if (saved) {
+          const parsed = JSON.parse(saved) as ConversationItem[]
+          // 过滤掉 GENERATING 状态的对话（别人可能无法继续）
+          this.conversations = parsed.filter(c => 
+            c.role === 'user' || c.aiResponse?.status !== 'GENERATING'
+          )
+          console.log('[ToolboxStore] Loaded conversations from storage:', this.conversations.length)
+        }
+      } catch (e) {
+        console.warn('[ToolboxStore] Failed to load conversations from localStorage:', e)
+      }
+    },
+
+    /**
+     * 初始化 store，加载持久化数据
+     */
+    async init() {
+      // 从 localStorage 恢复对话
+      this.loadConversationsFromStorage()
+      // 加载历史记录
+      await this.fetchHistory()
     },
 
     /**

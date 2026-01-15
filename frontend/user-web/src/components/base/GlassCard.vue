@@ -15,7 +15,7 @@ withDefaults(defineProps<Props>(), {
 <template>
   <div
     :class="[
-      'bg-bg-secondary border border-border-default shadow-card',
+      'bg-bg-elevated border border-border-default shadow-md',
       borderRadius,
       padding,
       className
@@ -26,5 +26,5 @@ withDefaults(defineProps<Props>(), {
 </template>
 
 <style scoped>
-/* 简洁白色卡片组件 */
+/* 深色主题卡片组件 */
 </style>

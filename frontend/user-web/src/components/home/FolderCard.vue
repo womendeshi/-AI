@@ -52,12 +52,11 @@ const projectCount = computed(() => {
 
 <template>
   <div
-    class="group relative bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-mochi-cyan/50 transition-all cursor-pointer"
+    class="group card cursor-pointer"
     @click="$emit('click')"
   >
     <!-- Folder visual -->
-    <div class="relative aspect-video bg-gradient-to-br from-[#26272c] to-[#1a1b1f] overflow-hidden flex items-center justify-center">
-      <!-- If cover image exists -->
+    <div class="relative aspect-video bg-bg-subtle rounded-t-lg overflow-hidden flex items-center justify-center">
       <img
         v-if="folderImage"
         :src="folderImage"
@@ -65,31 +64,30 @@ const projectCount = computed(() => {
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       >
 
-      <!-- Default folder icon -->
       <div v-else class="flex flex-col items-center gap-3">
-        <svg class="w-16 h-16 text-mochi-cyan/40 group-hover:text-mochi-cyan/60 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-16 h-16 text-text-tertiary group-hover:text-text-secondary transition-colors" fill="currentColor" viewBox="0 0 24 24">
           <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
         </svg>
-        <span class="text-white/20 text-xs font-medium">{{ projectCount }} 个项目</span>
+        <span class="text-sm text-text-tertiary font-medium">{{ projectCount }} 个项目</span>
       </div>
 
       <!-- Overlay on hover -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
         <div class="absolute bottom-3 left-3 right-3 flex gap-2">
           <button
-            class="flex-1 px-3 py-2 rounded-xl bg-mochi-cyan text-mochi-bg text-xs font-medium hover:brightness-110 transition-all"
+            class="flex-1 btn btn-primary text-xs"
             @click.stop="$emit('click')"
           >
-            打开文件夹
+            打开
           </button>
           <button
-            class="px-3 py-2 rounded-xl bg-white/10 text-white text-xs hover:bg-white/20 transition-all backdrop-blur-sm"
+            class="btn btn-secondary text-xs"
             @click.stop="$emit('edit')"
           >
             编辑
           </button>
           <button
-            class="px-3 py-2 rounded-xl bg-white/10 text-white text-xs hover:bg-white/20 transition-all backdrop-blur-sm"
+            class="btn btn-secondary text-xs"
             @click.stop="$emit('delete')"
           >
             删除
@@ -100,14 +98,12 @@ const projectCount = computed(() => {
 
     <!-- Folder info -->
     <div class="p-4">
-      <h3 class="text-white font-medium text-sm mb-2 truncate">{{ folder.name }}</h3>
-
+      <h3 class="text-sm font-medium text-text-primary mb-2 truncate">{{ folder.name }}</h3>
       <div class="flex items-center justify-between text-xs">
-        <span class="text-white/40">{{ formatDate(folder.createdAt) }}</span>
-        <NeonTag
-          :label="`${projectCount} 项目`"
-          variant="cyan"
-        />
+        <span class="text-text-tertiary">{{ formatDate(folder.createdAt) }}</span>
+        <span class="px-2 py-1 rounded bg-bg-subtle text-text-secondary font-medium">
+          {{ projectCount }}
+        </span>
       </div>
     </div>
   </div>

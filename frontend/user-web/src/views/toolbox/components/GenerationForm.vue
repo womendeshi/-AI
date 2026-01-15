@@ -147,16 +147,16 @@ const handleTypeChange = () => {
   <div class="space-y-4">
     <!-- Type Selector -->
     <div>
-      <div class="text-white/60 text-sm mb-2">生成类型</div>
+      <div class="text-text-tertiary text-sm mb-2">生成类型</div>
       <div class="flex gap-3">
         <button
           v-for="option in typeOptions"
           :key="option.value"
-          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all"
+          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded border transition-all"
           :class="
             formData.type === option.value
-              ? 'bg-mochi-cyan/20 border-mochi-cyan text-mochi-cyan'
-              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              ? 'bg-bg-subtle border-gray-900 text-text-primary'
+              : 'bg-bg-subtle border-border-default text-text-tertiary hover:bg-bg-hover'
           "
           @click="formData.type = option.value as any; handleTypeChange()"
         >
@@ -168,16 +168,16 @@ const handleTypeChange = () => {
 
     <!-- Model Selector -->
     <div>
-      <div class="text-white/60 text-sm mb-2">模型选择</div>
+      <div class="text-text-tertiary text-sm mb-2">模型选择</div>
       <div class="flex gap-2 flex-wrap">
         <button
           v-for="model in modelOptions"
           :key="model.value"
-          class="px-4 py-2 rounded-full border text-sm transition-all"
+          class="px-4 py-2 rounded border text-sm transition-all"
           :class="
             formData.model === model.value
-              ? 'bg-mochi-cyan/20 border-mochi-cyan text-mochi-cyan'
-              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              ? 'bg-bg-subtle border-gray-900 text-text-primary'
+              : 'bg-bg-subtle border-border-default text-text-tertiary hover:bg-bg-hover'
           "
           @click="formData.model = model.value"
         >
@@ -188,16 +188,16 @@ const handleTypeChange = () => {
 
     <!-- Aspect Ratio (Image/Video only) -->
     <div v-if="formData.type !== 'TEXT'">
-      <div class="text-white/60 text-sm mb-2">画幅比例</div>
+      <div class="text-text-tertiary text-sm mb-2">画幅比例</div>
       <div class="flex gap-2">
         <button
           v-for="ratio in aspectRatioOptions"
           :key="ratio.value"
-          class="px-4 py-2 rounded-full border text-sm transition-all"
+          class="px-4 py-2 rounded border text-sm transition-all"
           :class="
             formData.aspectRatio === ratio.value
-              ? 'bg-mochi-cyan/20 border-mochi-cyan text-mochi-cyan'
-              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              ? 'bg-bg-subtle border-gray-900 text-text-primary'
+              : 'bg-bg-subtle border-border-default text-text-tertiary hover:bg-bg-hover'
           "
           @click="formData.aspectRatio = ratio.value as any"
         >
@@ -208,10 +208,10 @@ const handleTypeChange = () => {
 
     <!-- Reference Image Upload (Image only) -->
     <div v-if="formData.type === 'IMAGE'">
-      <div class="text-white/60 text-sm mb-2">参考图（可选）</div>
+      <div class="text-text-tertiary text-sm mb-2">参考图（可选）</div>
       <div class="flex gap-3">
         <button
-          class="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 transition-all"
+          class="flex items-center gap-2 px-4 py-2 rounded bg-bg-subtle border border-border-default text-text-tertiary hover:bg-bg-hover transition-all"
           @click="handleReferenceImageClick"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,10 +229,10 @@ const handleTypeChange = () => {
         <div v-if="formData.referenceImageUrl" class="relative">
           <img
             :src="formData.referenceImageUrl"
-            class="w-16 h-16 object-cover rounded-2xl border border-white/10"
+            class="w-16 h-16 object-cover rounded border border-border-default"
           >
           <button
-            class="absolute -top-2 -right-2 w-5 h-5 bg-mochi-pink rounded-full flex items-center justify-center text-white text-xs"
+            class="absolute -top-2 -right-2 w-5 h-5 bg-gray-900 rounded flex items-center justify-center text-text-primary text-xs"
             @click="formData.referenceImageUrl = undefined"
           >
             ×
@@ -243,9 +243,9 @@ const handleTypeChange = () => {
 
     <!-- Prompt Input -->
     <div>
-      <div class="text-white/60 text-sm mb-2">
+      <div class="text-text-tertiary text-sm mb-2">
         提示词
-        <span class="text-white/40">（{{ promptLength }}/{{ maxLength }}）</span>
+        <span class="text-text-tertiary">（{{ promptLength }}/{{ maxLength }}）</span>
       </div>
       <textarea
         v-model="formData.prompt"
@@ -256,21 +256,21 @@ const handleTypeChange = () => {
         }`"
         :maxlength="maxLength"
         rows="6"
-        class="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-mochi-cyan transition-all resize-none"
+        class="w-full px-4 py-3 rounded bg-bg-subtle border border-border-default text-text-primary placeholder-white/30 focus:outline-none focus:border-gray-900 transition-all resize-none"
       />
     </div>
 
     <!-- Generate Button -->
-    <div class="flex items-center justify-between pt-4 border-t border-white/10">
-      <div class="text-white/60 text-sm">
+    <div class="flex items-center justify-between pt-4 border-t border-border-default">
+      <div class="text-text-tertiary text-sm">
         <span>消耗积分: </span>
-        <span class="text-mochi-cyan font-medium">{{ estimatedCost }}</span>
+        <span class="text-text-primary font-medium">{{ estimatedCost }}</span>
         <span class="mx-2">|</span>
         <span>当前余额: </span>
-        <span class="text-white">{{ userStore.points }}</span>
+        <span class="text-text-primary">{{ userStore.points }}</span>
       </div>
       <button
-        class="px-6 py-2 rounded-full bg-mochi-cyan text-mochi-bg font-medium text-sm hover:bg-mochi-cyan/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-6 py-2 rounded bg-gray-900 text-text-primary font-medium text-sm hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="loading || !formData.prompt.trim()"
         @click="handleGenerate"
       >

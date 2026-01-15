@@ -54,16 +54,16 @@ const handleClose = () => {
   >
     <div
       v-if="show"
-      class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
       @click.self="handleClose"
     >
       <!-- Modal Container -->
-      <div class="bg-[#1a1b1f] w-[500px] max-h-[90vh] rounded-xl flex flex-col shadow-2xl">
+      <div class="bg-bg-elevated w-[500px] max-h-[90vh] rounded-lg flex flex-col shadow-2xl border border-border-default pointer-events-auto">
         <!-- Header -->
-        <div class="relative flex items-center justify-center py-4 border-b border-white/5">
-          <h2 class="text-[16px] font-medium text-[#ddd]">创建作品</h2>
+        <div class="relative flex items-center justify-center py-4 border-b border-border-subtle">
+          <h2 class="text-[16px] font-medium text-text-primary">创建作品</h2>
           <button
-            class="absolute right-5 top-4 text-white/60 hover:text-white transition-colors"
+            class="absolute right-5 top-4 text-text-tertiary hover:text-text-primary transition-colors"
             @click="handleClose"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,27 +77,27 @@ const handleClose = () => {
         <div class="flex flex-col gap-6 p-8">
           <!-- Project Name -->
           <div>
-            <div class="text-[14px] text-white/60 mb-2">项目名称</div>
+            <div class="text-[14px] text-text-tertiary mb-2">项目名称</div>
             <input
               v-model="projectName"
               type="text"
               placeholder="请输入项目名称"
-              class="w-full bg-[#26272c] border-none rounded-lg px-3 py-2.5 text-white text-[14px] outline-none placeholder-[#555] focus:ring-1 focus:ring-[#00e5bf]"
+              class="w-full bg-bg-subtle border border-border-default rounded-lg px-3 py-2.5 text-text-primary text-[14px] outline-none placeholder-text-tertiary focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6]"
             />
           </div>
 
           <!-- Story Script -->
           <div class="flex flex-col">
-            <div class="text-[14px] text-white/60 mb-2">故事文案（选填）</div>
-            <div class="bg-[#26272c] rounded-lg p-3 flex flex-col">
+            <div class="text-[14px] text-text-tertiary mb-2">故事文案（选填）</div>
+            <div class="bg-bg-subtle rounded-lg p-3 flex flex-col">
               <textarea
                 v-model="storyText"
                 placeholder="输入你的故事文案..."
-                class="h-32 bg-transparent border-none text-white text-[14px] leading-[1.5] resize-none outline-none placeholder-[#555]"
+                class="h-32 bg-transparent border-none text-text-primary text-[14px] leading-[1.5] resize-none outline-none placeholder-text-tertiary"
                 :maxlength="maxChars"
               ></textarea>
-              <div class="flex items-center justify-end mt-2 pt-2 border-t border-white/5">
-                <span class="text-[12px] text-[#555]">{{ charCount }} / {{ maxChars }}</span>
+              <div class="flex items-center justify-end mt-2 pt-2 border-t border-border-subtle">
+                <span class="text-[12px] text-text-tertiary">{{ charCount }} / {{ maxChars }}</span>
               </div>
             </div>
           </div>
@@ -106,14 +106,14 @@ const handleClose = () => {
         <!-- Footer -->
         <div class="flex items-center justify-center gap-4 px-8 pb-6">
           <button
-            class="px-8 py-2.5 bg-[#00e5bf] text-[#1a1b1f] text-[14px] font-medium rounded-full hover:bg-[#00d4b0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-8 py-2.5 bg-[#8B5CF6] text-white text-[14px] font-medium rounded-lg hover:bg-[#A78BFA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="loading"
             @click="handleConfirm"
           >
             {{ loading ? '创建中...' : '创建' }}
           </button>
           <button
-            class="px-8 py-2.5 bg-transparent border border-[#555] text-[#ddd] text-[14px] font-medium rounded-full hover:border-[#777] hover:bg-white/5 transition-colors"
+            class="px-8 py-2.5 bg-transparent border border-border-strong text-text-secondary text-[14px] font-medium rounded-lg hover:border-text-tertiary hover:bg-bg-hover transition-colors"
             @click="handleClose"
           >
             取消

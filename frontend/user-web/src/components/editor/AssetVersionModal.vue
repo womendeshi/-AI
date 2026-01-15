@@ -73,29 +73,29 @@ const handleClose = () => {
   <Transition name="fade">
     <div
       v-if="show"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       @click="handleClose"
     >
       <!-- Modal Content -->
       <div
-        class="bg-[#1E2025] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[80vh] shadow-2xl flex flex-col"
+        class="bg-bg-elevated border border-border-default rounded w-full max-w-4xl max-h-[80vh] shadow-2xl flex flex-col pointer-events-auto"
         @click.stop
       >
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border-default flex-shrink-0">
           <div>
-            <h2 class="text-lg font-bold text-white">
+            <h2 class="text-lg font-bold text-text-primary">
               版本历史
             </h2>
-            <p class="text-xs text-white/40 mt-0.5">
+            <p class="text-xs text-text-tertiary mt-0.5">
               共 {{ versions.length }} 个版本
             </p>
           </div>
           <button
-            class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
             @click="handleClose"
           >
-            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -105,10 +105,10 @@ const handleClose = () => {
         <div class="flex-1 overflow-y-auto p-6">
           <!-- Empty State -->
           <div v-if="versions.length === 0" class="flex flex-col items-center justify-center h-full py-16">
-            <svg class="w-16 h-16 text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 text-text-disabled mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <p class="text-white/40 text-sm">暂无版本记录</p>
+            <p class="text-text-tertiary text-sm">暂无版本记录</p>
           </div>
 
           <!-- Version Grid -->
@@ -117,16 +117,16 @@ const handleClose = () => {
               v-for="version in sortedVersions"
               :key="version.id"
               :class="[
-                'relative bg-[#191A1E] border-2 rounded-2xl overflow-hidden cursor-pointer transition-all group',
+                'relative bg-bg-elevated border-2 rounded overflow-hidden cursor-pointer transition-all group',
                 version.isCurrent
-                  ? 'border-[#00FFCC] shadow-lg shadow-[#00FFCC]/20'
-                  : 'border-white/10 hover:border-white/20',
+                  ? 'border-gray-900 shadow-lg shadow-[#00FFCC]/20'
+                  : 'border-border-default hover:border-border-default',
                 loading ? 'pointer-events-none opacity-50' : '',
               ]"
               @click="handleSwitchVersion(version.id)"
             >
               <!-- Image -->
-              <div class="aspect-video bg-black/40 flex items-center justify-center overflow-hidden">
+              <div class="aspect-video bg-bg-subtle flex items-center justify-center overflow-hidden">
                 <img
                   :src="version.url"
                   :alt="`版本 ${version.versionNo}`"
@@ -138,37 +138,37 @@ const handleClose = () => {
               <!-- Info -->
               <div class="p-3">
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-sm font-bold text-white">
+                  <span class="text-sm font-bold text-text-primary">
                     版本 {{ version.versionNo }}
                   </span>
                   <div
                     :class="[
-                      'px-2 py-0.5 text-[10px] font-bold rounded-full',
-                      version.source === 'AI' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300',
+                      'px-2 py-0.5 text-[10px] font-bold rounded',
+                      version.source === 'AI' ? 'bg-bg-subtle text-text-secondary' : 'bg-bg-subtle text-text-secondary',
                     ]"
                   >
                     {{ version.source }}
                   </div>
                 </div>
-                <p class="text-xs text-white/40">
+                <p class="text-xs text-text-tertiary">
                   {{ formatDate(version.createdAt) }}
                 </p>
 
                 <!-- Current Badge -->
                 <div
                   v-if="version.isCurrent"
-                  class="absolute top-2 right-2 bg-[#00FFCC] text-black text-[10px] font-bold px-2 py-1 rounded-full"
+                  class="absolute top-2 right-2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded"
                 >
                   当前版本
                 </div>
 
                 <!-- Download Button -->
                 <button
-                  class="absolute bottom-2 right-2 p-1.5 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20"
+                  class="absolute bottom-2 right-2 p-1.5 bg-bg-hover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-bg-hover"
                   @click.stop="handleDownload(version.url)"
                   title="下载"
                 >
-                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                   </svg>
                 </button>
@@ -180,12 +180,12 @@ const handleClose = () => {
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center justify-between px-6 py-4 border-t border-white/10 flex-shrink-0">
-          <div class="text-xs text-white/40">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-border-default flex-shrink-0">
+          <div class="text-xs text-text-tertiary">
             点击版本卡片切换为当前版本
           </div>
           <button
-            class="px-5 py-2 text-sm font-medium text-white/70 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+            class="px-5 py-2 text-sm font-medium text-white/70 bg-bg-subtle rounded hover:bg-bg-hover transition-colors"
             @click="handleClose"
           >
             关闭

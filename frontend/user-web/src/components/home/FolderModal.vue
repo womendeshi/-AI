@@ -51,7 +51,7 @@ const handleCancel = () => {
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
         @click.self="handleCancel"
       >
         <Transition
@@ -63,18 +63,18 @@ const handleCancel = () => {
           <GlassCard
             v-if="show"
             padding="p-6"
-            className="w-full max-w-md backdrop-blur-xl"
+            className="w-full max-w-md pointer-events-auto"
           >
-            <h2 class="text-xl font-semibold text-white mb-4">{{ title }}</h2>
+            <h2 class="text-xl font-semibold text-text-primary mb-4">{{ title }}</h2>
 
             <div class="mb-6">
-              <label class="block text-white/80 text-sm mb-2">文件夹名称</label>
+              <label class="block text-text-secondary text-sm mb-2">文件夹名称</label>
               <input
                 v-model="localName"
                 type="text"
                 placeholder="请输入文件夹名称"
                 maxlength="50"
-                class="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-mochi-cyan focus:ring-1 focus:ring-mochi-cyan transition-all"
+                class="input"
                 @keydown.enter="handleConfirm"
                 @keydown.esc="handleCancel"
               >
@@ -90,10 +90,10 @@ const handleCancel = () => {
               <button
                 :disabled="!localName.trim() || loading"
                 :class="[
-                  'px-6 py-2 rounded-full text-sm font-medium transition-all',
+                  'px-6 py-2 rounded-lg text-sm font-medium transition-all',
                   localName.trim() && !loading
-                    ? 'bg-gradient-to-r from-mochi-cyan to-mochi-blue text-mochi-bg hover:shadow-neon-cyan'
-                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                    ? 'bg-[#8B5CF6] text-white hover:bg-[#A78BFA]'
+                    : 'bg-bg-hover text-text-tertiary cursor-not-allowed'
                 ]"
                 @click="handleConfirm"
               >

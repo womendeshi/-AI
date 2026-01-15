@@ -46,11 +46,11 @@ const handleClick = () => {
 
 <template>
   <div
-    class="relative bg-white/5 border rounded-2xl p-6 transition-all cursor-pointer group"
+    class="relative bg-bg-subtle border rounded p-6 transition-all cursor-pointer group"
     :class="[
       selected
-        ? 'border-[#00FFCC] bg-[#00FFCC]/10'
-        : 'border-white/10 hover:border-[#00FFCC]/50 hover:bg-white/10',
+        ? 'border-gray-900 bg-bg-subtle'
+        : 'border-border-default hover:border-gray-900/50 hover:bg-bg-hover',
       product.enabled ? '' : 'opacity-50 cursor-not-allowed'
     ]"
     @click="handleClick"
@@ -58,41 +58,41 @@ const handleClick = () => {
     <!-- 折扣标签 -->
     <div
       v-if="discount && product.enabled"
-      class="absolute top-4 right-4 bg-gradient-to-r from-[#FF6B6B] to-[#FF4444] px-3 py-1 rounded-full text-white text-xs font-bold"
+      class="absolute top-4 right-4 bg-red-500 px-3 py-1 rounded text-text-primary text-xs font-bold"
     >
       {{ discount }}折
     </div>
 
     <!-- 套餐名称 -->
-    <h3 class="text-xl font-bold text-white mb-4">
+    <h3 class="text-xl font-bold text-text-primary mb-4">
       {{ product.name }}
     </h3>
 
     <!-- 积分数量 -->
     <div class="mb-4">
       <div class="flex items-baseline">
-        <span class="text-4xl font-bold bg-gradient-to-r from-[#00FFCC] to-[#00AAFF] bg-clip-text text-transparent">
+        <span class="text-4xl font-bold text-text-primary ">
           {{ product.points }}
         </span>
-        <span class="text-white/60 ml-2">积分</span>
+        <span class="text-text-tertiary ml-2">积分</span>
       </div>
     </div>
 
     <!-- 价格 -->
     <div class="flex items-baseline mb-4">
-      <span class="text-white/60 text-sm">¥</span>
-      <span class="text-2xl font-bold text-white">{{ priceYuan }}</span>
+      <span class="text-text-tertiary text-sm">¥</span>
+      <span class="text-2xl font-bold text-text-primary">{{ priceYuan }}</span>
     </div>
 
     <!-- 描述（如果有） -->
-    <p v-if="product.description" class="text-white/40 text-sm">
+    <p v-if="product.description" class="text-text-tertiary text-sm">
       {{ product.description }}
     </p>
 
     <!-- 选中指示器 -->
     <div
       v-if="selected"
-      class="absolute bottom-4 right-4 w-6 h-6 rounded-full bg-[#00FFCC] flex items-center justify-center"
+      class="absolute bottom-4 right-4 w-6 h-6 rounded bg-gray-900 flex items-center justify-center"
     >
       <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />

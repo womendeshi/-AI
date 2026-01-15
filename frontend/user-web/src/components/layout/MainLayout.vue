@@ -20,12 +20,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-mochi-bg overflow-hidden">
+  <div class="flex h-screen bg-bg-base overflow-hidden">
     <!-- Sidebar -->
     <NavSidebar />
 
     <!-- Main content area -->
-    <main class="flex-1 overflow-y-auto">
+    <main class="flex-1 overflow-y-auto bg-bg-base">
       <slot />
     </main>
   </div>

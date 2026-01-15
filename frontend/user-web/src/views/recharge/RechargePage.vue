@@ -110,22 +110,22 @@ const handleClosePayment = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0D0E12] text-white">
+  <div class="min-h-screen bg-bg-base">
     <!-- Page Header -->
-    <div class="border-b border-white/10 bg-[#1E2025]">
+    <div class="border-b border-border-default bg-bg-elevated">
       <div class="max-w-[1400px] mx-auto px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold mb-2 bg-gradient-to-r from-[#00FFCC] to-[#00AAFF] bg-clip-text text-transparent">
+            <h1 class="text-2xl font-bold mb-2 text-text-primary">
               积分充值
             </h1>
-            <p class="text-sm text-white/60">选择充值套餐，使用微信扫码支付</p>
+            <p class="text-sm text-text-tertiary">选择充值套餐，使用微信扫码支付</p>
           </div>
 
           <!-- 当前余额 -->
-          <div class="bg-white/5 border border-white/10 rounded-2xl px-6 py-3">
-            <div class="text-xs text-white/60 mb-1">当前余额</div>
-            <div class="text-2xl font-bold text-[#00FFCC]">
+          <div class="card px-6 py-3">
+            <div class="text-xs text-text-tertiary mb-1">当前余额</div>
+            <div class="text-2xl font-bold text-text-primary">
               {{ userStore.points }} 积分
             </div>
           </div>
@@ -137,14 +137,14 @@ const handleClosePayment = () => {
     <div class="max-w-[1400px] mx-auto px-8 py-8">
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center h-96">
-        <div class="w-12 h-12 border-2 border-[#00FFCC] border-t-transparent rounded-full animate-spin"></div>
+        <div class="w-12 h-12 border-2 border-gray-900 border-t-transparent rounded animate-spin"></div>
       </div>
 
       <!-- Products Grid -->
       <div v-else-if="products.length > 0" class="space-y-8">
         <!-- 套餐选择 -->
         <div>
-          <h2 class="text-lg font-bold text-white mb-4">选择充值套餐</h2>
+          <h2 class="text-lg font-bold text-text-primary mb-4">选择充值套餐</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <ProductCard
               v-for="product in products"
@@ -158,28 +158,28 @@ const handleClosePayment = () => {
 
         <!-- 购买按钮 -->
         <div v-if="selectedProduct" class="flex items-center justify-center">
-          <div class="bg-white/5 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+          <div class="card p-6 w-full max-w-md">
             <div class="mb-4">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-white/60">已选套餐</span>
-                <span class="text-white font-medium">{{ selectedProduct.name }}</span>
+                <span class="text-text-tertiary">已选套餐</span>
+                <span class="text-text-primary font-medium">{{ selectedProduct.name }}</span>
               </div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-white/60">支付金额</span>
-                <span class="text-xl font-bold text-white">
+                <span class="text-text-tertiary">支付金额</span>
+                <span class="text-xl font-bold text-text-primary">
                   ¥{{ (selectedProduct.priceCents / 100).toFixed(2) }}
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-white/60">获得积分</span>
-                <span class="text-lg font-bold text-[#00FFCC]">
+                <span class="text-text-tertiary">获得积分</span>
+                <span class="text-lg font-bold text-text-primary">
                   {{ selectedProduct.points }}积分
                 </span>
               </div>
             </div>
 
             <button
-              class="w-full px-6 py-3 rounded-2xl bg-[#00FFCC] text-black font-bold hover:bg-[#00FFCC]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="btn btn-primary w-full"
               :disabled="creatingOrder"
               @click="handleConfirmRecharge"
             >
@@ -189,14 +189,14 @@ const handleClosePayment = () => {
         </div>
 
         <!-- 温馨提示 -->
-        <div class="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
-          <h3 class="text-white font-medium mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="card p-6">
+          <h3 class="text-text-primary font-medium mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             温馨提示
           </h3>
-          <ul class="space-y-2 text-sm text-white/60">
+          <ul class="space-y-2 text-sm text-text-tertiary">
             <li>• 支付完成后积分将立即到账</li>
             <li>• 订单有效期为2小时，请在有效期内完成支付</li>
             <li>• 如遇支付问题，请联系客服</li>
@@ -206,7 +206,7 @@ const handleClosePayment = () => {
       </div>
 
       <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center h-96 text-white/40">
+      <div v-else class="flex flex-col items-center justify-center h-96 text-text-tertiary">
         <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>

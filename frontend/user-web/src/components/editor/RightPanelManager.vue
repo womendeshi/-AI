@@ -29,7 +29,7 @@ const handleClosePanel = () => {
 </script>
 
 <template>
-  <aside class="w-[400px] bg-[#1E2025] border-l border-white/5 flex flex-col overflow-hidden flex-shrink-0">
+  <aside class="w-[400px] bg-bg-elevated border-l border-border-subtle flex flex-col overflow-hidden flex-shrink-0">
     <Transition
       mode="out-in"
       enter-active-class="transition-all duration-200 ease-out"
@@ -48,7 +48,7 @@ const handleClosePanel = () => {
       />
       <div v-else class="flex items-center justify-center h-full">
         <div class="text-center">
-          <p class="text-white/40 text-sm">未选择面板</p>
+          <p class="text-text-tertiary text-sm">未选择面板</p>
         </div>
       </div>
     </Transition>

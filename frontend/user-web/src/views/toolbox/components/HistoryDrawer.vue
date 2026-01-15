@@ -120,20 +120,20 @@ const handleClose = () => {
   <!-- Overlay -->
   <div
     v-if="show"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+    class="fixed inset-0 z-40 transition-opacity pointer-events-none"
     @click="handleClose"
   />
 
   <!-- Drawer -->
   <div
-    class="fixed top-0 right-0 h-full w-96 bg-mochi-surface-l2 border-l border-white/10 shadow-2xl z-50 transform transition-transform duration-300 flex flex-col"
+    class="fixed top-0 right-0 h-full w-96 bg-bg-elevated border-l border-border-default shadow-2xl z-50 transform transition-transform duration-300 flex flex-col"
     :class="show ? 'translate-x-0' : 'translate-x-full'"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-white/10">
-      <h2 class="text-lg font-bold text-white">历史记录</h2>
+    <div class="flex items-center justify-between p-4 border-b border-border-default">
+      <h2 class="text-lg font-bold text-text-primary">历史记录</h2>
       <button
-        class="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all"
+        class="w-8 h-8 rounded flex items-center justify-center text-text-tertiary hover:bg-bg-hover hover:text-text-primary transition-all"
         @click="handleClose"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,23 +143,23 @@ const handleClose = () => {
     </div>
 
     <!-- Search -->
-    <div class="p-4 border-b border-white/10">
+    <div class="p-4 border-b border-border-default">
       <input
         v-model="searchQuery"
-        class="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:border-mochi-cyan focus:outline-none transition-all"
+        class="w-full px-4 py-2 rounded bg-bg-subtle border border-border-default text-text-primary text-sm placeholder-white/30 focus:border-gray-900 focus:outline-none transition-all"
         placeholder="搜索提示词..."
       />
     </div>
 
     <!-- Filter Tabs -->
-    <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-white/10">
+    <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-border-default">
       <button
         v-for="type in ['ALL', 'TEXT', 'IMAGE', 'VIDEO']"
         :key="type"
-        class="px-2.5 py-1 rounded-full text-xs transition-all"
+        class="px-2.5 py-1 rounded text-xs transition-all"
         :class="filterType === type
-          ? 'bg-mochi-cyan/20 text-mochi-cyan border border-mochi-cyan/40'
-          : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'"
+          ? 'bg-bg-subtle text-text-primary border border-gray-900/40'
+          : 'bg-bg-subtle text-text-tertiary border border-border-default hover:bg-bg-hover'"
         @click="filterType = type as 'ALL' | 'TEXT' | 'IMAGE' | 'VIDEO'"
       >
         {{ type === 'ALL' ? '全部' : type === 'TEXT' ? '文字' : type === 'IMAGE' ? '图片' : '视频' }}
@@ -170,10 +170,10 @@ const handleClose = () => {
     <div class="flex-1 overflow-auto">
       <!-- Empty State -->
       <div v-if="Object.keys(groupedHistory).length === 0" class="flex flex-col items-center justify-center py-20">
-        <svg class="w-16 h-16 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-16 h-16 text-text-disabled mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        <p class="text-white/40 text-sm">暂无历史记录</p>
+        <p class="text-text-tertiary text-sm">暂无历史记录</p>
       </div>
 
       <!-- Grouped List -->
@@ -181,26 +181,26 @@ const handleClose = () => {
         <div v-for="(items, groupKey) in groupedHistory" :key="groupKey" class="space-y-1.5">
           <!-- Group Label -->
           <div class="flex items-center gap-2 mb-1.5">
-            <div class="w-1.5 h-1.5 rounded-full bg-mochi-cyan/60"></div>
-            <span class="text-xs font-medium text-white/60">{{ groupKey }}</span>
+            <div class="w-1.5 h-1.5 rounded bg-gray-900/60"></div>
+            <span class="text-xs font-medium text-text-tertiary">{{ groupKey }}</span>
           </div>
 
           <!-- Items -->
           <div
             v-for="item in items"
             :key="item.id"
-            class="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-mochi-cyan/40 cursor-pointer transition-all"
+            class="p-2.5 rounded bg-bg-subtle border border-border-default hover:bg-bg-hover hover:border-gray-900/40 cursor-pointer transition-all"
             @click="handleHistoryClick(item)"
           >
             <div class="flex items-start gap-2 mb-1.5">
               <!-- 图片/视频预览 -->
-              <div v-if="item.type === 'IMAGE' && item.resultUrl" class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-white/10">
+              <div v-if="item.type === 'IMAGE' && item.resultUrl" class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-border-default">
                 <img :src="item.resultUrl" class="w-full h-full object-cover" />
               </div>
-              <div v-else-if="item.type === 'VIDEO' && item.resultUrl" class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center relative">
+              <div v-else-if="item.type === 'VIDEO' && item.resultUrl" class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-border-default bg-bg-subtle flex items-center justify-center relative">
                 <video :src="item.resultUrl" class="w-full h-full object-cover" muted />
-                <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <svg class="w-4 h-4 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-0 flex items-center justify-center bg-bg-subtle">
+                  <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
@@ -208,15 +208,14 @@ const handleClose = () => {
               <span v-else v-html="getTypeIcon(item.type)" class="flex-shrink-0 mt-0.5"></span>
               
               <div class="flex-1 min-w-0">
-                <p class="text-white/80 text-xs line-clamp-2 break-words leading-relaxed">
+                <p class="text-text-secondary text-xs line-clamp-2 break-words leading-relaxed">
                   {{ item.prompt || '(无提示词)' }}
                 </p>
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-xs text-white/40">
+            <div class="flex items-center justify-between text-xs text-text-tertiary">
               <span>{{ formatTime(item.createdAt) }}</span>
-              <span>{{ item.costPoints }} 积分</span>
             </div>
           </div>
         </div>

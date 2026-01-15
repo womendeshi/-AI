@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
 import type { ProjectVO, FolderVO } from '@/types/api'
@@ -16,9 +16,33 @@ const emit = defineEmits<{
   moveProject: [project: ProjectVO]
 }>()
 
-// Get all projects directly (no folding)
-const allProjects = computed(() => {
-  return projectStore.projects
+// Tab 切换: 'projects' | 'folders'
+const activeTab = ref<'projects' | 'folders'>('projects')
+
+// 分页状态
+const currentPage = ref(1)
+const pageSize = 3
+
+// 切换 Tab 时重置分页
+watch(activeTab, () => {
+  currentPage.value = 1
+})
+
+// 获取当前列表数据
+const currentList = computed(() => {
+  return activeTab.value === 'projects' ? projectStore.projects : projectStore.folders
+})
+
+// 分页后的数据
+const paginatedList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+  return currentList.value.slice(start, end)
+})
+
+// 总页数
+const totalPages = computed(() => {
+  return Math.ceil(currentList.value.length / pageSize) || 1
 })
 
 const formatDate = (date: string) => {
@@ -39,89 +63,168 @@ const getFolderName = (folderId: number | null) => {
   const folder = projectStore.getFolderById(folderId)
   return folder?.name || '未知文件夹'
 }
+
+// 分页操作
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
 </script>
 
 <template>
-  <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+  <div class="card overflow-hidden">
+    <!-- Tab 切换 -->
+    <div class="flex items-center gap-1 px-6 py-3 border-b border-border-default">
+      <button
+        :class="[
+          'px-4 py-1.5 rounded text-sm font-medium transition-colors',
+          activeTab === 'projects'
+            ? 'bg-[#8B5CF6] text-white'
+            : 'text-text-secondary hover:bg-bg-hover'
+        ]"
+        @click="activeTab = 'projects'"
+      >
+        项目 ({{ projectStore.projects.length }})
+      </button>
+      <button
+        :class="[
+          'px-4 py-1.5 rounded text-sm font-medium transition-colors',
+          activeTab === 'folders'
+            ? 'bg-[#8B5CF6] text-white'
+            : 'text-text-secondary hover:bg-bg-hover'
+        ]"
+        @click="activeTab = 'folders'"
+      >
+        文件夹 ({{ projectStore.folders.length }})
+      </button>
+    </div>
+
     <!-- Table header -->
-    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-white/5 border-b border-white/10 text-xs font-medium text-white/60">
-      <div class="col-span-5">项目名称</div>
-      <div class="col-span-2">所属文件夹</div>
-      <div class="col-span-2">更新时间</div>
+    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-bg-subtle border-b border-border-default text-xs font-medium text-text-secondary">
+      <div class="col-span-6">名称</div>
+      <div class="col-span-3">更新时间</div>
       <div class="col-span-3 text-right">操作</div>
     </div>
 
     <!-- Empty state -->
-    <div v-if="allProjects.length === 0" class="py-16 text-center">
+    <div v-if="currentList.length === 0" class="py-16 text-center">
       <div class="mb-4">
-        <svg class="w-16 h-16 mx-auto text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
-      <p class="text-white/40 text-sm">暂无项目</p>
+      <p class="text-text-tertiary text-sm">暂无{{ activeTab === 'projects' ? '项目' : '文件夹' }}</p>
     </div>
 
-    <!-- Project list (flat, no folding) -->
-    <div v-else class="divide-y divide-white/5">
+    <!-- 项目列表 -->
+    <div v-else-if="activeTab === 'projects'" class="divide-y divide-border-subtle">
       <div
-        v-for="project in allProjects"
+        v-for="project in paginatedList as ProjectVO[]"
         :key="project.id"
-        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-white/5 transition-all"
+        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-bg-hover transition-all"
       >
-        <!-- Project name -->
-        <div class="col-span-5 flex items-center gap-3">
-          <div class="w-12 h-12 rounded-lg bg-mochi-surface-l1 overflow-hidden flex-shrink-0">
+        <div class="col-span-6 flex items-center gap-3">
+          <div class="w-12 h-12 rounded bg-bg-subtle overflow-hidden flex-shrink-0">
             <img
               v-if="project.coverUrl"
               :src="project.coverUrl"
               :alt="project.title || project.name"
               class="w-full h-full object-cover"
             >
-            <div v-else class="w-full h-full flex items-center justify-center text-white/20">
+            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-white text-sm font-medium truncate">{{ project.title || project.name }}</p>
-            <p v-if="project.description" class="text-white/40 text-xs truncate">
-              {{ project.description }}
-            </p>
+            <p class="text-text-primary text-sm font-medium truncate">{{ project.title || project.name }}</p>
+            <p v-if="project.description" class="text-text-tertiary text-xs truncate">{{ project.description }}</p>
           </div>
         </div>
-
-        <!-- Folder name -->
-        <div class="col-span-2 flex items-center">
-          <NeonTag :label="getFolderName(project.folderId)" variant="cyan" />
+        <div class="col-span-3 flex items-center">
+          <span class="text-text-secondary text-sm">{{ formatDate(project.updatedAt) }}</span>
         </div>
-
-        <!-- Update time -->
-        <div class="col-span-2 flex items-center">
-          <span class="text-white/60 text-sm">{{ formatDate(project.updatedAt) }}</span>
-        </div>
-
-        <!-- Actions -->
         <div class="col-span-3 flex items-center justify-end gap-2">
-          <PillButton
-            label="编辑"
-            variant="primary"
-            @click="handleEditProject(project)"
-          />
-          <PillButton
-            label="移动"
-            variant="ghost"
-            @click="$emit('moveProject', project)"
-          />
-          <button
-            class="p-2 rounded-lg text-white/60 hover:bg-mochi-pink/20 hover:text-mochi-pink transition-all"
-            @click="$emit('deleteProject', project)"
-          >
+          <button class="btn btn-secondary text-xs" @click="handleEditProject(project)">编辑</button>
+          <button class="btn btn-secondary text-xs" @click="$emit('moveProject', project)">移动</button>
+          <button class="p-2 rounded text-text-tertiary hover:bg-bg-hover hover:text-error transition-all" @click="$emit('deleteProject', project)">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- 文件夹列表 -->
+    <div v-else class="divide-y divide-border-subtle">
+      <div
+        v-for="folder in paginatedList as FolderVO[]"
+        :key="folder.id"
+        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-bg-hover transition-all"
+      >
+        <div class="col-span-6 flex items-center gap-3">
+          <div class="w-12 h-12 rounded bg-[#8B5CF6]/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-text-primary text-sm font-medium truncate">{{ folder.name }}</p>
+            <p class="text-text-tertiary text-xs">{{ folder.projectCount || 0 }} 个项目</p>
+          </div>
+        </div>
+        <div class="col-span-3 flex items-center">
+          <span class="text-text-secondary text-sm">{{ formatDate(folder.createdAt) }}</span>
+        </div>
+        <div class="col-span-3 flex items-center justify-end gap-2">
+          <button class="btn btn-secondary text-xs" @click="$emit('editFolder', folder)">编辑</button>
+          <button class="p-2 rounded text-text-tertiary hover:bg-bg-hover hover:text-error transition-all" @click="$emit('deleteFolder', folder)">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div v-if="currentList.length > pageSize" class="px-6 py-4 border-t border-border-default flex items-center justify-between">
+      <div class="text-sm text-text-tertiary">
+        显示 {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, currentList.length) }} / 共 {{ currentList.length }} 个{{ activeTab === 'projects' ? '项目' : '文件夹' }}
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          :disabled="currentPage === 1"
+          class="px-3 py-1.5 rounded text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          @click="goToPage(currentPage - 1)"
+        >
+          上一页
+        </button>
+        <div class="flex items-center gap-1">
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            :class="[
+              'px-3 py-1.5 rounded text-sm transition-colors',
+              page === currentPage
+                ? 'bg-bg-subtle text-text-primary border border-border-default'
+                : 'text-text-secondary hover:bg-bg-hover'
+            ]"
+            @click="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+        </div>
+        <button
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1.5 rounded text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          @click="goToPage(currentPage + 1)"
+        >
+          下一页
+        </button>
       </div>
     </div>
   </div>

@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import StoryboardRow from './StoryboardRow.vue'
+import LoadingSpinner from '@/components/base/LoadingSpinner.vue'
 
 const editorStore = useEditorStore()
 
@@ -240,20 +241,20 @@ computed(() => {
 <template>
   <div class="flex flex-col h-full">
     <!-- Toolbar -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border-default">
       <div class="flex items-center gap-3">
-        <h3 class="text-white text-base font-semibold">
+        <h3 class="text-text-primary text-base font-semibold">
           分镜表
-          <span class="text-white/40 text-sm ml-2">({{ editorStore.shots.length }} 条)</span>
+          <span class="text-text-tertiary text-sm ml-2">({{ editorStore.shots.length }} 条)</span>
         </h3>
 
         <!-- Batch Actions (shown when selection exists) -->
         <div v-if="editorStore.hasSelection" class="flex items-center gap-2">
-          <span class="text-white/60 text-sm">
+          <span class="text-text-tertiary text-sm">
             已选中 {{ editorStore.selectedShotIds.size }} 条
           </span>
           <button
-            class="px-3 py-1 bg-purple-500/20 text-purple-400 text-sm rounded-full hover:bg-purple-500/30 transition-colors flex items-center gap-1.5"
+            class="px-3 py-1 bg-bg-subtle text-text-secondary text-sm rounded hover:bg-bg-hover transition-colors flex items-center gap-1.5"
             @click="handleBatchGenerateShots"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -262,7 +263,7 @@ computed(() => {
             批量生成分镜图
           </button>
           <button
-            class="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full hover:bg-blue-500/30 transition-colors flex items-center gap-1.5"
+            class="px-3 py-1 bg-bg-subtle text-text-secondary text-sm rounded hover:bg-bg-hover transition-colors flex items-center gap-1.5"
             @click="handleBatchGenerateVideos"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -271,14 +272,14 @@ computed(() => {
             批量生成视频
           </button>
           <button
-            class="px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full hover:bg-red-500/30 transition-colors"
+            class="px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded hover:bg-red-500/30 transition-colors"
             @click="handleDeleteSelected"
           >
             删除选中
           </button>
           <button
             v-if="editorStore.selectedShotIds.size >= 2"
-            class="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm rounded-full hover:bg-amber-500/30 transition-colors flex items-center gap-1.5"
+            class="px-3 py-1 bg-bg-subtle text-text-secondary text-sm rounded hover:bg-bg-hover transition-colors flex items-center gap-1.5"
             @click="handleMergeSelected"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -287,7 +288,7 @@ computed(() => {
             合并选中
           </button>
           <button
-            class="px-3 py-1 bg-white/10 text-white/60 text-sm rounded-full hover:bg-white/20 transition-colors"
+            class="px-3 py-1 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
             @click="editorStore.deselectAll"
           >
             取消选择
@@ -299,7 +300,7 @@ computed(() => {
       <div class="flex items-center gap-2">
         <!-- AI Parse Script Button -->
         <button
-          class="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 font-medium text-sm rounded-2xl hover:bg-purple-500/30 transition-colors"
+          class="flex items-center gap-2 px-4 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
           @click="showParseModal = true"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,7 +311,7 @@ computed(() => {
         
         <!-- Add Shot Button -->
         <button
-          class="flex items-center gap-2 px-4 py-2 bg-[#00FFCC] text-black font-semibold text-sm rounded-2xl hover:bg-[#21FFF3] transition-colors"
+          class="flex items-center gap-2 px-4 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
           @click="showAddModal = true"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,13 +329,13 @@ computed(() => {
         v-if="editorStore.shots.length === 0 && !editorStore.loading"
         class="flex flex-col items-center justify-center h-full"
       >
-        <svg class="w-20 h-20 text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-20 h-20 text-text-disabled mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
         </svg>
-        <p class="text-white/40 text-sm mb-2">暂无分镜</p>
-        <p class="text-white/20 text-xs mb-4">点击上方"添加分镜"按钮开始创作</p>
+        <p class="text-text-tertiary text-sm mb-2">暂无分镜</p>
+        <p class="text-text-disabled text-xs mb-4">点击上方"添加分镜"按钮开始创作</p>
         <button
-          class="px-4 py-2 bg-[#00FFCC] text-black font-semibold text-sm rounded-2xl hover:bg-[#21FFF3] transition-colors"
+          class="px-4 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
           @click="showAddModal = true"
         >
           添加第一条分镜
@@ -346,13 +347,13 @@ computed(() => {
         v-else-if="editorStore.loading"
         class="flex items-center justify-center h-full"
       >
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00FFCC]"></div>
+        <LoadingSpinner size="large" text="加载中..." />
       </div>
 
       <!-- Table -->
       <table v-else class="w-full">
         <!-- Table Header -->
-        <thead class="sticky top-0 bg-[#1A1B1E] border-b border-white/10 z-10">
+        <thead class="sticky top-0 bg-bg-elevated border-b border-border-default z-10">
           <tr>
             <th class="px-3 py-3 text-left w-[48px]">
               <input
@@ -360,32 +361,32 @@ computed(() => {
                 :checked="editorStore.allSelected"
                 :indeterminate="editorStore.hasSelection && !editorStore.allSelected"
                 @change="handleToggleSelectAll"
-                class="w-4 h-4 rounded bg-white/10 border-white/20 text-[#00FFCC] focus:ring-2 focus:ring-[#00FFCC]/50 cursor-pointer"
+                class="w-4 h-4 rounded bg-bg-hover border-border-default text-text-primary focus:ring-2 focus:ring-[#00FFCC]/50 cursor-pointer"
               >
             </th>
-            <th class="px-3 py-3 text-left w-[80px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[80px] text-text-tertiary text-xs font-semibold uppercase">
               ID
             </th>
-            <th class="px-3 py-3 text-left flex-1 min-w-[200px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left flex-1 min-w-[200px] text-text-tertiary text-xs font-semibold uppercase">
               剧本
             </th>
-            <th class="px-3 py-3 text-left w-[180px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[180px] text-text-tertiary text-xs font-semibold uppercase">
               角色画像
             </th>
-            <th class="px-3 py-3 text-left w-[140px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
               场景画像
             </th>
-            <th class="px-3 py-3 text-left w-[140px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
               道具画像
             </th>
             <th class="w-0 hidden"></th>
-            <th class="px-3 py-3 text-left w-[120px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[120px] text-text-tertiary text-xs font-semibold uppercase">
               分镜图
             </th>
-            <th class="px-3 py-3 text-left w-[120px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[120px] text-text-tertiary text-xs font-semibold uppercase">
               视频
             </th>
-            <th class="px-3 py-3 text-left w-[140px] text-white/60 text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
               操作
             </th>
           </tr>
@@ -419,28 +420,28 @@ computed(() => {
     >
       <div
         v-if="showAddModal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
         @click.self="showAddModal = false"
       >
-        <div class="bg-[#1E2025] w-[600px] rounded-2xl p-6 shadow-2xl">
-          <h3 class="text-white text-lg font-semibold mb-4">添加新分镜</h3>
+        <div class="bg-bg-elevated w-[600px] rounded p-6 shadow-2xl pointer-events-auto">
+          <h3 class="text-text-primary text-lg font-semibold mb-4">添加新分镜</h3>
 
           <textarea
             v-model="newShotScript"
             placeholder="输入剧本内容..."
-            class="w-full h-32 px-4 py-3 bg-[#0D0E12] border border-white/10 rounded-2xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50 placeholder-white/30"
+            class="w-full h-32 px-4 py-3 bg-bg-base border border-border-default rounded text-text-primary text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50 placeholder-white/30"
             autofocus
           ></textarea>
 
           <div class="flex items-center justify-end gap-3 mt-4">
             <button
-              class="px-4 py-2 bg-white/10 text-white/60 text-sm rounded-2xl hover:bg-white/20 transition-colors"
+              class="px-4 py-2 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
               @click="showAddModal = false; newShotScript = ''"
             >
               取消
             </button>
             <button
-              class="px-4 py-2 bg-[#00FFCC] text-black font-semibold text-sm rounded-2xl hover:bg-[#21FFF3] transition-colors"
+              class="px-4 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
               @click="handleAddShot"
             >
               添加
@@ -452,46 +453,42 @@ computed(() => {
 
     <!-- AI Parse Script Modal -->
     <Transition
-      enter-active-class="transition-opacity duration-200"
-      leave-active-class="transition-opacity duration-200"
-      enter-from-class="opacity-0"
-      leave-to-class="opacity-0"
+      enter-active-class="transition-all duration-200"
+      leave-active-class="transition-all duration-200"
+      enter-from-class="opacity-0 scale-95"
+      leave-to-class="opacity-0 scale-95"
     >
       <div
         v-if="showParseModal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        @click.self="showParseModal = false; fullScript = ''"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
       >
-        <div class="bg-[#1E2025] w-[700px] rounded-2xl p-6 shadow-2xl">
-          <h3 class="text-white text-lg font-semibold mb-2">AI解析剧本</h3>
-          <p class="text-white/60 text-sm mb-4">粘贴完整剧本，AI将自动提取角色、场景并拆分成多条分镜</p>
+        <div class="bg-bg-elevated w-[700px] rounded-xl p-8 shadow-2xl border border-border-default pointer-events-auto">
+          <h3 class="text-text-primary text-xl font-bold mb-2">AI解析剧本</h3>
+          <p class="text-text-tertiary text-sm mb-6">粘贴完整剧本，AI将自动提取角色、场景并拆分成多条分镜</p>
 
           <textarea
             v-model="fullScript"
             placeholder="粘贴你的完整剧本或文案..."
-            class="w-full h-64 px-4 py-3 bg-[#0D0E12] border border-white/10 rounded-2xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 placeholder-white/30"
+            class="w-full h-80 px-4 py-4 bg-bg-base border border-border-default rounded-lg text-text-primary text-sm resize-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder-text-tertiary"
             :disabled="isParsing"
           ></textarea>
 
-          <div class="flex items-center justify-between mt-4">
-            <span class="text-white/40 text-xs">提示：AI将自动提取角色形象、场景描述，并拆分成专业剧本格式</span>
+          <div class="flex items-center justify-between mt-6">
+            <span class="text-text-tertiary text-xs">提示：AI将自动提取角色形象、场景描述，并拆分成专业剧本格式</span>
             <div class="flex items-center gap-3">
               <button
-                class="px-4 py-2 bg-white/10 text-white/60 text-sm rounded-2xl hover:bg-white/20 transition-colors"
+                class="px-6 py-2.5 bg-bg-hover text-text-secondary text-sm rounded-lg hover:bg-bg-subtle transition-colors"
                 @click="showParseModal = false; fullScript = ''"
                 :disabled="isParsing"
               >
                 取消
               </button>
               <button
-                class="px-4 py-2 bg-purple-500 text-white font-semibold text-sm rounded-2xl hover:bg-purple-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-6 py-2.5 bg-purple-600 text-white font-semibold text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="handleParseScript"
                 :disabled="isParsing || !fullScript.trim()"
               >
-                <svg v-if="isParsing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <LoadingSpinner v-if="isParsing" size="small" />
                 <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>

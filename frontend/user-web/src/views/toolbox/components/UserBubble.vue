@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { ConversationItem } from '@/stores/toolbox'
+import { useUserStore } from '@/stores/user'
 
 interface Props {
   conversation: ConversationItem
 }
 
 const props = defineProps<Props>()
+const userStore = useUserStore()
 
 // 获取类型图标SVG
 const getTypeIcon = (type: string) => {
@@ -45,37 +47,37 @@ const getTypeName = (type: string) => {
 </script>
 
 <template>
-  <div class="flex justify-end mb-2">
-    <div class="max-w-[70%] bg-mochi-cyan/10 border border-mochi-cyan/30 rounded-2xl p-3">
+  <div class="flex justify-end mb-2 gap-2">
+    <div class="max-w-[70%] bg-bg-subtle border border-border-default rounded p-3">
       <!-- Header: Type | Model | Ratio -->
       <div class="flex items-center gap-1.5 mb-1.5 text-xs">
-        <span class="flex items-center gap-1 text-mochi-cyan">
+        <span class="flex items-center gap-1 text-text-primary">
           <span v-html="getTypeIcon(conversation.userInput?.type || '')"></span>
           <span class="font-medium">{{ getTypeName(conversation.userInput?.type || '') }}</span>
         </span>
-        <span class="text-white/40">|</span>
-        <span class="text-white/60">{{ conversation.userInput?.model }}</span>
-        <span v-if="conversation.userInput?.aspectRatio" class="text-white/40">|</span>
-        <span v-if="conversation.userInput?.aspectRatio" class="text-white/60">
+        <span class="text-text-tertiary">|</span>
+        <span class="text-text-tertiary">{{ conversation.userInput?.model }}</span>
+        <span v-if="conversation.userInput?.aspectRatio" class="text-text-tertiary">|</span>
+        <span v-if="conversation.userInput?.aspectRatio" class="text-text-tertiary">
           {{ conversation.userInput?.aspectRatio }}
         </span>
-        <span v-if="conversation.userInput?.duration" class="text-white/40">|</span>
-        <span v-if="conversation.userInput?.duration" class="text-white/60">
+        <span v-if="conversation.userInput?.duration" class="text-text-tertiary">|</span>
+        <span v-if="conversation.userInput?.duration" class="text-text-tertiary">
           {{ conversation.userInput?.duration }}秒
         </span>
       </div>
 
       <!-- Prompt -->
-      <div class="text-white/90 text-sm leading-relaxed whitespace-pre-wrap break-words mb-1.5">
+      <div class="text-white text-sm leading-relaxed whitespace-pre-wrap break-words">
         {{ conversation.userInput?.prompt || '(无提示词)' }}
       </div>
-
-      <!-- Estimated Cost -->
-      <div class="flex items-center justify-end gap-1 text-xs text-mochi-cyan/80">
-        <span>预计:</span>
-        <span class="font-medium">{{ conversation.userInput?.estimatedCost }}</span>
-        <span>积分</span>
-      </div>
+    </div>
+    <!-- 用户头像 -->
+    <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-bg-hover flex items-center justify-center">
+      <img v-if="userStore.user?.avatar" :src="userStore.user.avatar" class="w-full h-full object-cover" />
+      <svg v-else class="w-5 h-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
     </div>
   </div>
 </template>

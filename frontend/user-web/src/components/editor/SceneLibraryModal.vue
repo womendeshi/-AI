@@ -12,6 +12,7 @@ import { ref, computed, onMounted } from 'vue'
 import { sceneApi } from '@/api/scene'
 import { useEditorStore } from '@/stores/editor'
 import type { SceneLibraryVO, SceneCategoryVO } from '@/types/api'
+import LoadingSpinner from '@/components/base/LoadingSpinner.vue'
 
 interface Props {
   projectId: number
@@ -193,14 +194,14 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="handleClose">
+  <div class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" @click.self="handleClose">
     <!-- Modal Container -->
-    <div class="bg-[#1E2025] border border-white/10 rounded-2xl w-[900px] max-h-[80vh] flex flex-col shadow-2xl" @click.stop>
+    <div class="bg-bg-elevated border border-border-default rounded w-[900px] max-h-[80vh] flex flex-col shadow-2xl pointer-events-auto" @click.stop>
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <h2 class="text-lg font-bold text-white">从场景库中选择</h2>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
+        <h2 class="text-lg font-bold text-text-primary">从场景库中选择</h2>
         <button
-          class="p-2 rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors"
           @click="handleClose"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,13 +213,13 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
       <!-- Content -->
       <div class="flex flex-1 overflow-hidden">
         <!-- Left Sidebar: Categories -->
-        <div class="w-48 border-r border-white/10 p-4 overflow-y-auto">
-          <h3 class="text-xs font-bold text-white/60 mb-3">分类</h3>
+        <div class="w-48 border-r border-border-default p-4 overflow-y-auto">
+          <h3 class="text-xs font-bold text-text-secondary mb-3">分类</h3>
           <div class="space-y-1">
             <!-- All Category -->
             <button
               class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-              :class="selectedCategoryId === null ? 'bg-[#00FFCC]/20 text-[#00FFCC]' : 'text-white/80 hover:bg-white/5'"
+              :class="selectedCategoryId === null ? 'bg-bg-hover text-text-primary font-medium' : 'text-text-secondary hover:bg-bg-subtle'"
               @click="selectedCategoryId = null"
             >
               全部
@@ -229,33 +230,33 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
               v-for="category in categories"
               :key="category.id"
               class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-              :class="selectedCategoryId === category.id ? 'bg-[#00FFCC]/20 text-[#00FFCC]' : 'text-white/80 hover:bg-white/5'"
+              :class="selectedCategoryId === category.id ? 'bg-bg-hover text-text-primary font-medium' : 'text-text-secondary hover:bg-bg-subtle'"
               @click="selectedCategoryId = category.id"
             >
               {{ category.name }}
             </button>
 
             <!-- Add Category Button -->
-            <div class="mt-3 pt-3 border-t border-white/10">
+            <div class="mt-3 pt-3 border-t border-border-default">
               <div v-if="showCreateCategory" class="space-y-2">
                 <input
                   v-model="newCategoryName"
                   type="text"
                   placeholder="分类名称..."
-                  class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-[#00FFCC]/50"
+                  class="w-full px-3 py-2 bg-bg-subtle border border-border-default rounded-lg text-text-primary text-sm placeholder-text-tertiary focus:outline-none focus:border-gray-900/50"
                   @keyup.enter="handleCreateCategory"
                   @keyup.esc="showCreateCategory = false"
                 >
                 <div class="flex gap-2">
                   <button
-                    class="flex-1 px-3 py-1.5 bg-[#00FFCC] text-black text-xs font-medium rounded-lg hover:bg-[#00FFCC]/80 transition-colors disabled:opacity-50"
+                    class="flex-1 px-3 py-1.5 bg-bg-subtle text-text-secondary text-xs font-medium rounded-lg hover:bg-bg-hover transition-colors disabled:opacity-50"
                     :disabled="creatingCategory"
                     @click="handleCreateCategory"
                   >
                     {{ creatingCategory ? '创建中...' : '确定' }}
                   </button>
                   <button
-                    class="px-3 py-1.5 bg-white/10 text-white/80 text-xs rounded-lg hover:bg-white/20 transition-colors"
+                    class="px-3 py-1.5 bg-bg-subtle text-text-secondary text-xs rounded-lg hover:bg-bg-hover transition-colors"
                     @click="showCreateCategory = false; newCategoryName = ''"
                   >
                     取消
@@ -264,7 +265,7 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
               </div>
               <button
                 v-else
-                class="w-full text-left px-3 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                class="w-full text-left px-3 py-2 rounded-lg text-sm text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors flex items-center gap-2"
                 @click="showCreateCategory = true"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,12 +280,12 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
         <!-- Right Content: Scenes -->
         <div class="flex-1 flex flex-col overflow-hidden">
           <!-- Search Bar -->
-          <div class="px-6 py-4 border-b border-white/10">
+          <div class="px-6 py-4 border-b border-border-default">
             <input
               v-model="searchQuery"
               type="text"
               placeholder="搜索场景名称或描述..."
-              class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-[#00FFCC]/50"
+              class="w-full px-4 py-2 bg-bg-subtle border border-border-default rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:border-gray-900/50"
             >
           </div>
 
@@ -292,16 +293,16 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
           <div class="flex-1 overflow-y-auto px-6 py-4">
             <!-- Loading State -->
             <div v-if="loading" class="flex items-center justify-center h-64">
-              <div class="w-8 h-8 border-2 border-mochi-cyan border-t-transparent rounded-full animate-spin"></div>
+              <LoadingSpinner size="medium" />
             </div>
 
             <!-- Scene Cards -->
             <div v-else-if="filteredScenes.length > 0" class="grid grid-cols-4 gap-4">
-              <div
-                v-for="scene in filteredScenes"
-                :key="scene.id"
-                class="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-all group"
-              >
+                <div
+                  v-for="scene in filteredScenes"
+                  :key="scene.id"
+                  class="bg-bg-subtle border border-border-default rounded-lg p-3 hover:border-gray-400 hover:shadow-sm transition-all group"
+                >
                 <!-- Thumbnail -->
                 <div class="aspect-square rounded-lg overflow-hidden mb-2 relative">
                   <img
@@ -312,21 +313,21 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
                   >
                   <div
                     v-else
-                    class="w-full h-full bg-black/20 flex items-center justify-center"
+                    class="w-full h-full bg-bg-base flex items-center justify-center"
                   >
-                    <svg class="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-12 h-12 text-text-disabled" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
 
                   <!-- Add Button Overlay -->
-                  <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="absolute inset-0 bg-bg-elevated/90 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                     <!-- Category Select Dropdown -->
                     <div v-if="showCategorySelect === scene.id" class="w-full px-2">
-                      <div class="bg-[#2A2D35] rounded-lg p-2 space-y-1 max-h-32 overflow-y-auto">
+                      <div class="bg-bg-subtle rounded-lg p-2 space-y-1 max-h-32 overflow-y-auto">
                         <button
                           class="w-full text-left px-2 py-1.5 rounded text-xs transition-colors"
-                          :class="scene.categoryId === null ? 'bg-[#00FFCC]/20 text-[#00FFCC]' : 'text-white/80 hover:bg-white/10'"
+                          :class="scene.categoryId === null ? 'bg-bg-hover text-text-primary font-medium' : 'text-text-secondary hover:bg-bg-hover'"
                           :disabled="changingCategoryId === scene.id"
                           @click="handleChangeCategory(scene, null)"
                         >
@@ -336,7 +337,7 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
                           v-for="cat in categories"
                           :key="cat.id"
                           class="w-full text-left px-2 py-1.5 rounded text-xs transition-colors"
-                          :class="scene.categoryId === cat.id ? 'bg-[#00FFCC]/20 text-[#00FFCC]' : 'text-white/80 hover:bg-white/10'"
+                          :class="scene.categoryId === cat.id ? 'bg-bg-hover text-text-primary font-medium' : 'text-text-secondary hover:bg-bg-hover'"
                           :disabled="changingCategoryId === scene.id"
                           @click="handleChangeCategory(scene, cat.id)"
                         >
@@ -344,7 +345,7 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
                         </button>
                       </div>
                       <button
-                        class="w-full mt-2 px-3 py-1.5 rounded-lg border border-white/20 text-white/60 text-xs hover:bg-white/5"
+                        class="w-full mt-2 px-3 py-1.5 rounded-lg border border-border-default text-text-tertiary text-xs hover:bg-bg-subtle"
                         @click="showCategorySelect = null"
                       >
                         取消
@@ -354,7 +355,7 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
                     <template v-else>
                       <div class="flex flex-col gap-2">
                         <button
-                          class="px-3 py-1.5 rounded-lg border border-white/30 text-white/80 text-xs hover:bg-white/10 transition-colors"
+                          class="px-3 py-1.5 rounded-lg border border-border-default text-text-secondary text-xs hover:bg-bg-hover transition-colors"
                           @click.stop="handleShowCategorySelect(scene.id)"
                         >
                           {{ scene.categoryId ? '修改分类' : '添加到分类' }}
@@ -373,13 +374,13 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
                 </div>
 
                 <!-- Scene Info -->
-                <h4 class="text-sm font-medium text-white truncate mb-1">{{ scene.name }}</h4>
-                <p class="text-xs text-white/60 line-clamp-2 h-8">{{ scene.description || '暂无描述' }}</p>
+                <h4 class="text-sm font-medium text-text-primary truncate mb-1">{{ scene.name }}</h4>
+                <p class="text-xs text-text-tertiary line-clamp-2 h-8">{{ scene.description || '暂无描述' }}</p>
               </div>
             </div>
 
             <!-- Empty State -->
-            <div v-else class="flex flex-col items-center justify-center h-64 text-white/40">
+            <div v-else class="flex flex-col items-center justify-center h-64 text-text-tertiary">
               <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -390,9 +391,9 @@ const handleDeleteScene = async (scene: SceneLibraryVO) => {
       </div>
 
       <!-- Footer -->
-      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-default">
         <button
-          class="px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:bg-white/5 transition-colors text-sm"
+          class="px-4 py-2 rounded-lg border border-border-default text-text-secondary hover:bg-bg-subtle transition-colors text-sm"
           @click="handleClose"
         >
           关闭

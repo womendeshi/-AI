@@ -103,28 +103,34 @@ const saveToSceneLibrary = async () => {
 </script>
 
 <template>
-  <div class="flex justify-start mb-2">
-    <div class="max-w-[75%] bg-white/5 border border-white/10 rounded-2xl p-2.5">
+  <div class="flex justify-start mb-2 gap-2">
+    <!-- AI头像 -->
+    <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-[#8B5CF6] flex items-center justify-center">
+      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 15.5m14.8-.2l.009.009a.75.75 0 01.213.686l-.473 1.893a.75.75 0 01-.635.556l-2.19.274a1.125 1.125 0 00-.768.467l-1.286 1.929a.75.75 0 01-1.24.002l-1.29-1.931a1.125 1.125 0 00-.768-.467l-2.19-.274a.75.75 0 01-.635-.556l-.473-1.893a.75.75 0 01.213-.686l.009-.009" />
+      </svg>
+    </div>
+    <div class="max-w-[75%] bg-bg-subtle border border-border-default rounded p-2.5">
       <!-- GENERATING Status -->
       <div v-if="conversation.aiResponse?.status === 'GENERATING'" class="flex items-center gap-2 py-2 px-1">
-        <div class="w-5 h-5 border-2 border-mochi-cyan border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-white/60 text-xs">正在生成中...</span>
+        <div class="w-4 h-4 border-2 border-text-tertiary border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-text-tertiary text-xs">正在生成中...</span>
       </div>
 
       <!-- FAILED Status -->
       <div v-else-if="conversation.aiResponse?.status === 'FAILED'" class="flex items-center gap-2 py-1">
-        <svg class="w-4 h-4 text-mochi-pink flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <svg class="w-4 h-4 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
         </svg>
-        <span class="text-mochi-pink text-xs">{{ conversation.aiResponse?.errorMessage || '生成失败' }}</span>
+        <span class="text-red-400 text-xs">{{ conversation.aiResponse?.errorMessage || '生成失败' }}</span>
       </div>
 
       <!-- READY Status - TEXT -->
       <div v-else-if="conversation.contentType === 'TEXT' && conversation.aiResponse?.text" class="group">
         <div class="flex items-start gap-2">
-          <div class="flex-1 text-white/90 text-sm leading-relaxed whitespace-pre-wrap break-words select-text">{{ conversation.aiResponse.text }}</div>
+          <div class="flex-1 text-white text-sm leading-relaxed whitespace-pre-wrap break-words select-text">{{ conversation.aiResponse.text }}</div>
           <button
-            class="flex-shrink-0 p-1.5 rounded-lg text-white/30 hover:text-mochi-cyan hover:bg-white/5 transition-all opacity-0 group-hover:opacity-100"
+            class="flex-shrink-0 p-1.5 rounded-lg text-white/30 hover:text-text-primary hover:bg-bg-subtle transition-all opacity-0 group-hover:opacity-100"
             title="复制"
             @click="copyText"
           >
@@ -148,7 +154,7 @@ const saveToSceneLibrary = async () => {
             <!-- 悬浮操作按钮 -->
             <div class="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                class="p-1 rounded bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+                class="p-1 rounded bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
                 :title="`下载图片 ${index + 1}`"
                 @click.stop="downloadImage(url, index)"
               >
@@ -169,7 +175,7 @@ const saveToSceneLibrary = async () => {
           <!-- 悬浮操作按钮 -->
           <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="p-1.5 rounded-lg bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+              class="p-1.5 rounded-lg bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
               title="下载"
               @click.stop="downloadFile"
             >
@@ -178,7 +184,7 @@ const saveToSceneLibrary = async () => {
               </svg>
             </button>
             <button
-              class="p-1.5 rounded-lg bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+              class="p-1.5 rounded-lg bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
               title="保存到角色库"
               @click.stop="saveToCharacterLibrary"
             >
@@ -187,7 +193,7 @@ const saveToSceneLibrary = async () => {
               </svg>
             </button>
             <button
-              class="p-1.5 rounded-lg bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+              class="p-1.5 rounded-lg bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
               title="保存到场景库"
               @click.stop="saveToSceneLibrary"
             >
@@ -211,7 +217,7 @@ const saveToSceneLibrary = async () => {
           <!-- 悬浮操作按钮 -->
           <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="p-1.5 rounded-lg bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+              class="p-1.5 rounded-lg bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
               title="下载"
               @click.stop="downloadFile"
             >
@@ -220,7 +226,7 @@ const saveToSceneLibrary = async () => {
               </svg>
             </button>
             <button
-              class="p-1.5 rounded-lg bg-black/50 text-white/80 hover:text-mochi-cyan hover:bg-black/70 transition-all"
+              class="p-1.5 rounded-lg bg-gray-800 text-text-secondary hover:text-text-primary hover:bg-gray-600 transition-all"
               title="保存到资产库"
               @click.stop="saveToSceneLibrary"
             >
@@ -232,10 +238,9 @@ const saveToSceneLibrary = async () => {
         </div>
       </div>
 
-      <!-- Footer: Cost & Time (Only for READY status, compact) -->
+      <!-- Footer: Time (Only for READY status, compact) -->
       <div v-if="conversation.aiResponse?.status === 'READY'" class="mt-1.5 flex items-center gap-3 text-[10px] text-white/30">
-        <span><span class="text-mochi-cyan/70">{{ conversation.aiResponse?.costPoints || 0 }}</span> 积分</span>
-        <span>{{ conversation.aiResponse?.generationTime || 0 }}s</span>
+        <span>耗时 {{ conversation.aiResponse?.generationTime || 0 }}s</span>
       </div>
     </div>
   </div>

@@ -9,11 +9,11 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const colorClasses = {
-  default: 'bg-gray-100 text-text-secondary border border-border-default',
-  primary: 'bg-accent/10 text-accent border border-accent/20',
-  success: 'bg-success/10 text-success border border-success/20',
-  warning: 'bg-warning/10 text-warning border border-warning/20',
-  danger: 'bg-danger/10 text-danger border border-danger/20',
+  default: 'bg-bg-subtle text-text-secondary border border-border-default',
+  primary: 'bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/30',
+  success: 'bg-success/20 text-success border border-success/30',
+  warning: 'bg-warning/20 text-warning border border-warning/30',
+  danger: 'bg-error/20 text-error border border-error/30',
 }
 </script>
 

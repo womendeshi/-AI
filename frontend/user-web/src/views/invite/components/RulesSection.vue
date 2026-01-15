@@ -21,23 +21,23 @@ const rules = [
 </script>
 
 <template>
-  <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-    <h3 class="text-white font-medium mb-4">邀请规则</h3>
+  <div class="p-6 rounded bg-bg-subtle border border-border-default">
+    <h3 class="text-text-primary font-medium mb-4">邀请规则</h3>
 
     <div class="space-y-4">
       <div
         v-for="(rule, index) in rules"
         :key="index"
-        class="p-4 rounded-2xl bg-white/5 border border-white/10"
+        class="p-4 rounded bg-bg-subtle border border-border-default"
       >
-        <h4 class="text-mochi-cyan font-medium text-sm mb-2">{{ rule.title }}</h4>
-        <p class="text-white/60 text-xs leading-relaxed">{{ rule.content }}</p>
+        <h4 class="text-text-primary font-medium text-sm mb-2">{{ rule.title }}</h4>
+        <p class="text-text-tertiary text-xs leading-relaxed">{{ rule.content }}</p>
       </div>
     </div>
 
     <!-- Notice -->
-    <div class="mt-4 p-3 rounded-2xl bg-mochi-cyan/10 border border-mochi-cyan/20">
-      <p class="text-mochi-cyan text-xs">
+    <div class="mt-4 p-3 rounded bg-bg-subtle border border-gray-900/20">
+      <p class="text-text-primary text-xs">
         注意:邀请码有效期为永久,但平台保留最终解释权。
       </p>
     </div>

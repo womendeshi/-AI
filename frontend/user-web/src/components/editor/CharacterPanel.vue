@@ -68,9 +68,9 @@ const handleCharacterClick = (characterId: number) => {
   <div class="flex flex-col h-full">
     <!-- Section: Active Characters -->
     <div class="flex-grow overflow-y-auto pr-2">
-      <h3 class="text-sm font-bold mb-3 text-white">
+      <h3 class="text-sm font-bold mb-3 text-text-primary">
         作品中角色
-        <span class="text-white/40 font-normal ml-2">({{ activeCharacters.length }})</span>
+        <span class="text-text-tertiary font-normal ml-2">({{ activeCharacters.length }})</span>
       </h3>
 
       <div class="grid grid-cols-4 gap-2 mb-6">
@@ -90,7 +90,7 @@ const handleCharacterClick = (characterId: number) => {
           >
           <div
             v-else
-            class="w-full aspect-square rounded-lg bg-black/20 flex items-center justify-center mb-1"
+            class="w-full aspect-square rounded-lg bg-bg-subtle flex items-center justify-center mb-1"
           >
             <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -100,11 +100,11 @@ const handleCharacterClick = (characterId: number) => {
 
           <!-- Active Indicator (Neon Cyan Dot) -->
           <div
-            class="absolute top-1 right-1 w-2.5 h-2.5 bg-[#00FFCC] rounded-full border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"
+            class="absolute top-1 right-1 w-2.5 h-2.5 bg-gray-900 rounded border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"
           ></div>
 
           <!-- Character Name -->
-          <p class="text-center text-xs truncate text-white/80">
+          <p class="text-center text-xs truncate text-text-secondary">
             {{ char.name }}
           </p>
         </div>
@@ -112,7 +112,7 @@ const handleCharacterClick = (characterId: number) => {
         <!-- Empty State -->
         <div
           v-if="activeCharacters.length === 0"
-          class="col-span-4 text-center py-8 text-white/40 text-xs"
+          class="col-span-4 text-center py-8 text-text-tertiary text-xs"
         >
           暂无启用的角色
         </div>
@@ -120,9 +120,9 @@ const handleCharacterClick = (characterId: number) => {
 
       <!-- Section: All Available Characters -->
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-bold text-white">
+        <h3 class="text-sm font-bold text-text-primary">
           全部可用角色
-          <span class="text-white/40 font-normal ml-2">({{ availableCharacters.length }})</span>
+          <span class="text-text-tertiary font-normal ml-2">({{ availableCharacters.length }})</span>
         </h3>
 
         <!-- Search Input -->
@@ -131,7 +131,7 @@ const handleCharacterClick = (characterId: number) => {
             v-model="searchQuery"
             type="text"
             placeholder="搜索角色..."
-            class="px-2 py-1 pr-6 text-xs bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-[#00FFCC]/50 w-32"
+            class="px-2 py-1 pr-6 text-xs bg-bg-subtle border border-border-default rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:border-gray-900/50 w-32"
           >
         </div>
       </div>
@@ -153,7 +153,7 @@ const handleCharacterClick = (characterId: number) => {
           >
           <div
             v-else
-            class="w-full aspect-square rounded-lg bg-black/20 flex items-center justify-center mb-1"
+            class="w-full aspect-square rounded-lg bg-bg-subtle flex items-center justify-center mb-1"
           >
             <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -162,7 +162,7 @@ const handleCharacterClick = (characterId: number) => {
           </div>
 
           <!-- Character Name -->
-          <p class="text-center text-xs truncate text-white/80">
+          <p class="text-center text-xs truncate text-text-secondary">
             {{ char.name }}
           </p>
         </div>
@@ -170,7 +170,7 @@ const handleCharacterClick = (characterId: number) => {
         <!-- Add Character Button ("+") -->
         <div class="inline-block">
           <button
-            class="w-full aspect-square rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-white/40 hover:bg-white/5 hover:border-white/40 transition-colors"
+            class="w-full aspect-square rounded-lg border-2 border-dashed border-border-default flex flex-col items-center justify-center text-text-tertiary hover:bg-bg-subtle hover:border-white/40 transition-colors"
             @click="handleAddCharacter"
           >
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -184,7 +184,7 @@ const handleCharacterClick = (characterId: number) => {
         <!-- Empty State -->
         <div
           v-if="availableCharacters.length === 0"
-          class="col-span-4 text-center py-8 text-white/40 text-xs"
+          class="col-span-4 text-center py-8 text-text-tertiary text-xs"
         >
           {{ searchQuery ? '未找到匹配的角色' : '暂无可用角色' }}
         </div>

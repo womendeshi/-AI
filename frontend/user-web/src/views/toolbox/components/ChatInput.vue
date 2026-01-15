@@ -7,11 +7,11 @@ import { uploadApi } from '@/api/upload'
 
 const toolboxStore = useToolboxStore()
 
-// 类型选项
+// 类型选项 (视频功能暂时禁用)
 const typeOptions = [
   { label: '文字', value: 'TEXT' },
   { label: '图片', value: 'IMAGE' },
-  { label: '视频', value: 'VIDEO' },
+  // { label: '视频', value: 'VIDEO' }, // 暂时禁用
 ]
 
 // 当前类型的模型列表
@@ -136,7 +136,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 </script>
 
 <template>
-  <div class="border-t border-white/10 bg-mochi-surface-l2 p-3">
+  <div class="border-t border-border-default bg-bg-elevated p-3">
     <!-- Controls Row -->
     <div class="flex items-center gap-2 mb-2">
       <!-- Type Select -->
@@ -169,7 +169,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       />
 
       <!-- Estimated Cost -->
-      <div class="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-mochi-cyan/10 border border-mochi-cyan/30 text-mochi-cyan text-xs whitespace-nowrap">
+      <div class="flex items-center gap-1 px-3 py-1.5 rounded bg-bg-subtle border border-border-default text-text-primary text-xs whitespace-nowrap">
         <span>预计:</span>
         <span class="font-medium">{{ toolboxStore.estimatedCost }}</span>
         <span>积分</span>
@@ -194,15 +194,15 @@ const handleKeydown = (e: KeyboardEvent) => {
             @change="handleImageUpload"
           />
           <div
-            class="w-16 h-16 rounded-xl border-2 border-dashed flex items-center justify-center transition-all"
+            class="w-16 h-16 rounded border-2 border-dashed flex items-center justify-center transition-all"
             :class="uploading
-              ? 'border-mochi-cyan/50 bg-mochi-cyan/5'
-              : 'border-white/20 bg-white/5 hover:border-mochi-cyan/50 hover:bg-mochi-cyan/5'"
+              ? 'border-gray-900/50 bg-gray-900/5'
+              : 'border-border-default bg-bg-subtle hover:border-gray-900/50 hover:bg-gray-900/5'"
           >
-            <svg v-if="!uploading" class="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="!uploading" class="w-6 h-6 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <svg v-else class="w-6 h-6 text-mochi-cyan animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg v-else class="w-6 h-6 text-text-primary animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -213,10 +213,10 @@ const handleKeydown = (e: KeyboardEvent) => {
         <div v-else class="relative w-16 h-16 group">
           <img
             :src="referenceImageUrl"
-            class="w-full h-full rounded-xl object-cover"
+            class="w-full h-full rounded object-cover"
           />
           <button
-            class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            class="absolute -top-1 -right-1 w-5 h-5 rounded bg-red-500 text-text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             @click="removeReferenceImage"
           >
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       
       <textarea
         v-model="toolboxStore.currentInput.prompt"
-        class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm resize-none focus:border-mochi-cyan focus:outline-none transition-all placeholder-white/30"
+        class="flex-1 px-3 py-2 rounded bg-bg-subtle border border-border-default text-text-primary text-sm resize-none focus:border-gray-900 focus:outline-none transition-all placeholder-white/30"
         placeholder="输入提示词... (Ctrl+Enter发送)"
         rows="2"
         @keydown="handleKeydown"
@@ -236,10 +236,10 @@ const handleKeydown = (e: KeyboardEvent) => {
 
       <!-- Send Button -->
       <button
-        class="px-4 py-2 rounded-xl font-medium text-xs transition-all flex items-center gap-1.5"
+        class="px-4 py-2 rounded font-medium text-xs transition-all flex items-center gap-1.5"
         :class="canSend
-          ? 'bg-mochi-cyan text-mochi-bg hover:bg-mochi-cyan/90'
-          : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'"
+          ? 'bg-gray-900 text-text-primary hover:bg-gray-700'
+          : 'bg-bg-subtle text-white/30 cursor-not-allowed border border-border-default'"
         :disabled="!canSend"
         @click="handleSend"
       >

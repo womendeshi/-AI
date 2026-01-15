@@ -78,7 +78,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
     <!-- Display Mode -->
     <h1
       v-if="!isEditing"
-      class="text-lg font-bold text-white cursor-pointer hover:bg-white/10 px-3 py-1.5 rounded-xl transition-colors truncate max-w-[300px]"
+      class="text-lg font-bold text-text-primary cursor-pointer hover:bg-bg-hover px-3 py-1.5 rounded transition-colors truncate max-w-[300px]"
       :title="projectName"
       @click="startEditing"
     >
@@ -91,14 +91,14 @@ const handleKeyDown = (e: KeyboardEvent) => {
         ref="inputRef"
         v-model="editingName"
         type="text"
-        class="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-white text-lg font-bold focus:outline-none focus:border-[#00FFCC] transition-colors w-[250px]"
+        class="bg-bg-hover border border-border-default rounded px-3 py-1.5 text-text-primary text-lg font-bold focus:outline-none focus:border-gray-900 transition-colors w-[250px]"
         placeholder="输入项目名称"
         @keydown="handleKeyDown"
       >
 
       <!-- Save Button -->
       <button
-        class="p-1.5 rounded-full bg-[#00FFCC]/20 hover:bg-[#00FFCC]/30 transition-colors"
+        class="p-1.5 rounded bg-bg-subtle hover:bg-gray-900/30 transition-colors"
         title="保存 (Enter)"
         @click="saveEdit"
       >
@@ -109,11 +109,11 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
       <!-- Cancel Button -->
       <button
-        class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        class="p-1.5 rounded bg-bg-hover hover:bg-bg-hover transition-colors"
         title="取消 (Esc)"
         @click="cancelEditing"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white/80">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-secondary">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>

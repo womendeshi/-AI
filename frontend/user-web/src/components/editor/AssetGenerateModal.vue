@@ -79,24 +79,24 @@ const handleClose = () => {
   <Transition name="fade">
     <div
       v-if="show"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       @click="handleClose"
     >
       <!-- Modal Content -->
       <div
-        class="bg-[#1E2025] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
+        class="bg-bg-elevated border border-border-default rounded w-full max-w-md shadow-2xl pointer-events-auto"
         @click.stop
       >
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <h2 class="text-lg font-bold text-white">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
+          <h2 class="text-lg font-bold text-text-primary">
             生成{{ assetTypeLabel }}
           </h2>
           <button
-            class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
             @click="handleClose"
           >
-            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -106,7 +106,7 @@ const handleClose = () => {
         <div class="px-6 py-5 space-y-4">
           <!-- Aspect Ratio -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">
+            <label class="block text-sm font-medium text-text-secondary mb-2">
               画幅比例 <span class="text-red-400">*</span>
             </label>
             <div class="grid grid-cols-4 gap-2">
@@ -114,10 +114,10 @@ const handleClose = () => {
                 v-for="ratio in ['1:1', '16:9', '9:16', '21:9']"
                 :key="ratio"
                 :class="[
-                  'px-3 py-2 text-sm font-medium rounded-2xl border-2 transition-all',
+                  'px-3 py-2 text-sm font-medium rounded border-2 transition-all',
                   form.aspectRatio === ratio
-                    ? 'bg-[#00FFCC]/10 border-[#00FFCC] text-[#00FFCC]'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20',
+                    ? 'bg-bg-subtle border-gray-900 text-text-primary'
+                    : 'bg-bg-subtle border-border-default text-text-tertiary hover:border-border-default',
                 ]"
                 @click="form.aspectRatio = ratio as '1:1' | '16:9' | '9:16' | '21:9'"
               >
@@ -128,12 +128,12 @@ const handleClose = () => {
 
           <!-- Model Selection -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">
-              模型选择 <span class="text-white/40 text-xs">(可选)</span>
+            <label class="block text-sm font-medium text-text-secondary mb-2">
+              模型选择 <span class="text-text-tertiary text-xs">(可选)</span>
             </label>
             <select
               v-model="form.model"
-              class="w-full px-4 py-2.5 bg-[#191A1E] border border-white/10 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
+              class="w-full px-4 py-2.5 bg-bg-elevated border border-border-default rounded text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
             >
               <option :value="undefined">默认模型</option>
               <option value="jimeng-4.5">即梦 4.5</option>
@@ -143,43 +143,43 @@ const handleClose = () => {
 
           <!-- Custom Prompt -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">
-              自定义提示词 <span class="text-white/40 text-xs">(可选)</span>
+            <label class="block text-sm font-medium text-text-secondary mb-2">
+              自定义提示词 <span class="text-text-tertiary text-xs">(可选)</span>
             </label>
             <textarea
               v-model="form.prompt"
               rows="3"
-              class="w-full px-4 py-2.5 bg-[#191A1E] border border-white/10 rounded-2xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
+              class="w-full px-4 py-2.5 bg-bg-elevated border border-border-default rounded text-text-primary text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
               placeholder="留空则使用系统默认提示词..."
             ></textarea>
-            <p class="mt-1.5 text-xs text-white/40">
+            <p class="mt-1.5 text-xs text-text-tertiary">
               提示：留空将根据剧本内容自动生成提示词
             </p>
           </div>
 
           <!-- Estimated Cost -->
-          <div class="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
-            <span class="text-sm text-white/60">预估消耗</span>
+          <div class="bg-bg-subtle border border-border-default rounded px-4 py-3 flex items-center justify-between">
+            <span class="text-sm text-text-tertiary">预估消耗</span>
             <div class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#00FFCC]" viewBox="0 0 1024 1024" fill="currentColor">
+              <svg class="w-4 h-4 text-text-primary" viewBox="0 0 1024 1024" fill="currentColor">
                 <path d="M224 800c0 9.6 3.2 44.8 6.4 54.4 6.4 48-48 76.8-48 76.8s80 41.6 147.2 0S464 796.8 368 736c-22.4-12.8-41.6-19.2-57.6-19.2-51.2 0-83.2 44.8-86.4 83.2z m336-124.8l-32 51.2c-51.2 51.2-83.2 32-83.2 32 25.6 67.2 0 112-12.8 128 25.6 6.4 51.2 9.6 80 9.6 54.4 0 102.4-9.6 150.4-32 3.2 0 3.2-3.2 3.2-3.2 22.4-16 12.8-35.2 6.4-44.8-9.6-12.8-12.8-25.6-12.8-41.6 0-54.4 60.8-99.2 137.6-99.2h22.4c12.8 0 38.4 9.6 48-25.6 0-3.2 0-3.2 3.2-6.4 0-3.2 3.2-6.4 3.2-6.4 6.4-16 6.4-16 6.4-19.2 9.6-35.2 16-73.6 16-115.2 0-105.6-41.6-198.4-108.8-268.8C704 396.8 560 675.2 560 675.2z m-336-256c0-28.8 22.4-51.2 51.2-51.2 28.8 0 51.2 22.4 51.2 51.2 0 28.8-22.4 51.2-51.2 51.2-28.8 0-51.2-22.4-51.2-51.2z m96-134.4c0-22.4 19.2-41.6 41.6-41.6 22.4 0 41.6 19.2 41.6 41.6 0 22.4-19.2 41.6-41.6 41.6-22.4 0-41.6-19.2-41.6-41.6zM457.6 208c0-12.8 12.8-25.6 25.6-25.6s25.6 12.8 25.6 25.6-12.8 25.6-25.6 25.6-25.6-12.8-25.6-25.6zM128 505.6C128 592 153.6 672 201.6 736c28.8-60.8 112-60.8 124.8-60.8-16-51.2 16-99.2 16-99.2l316.8-422.4c-48-19.2-99.2-32-150.4-32-211.2-3.2-380.8 169.6-380.8 384z"></path>
               </svg>
-              <span class="text-base font-bold text-[#00FFCC]">{{ estimatedCost }}</span>
-              <span class="text-sm text-white/60">积分</span>
+              <span class="text-base font-bold text-text-primary">{{ estimatedCost }}</span>
+              <span class="text-sm text-text-tertiary">积分</span>
             </div>
           </div>
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-default">
           <button
-            class="px-5 py-2 text-sm font-medium text-white/70 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+            class="px-5 py-2 text-sm font-medium text-white/70 bg-bg-subtle rounded hover:bg-bg-hover transition-colors"
             @click="handleClose"
           >
             取消
           </button>
           <button
-            class="px-5 py-2 text-sm font-bold text-black bg-[#00FFCC] rounded-full hover:bg-[#21FFF3] transition-colors flex items-center gap-2"
+            class="px-5 py-2 text-sm font-medium text-text-secondary bg-bg-subtle rounded hover:bg-bg-hover transition-colors flex items-center gap-2"
             @click="handleConfirm"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">

@@ -116,39 +116,33 @@ const handleKeydown = (e: KeyboardEvent, action: 'sendCode' | 'login') => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-mochi-bg flex items-center justify-center p-4">
-    <!-- Background gradient -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute top-1/4 -left-1/4 w-96 h-96 bg-mochi-cyan/10 rounded-full blur-3xl" />
-      <div class="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-mochi-blue/10 rounded-full blur-3xl" />
-    </div>
-
+  <div class="min-h-screen bg-bg-base flex items-center justify-center p-4">
     <div class="relative w-full max-w-md">
       <!-- Logo and title -->
       <div class="text-center mb-8">
         <div class="inline-block mb-4">
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-mochi-cyan to-mochi-blue flex items-center justify-center">
-            <span class="text-2xl font-bold text-mochi-bg">圆梦</span>
+          <div class="w-16 h-16 rounded-lg bg-[#8B5CF6] flex items-center justify-center">
+            <span class="text-2xl font-bold text-white">圆梦</span>
           </div>
         </div>
-        <h1 class="text-3xl font-bold text-white mb-2">圆梦动画</h1>
-        <p class="text-white/60 text-sm">AI 驱动的动画创作平台</p>
+        <h1 class="text-3xl font-bold text-text-primary mb-2">圆梦动画</h1>
+        <p class="text-text-tertiary text-sm">AI 驱动的动画创作平台</p>
       </div>
 
       <!-- Login form -->
-      <GlassCard padding="p-8" className="backdrop-blur-xl">
-        <h2 class="text-xl font-semibold text-white mb-6">手机号登录</h2>
+      <div class="card p-8">
+        <h2 class="text-xl font-semibold text-text-primary mb-6">手机号登录</h2>
 
         <!-- Phone input -->
         <div class="mb-4">
-          <label class="block text-white/80 text-sm mb-2">手机号</label>
+          <label class="block text-text-secondary text-sm mb-2">手机号</label>
           <input
             :value="phone"
             type="tel"
             inputmode="numeric"
             placeholder="请输入手机号"
             maxlength="11"
-            class="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-mochi-cyan focus:ring-1 focus:ring-mochi-cyan transition-all"
+            class="input"
             @input="handlePhoneInput"
             @keydown="(e) => handleKeydown(e, 'sendCode')"
           >
@@ -156,7 +150,7 @@ const handleKeydown = (e: KeyboardEvent, action: 'sendCode' | 'login') => {
 
         <!-- Verification code input with send button -->
         <div class="mb-4">
-          <label class="block text-white/80 text-sm mb-2">验证码</label>
+          <label class="block text-text-secondary text-sm mb-2">验证码</label>
           <div class="flex gap-2">
             <input
               :value="verifyCode"
@@ -164,47 +158,42 @@ const handleKeydown = (e: KeyboardEvent, action: 'sendCode' | 'login') => {
               inputmode="numeric"
               placeholder="请输入验证码"
               maxlength="6"
-              class="flex-1 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-mochi-cyan focus:ring-1 focus:ring-mochi-cyan transition-all"
+              class="input flex-1"
               @input="handleCodeInput"
               @keydown="(e) => handleKeydown(e, 'login')"
             >
-            <PillButton
-              :label="sendCodeButtonText"
-              variant="secondary"
+            <button
+              class="btn btn-secondary whitespace-nowrap"
               :disabled="!canSendCode"
-              :loading="sendingCode"
-              class="px-4 py-3 whitespace-nowrap"
               @click="handleSendCode"
-            />
+            >
+              <span v-if="sendingCode">发送中...</span>
+              <span v-else>{{ sendCodeButtonText }}</span>
+            </button>
           </div>
         </div>
 
         <!-- Invite code input (optional) -->
         <div class="mb-6">
-          <label class="block text-white/80 text-sm mb-2">邀请码 <span class="text-white/40">(选填)</span></label>
+          <label class="block text-text-secondary text-sm mb-2">邀请码 <span class="text-text-tertiary">(选填)</span></label>
           <input
             v-model="inviteCode"
             type="text"
             placeholder="请输入邀请码"
             maxlength="20"
-            class="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-mochi-cyan focus:ring-1 focus:ring-mochi-cyan transition-all"
+            class="input"
           >
         </div>
 
         <!-- Error message -->
-        <div v-if="errorMessage" class="mb-4 p-3 rounded-xl bg-mochi-pink/10 border border-mochi-pink/20">
-          <p class="text-mochi-pink text-sm">{{ errorMessage }}</p>
+        <div v-if="errorMessage" class="mb-4 p-3 rounded-lg bg-error/20 border border-error/30">
+          <p class="text-error text-sm">{{ errorMessage }}</p>
         </div>
 
         <!-- Login button -->
         <button
+          class="btn btn-primary w-full"
           :disabled="!canLogin || loading"
-          :class="[
-            'w-full py-3 rounded-2xl font-medium text-sm transition-all',
-            canLogin && !loading
-              ? 'bg-gradient-to-r from-mochi-cyan to-mochi-blue text-mochi-bg hover:shadow-neon-cyan cursor-pointer'
-              : 'bg-white/10 text-white/30 cursor-not-allowed'
-          ]"
           @click="handleLogin"
         >
           <span v-if="loading">登录中...</span>
@@ -212,16 +201,16 @@ const handleKeydown = (e: KeyboardEvent, action: 'sendCode' | 'login') => {
         </button>
 
         <!-- Terms -->
-        <p class="text-white/40 text-xs text-center mt-6">
+        <p class="text-text-tertiary text-xs text-center mt-6">
           登录即表示同意
-          <a href="#" class="text-mochi-cyan hover:underline">用户协议</a>
+          <a href="#" class="text-[#8B5CF6] hover:underline">用户协议</a>
           和
-          <a href="#" class="text-mochi-cyan hover:underline">隐私政策</a>
+          <a href="#" class="text-[#8B5CF6] hover:underline">隐私政策</a>
         </p>
-      </GlassCard>
+      </div>
 
       <!-- Footer text -->
-      <p class="text-white/40 text-xs text-center mt-6">
+      <p class="text-text-tertiary text-xs text-center mt-6">
         © 2024 圆梦动画 · AI Story Studio
       </p>
     </div>

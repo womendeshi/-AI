@@ -18,16 +18,16 @@ defineEmits<{
 }>()
 
 const variantClasses = {
-  ghost: 'text-text-secondary hover:text-primary transition-colors',
-  primary: 'bg-primary text-text-inverse font-medium hover:bg-primary-light transition-all',
-  secondary: 'border border-border-default text-text-secondary hover:bg-bg-tertiary transition-colors',
+  ghost: 'text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors',
+  primary: 'bg-[#8B5CF6] text-white font-medium hover:bg-[#A78BFA] transition-all',
+  secondary: 'border border-border-default text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors',
 }
 </script>
 
 <template>
   <button
     :class="[
-      'flex items-center gap-2 px-3 py-1 rounded-full text-xs',
+      'flex items-center gap-2 px-3 py-1 rounded text-xs',
       variantClasses[variant],
       disabled && 'opacity-50 cursor-not-allowed',
     ]"

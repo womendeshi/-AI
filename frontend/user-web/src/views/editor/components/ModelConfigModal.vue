@@ -123,22 +123,22 @@ const handleReset = () => {
   <!-- Modal Overlay -->
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+    class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
     @click="handleClose"
   >
     <!-- Modal Content -->
     <div
-      class="bg-[#1E2025] border border-white/10 rounded-2xl p-6 w-full max-w-[600px] shadow-2xl max-h-[90vh] overflow-y-auto"
+      class="bg-bg-elevated border border-border-default rounded p-6 w-full max-w-[600px] shadow-2xl max-h-[90vh] overflow-y-auto pointer-events-auto"
       @click.stop
     >
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-white">模型配置</h2>
+        <h2 class="text-xl font-bold text-text-primary">模型配置</h2>
         <button
-          class="p-2 rounded-full hover:bg-white/10 transition-colors"
+          class="p-2 rounded hover:bg-bg-hover transition-colors"
           @click="handleClose"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white/60">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-tertiary">
             <path d="M18 6 6 18"></path>
             <path d="m6 6 12 12"></path>
           </svg>
@@ -149,9 +149,9 @@ const handleReset = () => {
       <div class="space-y-6">
         <!-- Language Model Selector -->
         <div>
-          <label class="block text-sm font-medium text-white/80 mb-3">
+          <label class="block text-sm font-medium text-text-secondary mb-3">
             语言模型
-            <span class="text-white/40 text-xs ml-2 font-normal">(用于文本生成、分析等)</span>
+            <span class="text-text-tertiary text-xs ml-2 font-normal">(用于文本生成、分析等)</span>
           </label>
           <CustomSelect
             v-model="localLanguageModel"
@@ -162,9 +162,9 @@ const handleReset = () => {
 
         <!-- Character Image Model Selector -->
         <div>
-          <label class="block text-sm font-medium text-white/80 mb-3">
+          <label class="block text-sm font-medium text-text-secondary mb-3">
             角色画像生成模型
-            <span class="text-white/40 text-xs ml-2 font-normal">(用于生成角色图片)</span>
+            <span class="text-text-tertiary text-xs ml-2 font-normal">(用于生成角色图片)</span>
           </label>
           <CustomSelect
             v-model="localCharacterImageModel"
@@ -175,9 +175,9 @@ const handleReset = () => {
 
         <!-- Scene Image Model Selector -->
         <div>
-          <label class="block text-sm font-medium text-white/80 mb-3">
+          <label class="block text-sm font-medium text-text-secondary mb-3">
             场景画像生成模型
-            <span class="text-white/40 text-xs ml-2 font-normal">(用于生成场景图片)</span>
+            <span class="text-text-tertiary text-xs ml-2 font-normal">(用于生成场景图片)</span>
           </label>
           <CustomSelect
             v-model="localSceneImageModel"
@@ -188,9 +188,9 @@ const handleReset = () => {
 
         <!-- Shot Image Model Selector -->
         <div>
-          <label class="block text-sm font-medium text-white/80 mb-3">
+          <label class="block text-sm font-medium text-text-secondary mb-3">
             分镜画面生成模型
-            <span class="text-white/40 text-xs ml-2 font-normal">(用于生成分镜图)</span>
+            <span class="text-text-tertiary text-xs ml-2 font-normal">(用于生成分镜图)</span>
           </label>
           <CustomSelect
             v-model="localShotImageModel"
@@ -201,9 +201,9 @@ const handleReset = () => {
 
         <!-- Video Model Selector -->
         <div>
-          <label class="block text-sm font-medium text-white/80 mb-3">
+          <label class="block text-sm font-medium text-text-secondary mb-3">
             视频生成模型
-            <span class="text-white/40 text-xs ml-2 font-normal">(用于生成视频)</span>
+            <span class="text-text-tertiary text-xs ml-2 font-normal">(用于生成视频)</span>
           </label>
           <CustomSelect
             v-model="localVideoModel"
@@ -213,38 +213,38 @@ const handleReset = () => {
         </div>
 
         <!-- Loading State -->
-        <div v-if="loadingModels" class="bg-white/5 border border-white/10 rounded-2xl p-4">
+        <div v-if="loadingModels" class="bg-bg-subtle border border-border-default rounded p-4">
           <div class="flex items-center gap-3">
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00FFCC]"></div>
-            <p class="text-white/60 text-xs">正在加载模型列表...</p>
+            <div class="animate-spin rounded h-4 w-4 border-b-2 border-gray-900"></div>
+            <p class="text-text-tertiary text-xs">正在加载模型列表...</p>
           </div>
         </div>
 
         <!-- Info Box -->
-        <div v-else class="bg-white/5 border border-white/10 rounded-2xl p-4">
-          <p class="text-white/60 text-xs leading-relaxed">
+        <div v-else class="bg-bg-subtle border border-border-default rounded p-4">
+          <p class="text-text-tertiary text-xs leading-relaxed">
             💡 提示: 模型配置将应用于编辑器中的相应生成操作。不同步骤可以使用不同的模型，配置会自动保存到本地。模型选项从后端数据库获取。
           </p>
         </div>
       </div>
 
       <!-- Footer Actions -->
-      <div class="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+      <div class="flex items-center justify-between mt-6 pt-4 border-t border-border-default">
         <button
-          class="px-4 py-2 rounded-full text-sm text-white/60 border border-white/20 hover:bg-white/5 transition-colors"
+          class="px-4 py-2 rounded text-sm text-text-tertiary border border-border-default hover:bg-bg-subtle transition-colors"
           @click="handleReset"
         >
           重置默认
         </button>
         <div class="flex items-center gap-3">
           <button
-            class="px-5 py-2 rounded-full text-sm text-white/60 border border-white/20 hover:bg-white/5 transition-colors"
+            class="px-5 py-2 rounded text-sm text-text-tertiary border border-border-default hover:bg-bg-subtle transition-colors"
             @click="handleClose"
           >
             取消
           </button>
           <button
-            class="px-5 py-2 rounded-full text-sm bg-[#00FFCC] text-[#0D0E12] font-semibold hover:bg-[#00FFCC]/90 transition-colors"
+            class="px-5 py-2 rounded text-sm bg-gray-900 text-[#0D0E12] font-semibold hover:bg-gray-700 transition-colors"
             @click="handleSave"
           >
             保存配置

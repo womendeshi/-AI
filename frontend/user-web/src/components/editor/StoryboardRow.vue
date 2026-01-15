@@ -783,8 +783,8 @@ const handleCopyThumbnail = async (url: string) => {
 <template>
   <tr
     :class="[
-      'group transition-colors border-b border-white/5',
-      selected ? 'bg-[#00FFCC]/10 border-l-2 !border-l-[#00FFCC]' : 'hover:bg-white/5',
+      'group transition-colors border-b border-border-subtle',
+      selected ? 'bg-bg-subtle border-l-2 !border-l-[#00FFCC]' : 'hover:bg-bg-subtle',
     ]"
   >
     <!-- Checkbox -->
@@ -793,13 +793,13 @@ const handleCopyThumbnail = async (url: string) => {
         type="checkbox"
         :checked="selected"
         @change="onToggleSelect"
-        class="w-4 h-4 rounded bg-white/10 border-white/20 text-[#00FFCC] focus:ring-2 focus:ring-[#00FFCC]/50 cursor-pointer"
+        class="w-4 h-4 rounded bg-bg-hover border-border-default text-text-primary focus:ring-2 focus:ring-[#00FFCC]/50 cursor-pointer"
       >
     </td>
 
     <!-- Shot ID -->
     <td class="px-3 py-3 w-[80px]">
-      <span class="inline-flex items-center justify-center px-2.5 py-1 bg-white/10 text-white/80 text-sm font-semibold rounded-full">
+      <span class="inline-flex items-center justify-center px-2.5 py-1 bg-bg-hover text-text-secondary text-sm font-semibold rounded">
         {{ shot.shotNo }}
       </span>
     </td>
@@ -808,7 +808,7 @@ const handleCopyThumbnail = async (url: string) => {
     <td class="px-3 py-3 flex-1 min-w-[200px] max-w-[400px]">
       <!-- Display Mode -->
       <div
-        class="text-white text-sm leading-relaxed cursor-pointer hover:bg-white/5 px-2 py-1 rounded-lg transition-colors whitespace-pre-wrap break-words"
+        class="text-text-primary text-sm leading-relaxed cursor-pointer hover:bg-bg-subtle px-2 py-1 rounded-lg transition-colors whitespace-pre-wrap break-words"
         @dblclick="startEditing"
         title="双击编辑"
       >
@@ -826,7 +826,7 @@ const handleCopyThumbnail = async (url: string) => {
           class="relative group/bound flex-shrink-0"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white/10 cursor-pointer hover:bg-white/15 transition-colors"
+            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
             @click="handleCharacterClick(char.characterId)"
             :title="char.characterName"
           >
@@ -836,55 +836,55 @@ const handleCopyThumbnail = async (url: string) => {
                 v-if="char.thumbnailUrl"
                 :src="char.thumbnailUrl"
                 :alt="char.characterName"
-                class="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                class="w-6 h-6 rounded object-cover flex-shrink-0"
               >
               <div
                 v-else
-                class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/60 text-xs font-bold flex-shrink-0"
+                class="w-6 h-6 rounded bg-bg-subtle flex items-center justify-center text-text-tertiary text-xs font-bold flex-shrink-0"
               >
                 {{ char.characterName?.[0] || '?' }}
               </div>
               <!-- 悬浮按钮（仅在有缩略图时显示） -->
               <div
                 v-if="char.thumbnailUrl"
-                class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
+                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
                 @click.stop
               >
                 <button
                   @click.stop="handleDownloadThumbnail(char.thumbnailUrl, char.characterName)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="下载"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </button>
                 <button
                   @click.stop="handleCopyThumbnail(char.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="复制"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
               </div>
             </div>
-            <span class="text-white/80 text-xs font-medium truncate max-w-[50px] pr-1">{{ char.characterName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate max-w-[50px] pr-1">{{ char.characterName }}</span>
           </div>
           <!-- 解绑按钮（悬浮显示） -->
           <button
             @click.stop="handleUnbindCharacterFromTable(char.bindingId, char.characterName)"
-            class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
+            class="absolute -top-1 -right-1 w-4 h-4 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
             title="移除角色"
           >
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-2.5 h-2.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
         <!-- 更多角色数量提示 -->
-        <span v-if="shot.characters.length > 3" class="text-white/40 text-xs font-medium">
+        <span v-if="shot.characters.length > 3" class="text-text-tertiary text-xs font-medium">
           +{{ shot.characters.length - 3 }}
         </span>
         <!-- 从剧本提取的人物（显示图片卡片或紫色标签） -->
@@ -896,7 +896,7 @@ const handleCopyThumbnail = async (url: string) => {
           <!-- 如果有对应的角色且有缩略图，显示图片卡片 -->
           <div
             v-if="getCharacterByName(charName)?.thumbnailUrl"
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white/10 cursor-pointer hover:bg-white/15 transition-colors"
+            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
             @click="handleGenerateCharacterFromScript(charName)"
             :title="charName"
           >
@@ -905,54 +905,54 @@ const handleCopyThumbnail = async (url: string) => {
               <img
                 :src="getCharacterByName(charName)?.thumbnailUrl"
                 :alt="charName"
-                class="w-6 h-6 rounded-full object-cover"
+                class="w-6 h-6 rounded object-cover"
               >
               <!-- 悬浮按钮 -->
               <div
-                class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
+                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
                 @click.stop
               >
                 <button
                   @click.stop="handleDownloadThumbnail(getCharacterByName(charName)!.thumbnailUrl!, charName)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="下载"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </button>
                 <button
                   @click.stop="handleCopyThumbnail(getCharacterByName(charName)!.thumbnailUrl!)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="复制"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
               </div>
             </div>
-            <span class="text-white/80 text-xs font-medium truncate max-w-[50px] pr-1">{{ charName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate max-w-[50px] pr-1">{{ charName }}</span>
           </div>
           <!-- 否则显示紫色标签 -->
           <button
             v-else
             @click="handleGenerateCharacterFromScript(charName)"
-            class="min-w-[32px] h-8 px-2 pr-6 rounded-full bg-purple-500/20 flex items-center justify-center gap-1 hover:bg-purple-500/30 transition-colors"
+            class="min-w-[32px] h-8 px-2 pr-6 rounded bg-bg-subtle flex items-center justify-center gap-1 hover:bg-bg-hover transition-colors"
             :title="`点击生成角色: ${charName}`"
           >
-            <svg class="w-3.5 h-3.5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
             </svg>
-            <span class="text-purple-400 text-xs font-medium truncate max-w-[60px]">{{ charName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate max-w-[60px]">{{ charName }}</span>
           </button>
           <!-- 删除按钮（悬浮显示） -->
           <button
             @click.stop="handleDismissCharacter(charName)"
-            class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/char:opacity-100 z-10"
+            class="absolute -top-1 -right-1 w-4 h-4 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/char:opacity-100 z-10"
             title="删除"
           >
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-2.5 h-2.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -960,10 +960,10 @@ const handleCopyThumbnail = async (url: string) => {
         <!-- 添加角色按钮（始终显示） -->
         <button
           @click="handleAddCharacter"
-          class="w-8 h-8 rounded-full border-2 border-dashed border-white/20 bg-black/10 flex items-center justify-center hover:bg-white/5 hover:border-[#00FFCC]/50 transition-colors flex-shrink-0"
+          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
           title="添加角色"
         >
-          <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
         </button>
@@ -979,7 +979,7 @@ const handleCopyThumbnail = async (url: string) => {
           class="relative group/bound flex-shrink-0"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white/10 cursor-pointer hover:bg-white/15 transition-colors"
+            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
             @click="handleSceneClick(shot.scene.sceneId)"
             :title="shot.scene.sceneName"
           >
@@ -989,49 +989,49 @@ const handleCopyThumbnail = async (url: string) => {
                 v-if="shot.scene.thumbnailUrl"
                 :src="shot.scene.thumbnailUrl"
                 :alt="shot.scene.sceneName"
-                class="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                class="w-6 h-6 rounded object-cover flex-shrink-0"
               >
               <div
                 v-else
-                class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/60 text-xs flex-shrink-0"
+                class="w-6 h-6 rounded bg-bg-subtle flex items-center justify-center text-text-tertiary text-xs flex-shrink-0"
               >
                 🏞️
               </div>
               <!-- 悬浮按钮（仅在有缩略图时显示） -->
               <div
                 v-if="shot.scene.thumbnailUrl"
-                class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
+                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
                 @click.stop
               >
                 <button
                   @click.stop="handleDownloadThumbnail(shot.scene.thumbnailUrl, shot.scene.sceneName)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="下载"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </button>
                 <button
                   @click.stop="handleCopyThumbnail(shot.scene.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="复制"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
               </div>
             </div>
-            <span class="text-white/80 text-xs font-medium truncate max-w-[60px] pr-1">{{ shot.scene.sceneName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate max-w-[60px] pr-1">{{ shot.scene.sceneName }}</span>
           </div>
           <!-- 解绑按钮（悬浮显示） -->
           <button
             @click.stop="handleUnbindSceneFromTable(shot.scene.bindingId, shot.scene.sceneName)"
-            class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
+            class="absolute -top-1 -right-1 w-4 h-4 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
             title="移除场景"
           >
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-2.5 h-2.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -1040,10 +1040,10 @@ const handleCopyThumbnail = async (url: string) => {
         <button
           v-if="!shot.scene"
           @click="handleAddScene"
-          class="w-8 h-8 rounded-full border-2 border-dashed border-white/20 bg-black/10 flex items-center justify-center hover:bg-white/5 hover:border-[#00FFCC]/50 transition-colors flex-shrink-0"
+          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
           title="添加场景"
         >
-          <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
         </button>
@@ -1063,7 +1063,7 @@ const handleCopyThumbnail = async (url: string) => {
           class="relative group/bound flex-shrink-0"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white/10 cursor-pointer hover:bg-white/15 transition-colors"
+            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
             @click="handlePropClick(prop.propId)"
             :title="prop.propName"
           >
@@ -1073,35 +1073,35 @@ const handleCopyThumbnail = async (url: string) => {
                 v-if="prop.thumbnailUrl"
                 :src="prop.thumbnailUrl"
                 :alt="prop.propName"
-                class="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                class="w-6 h-6 rounded object-cover flex-shrink-0"
               >
               <div
                 v-else
-                class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/60 text-xs flex-shrink-0"
+                class="w-6 h-6 rounded bg-bg-subtle flex items-center justify-center text-text-tertiary text-xs flex-shrink-0"
               >
                 🔧
               </div>
               <!-- 悬浮按钮（仅在有缩略图时显示） -->
               <div
                 v-if="prop.thumbnailUrl"
-                class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
+                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
                 @click.stop
               >
                 <button
                   @click.stop="handleDownloadThumbnail(prop.thumbnailUrl, prop.propName)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="下载"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </button>
                 <button
                   @click.stop="handleCopyThumbnail(prop.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-white/20 transition-colors"
+                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
                   title="复制"
                 >
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
@@ -1111,10 +1111,10 @@ const handleCopyThumbnail = async (url: string) => {
           <!-- 解绑按钮（悬浮显示） -->
           <button
             @click.stop="handleUnbindPropFromTable(prop.bindingId, prop.propName)"
-            class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
+            class="absolute -top-1 -right-1 w-4 h-4 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover/bound:opacity-100 z-10"
             title="移除道具"
           >
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-2.5 h-2.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -1123,10 +1123,10 @@ const handleCopyThumbnail = async (url: string) => {
         <button
           v-if="shot.props.length === 0"
           @click="handleAddProp"
-          class="w-8 h-8 rounded-full border-2 border-dashed border-white/20 bg-black/10 flex items-center justify-center hover:bg-white/5 hover:border-[#00FFCC]/50 transition-colors flex-shrink-0"
+          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
           title="添加道具"
         >
-          <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
         </button>
@@ -1162,13 +1162,13 @@ const handleCopyThumbnail = async (url: string) => {
           :class="[
             'p-1.5 rounded-lg transition-colors',
             isFirst
-              ? 'bg-white/5 cursor-not-allowed opacity-30'
-              : 'bg-white/10 hover:bg-white/20'
+              ? 'bg-bg-subtle cursor-not-allowed opacity-30'
+              : 'bg-bg-hover hover:bg-bg-hover'
           ]"
           title="向上合并"
           @click="onMergeUp"
         >
-          <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
           </svg>
         </button>
@@ -1178,13 +1178,13 @@ const handleCopyThumbnail = async (url: string) => {
           :class="[
             'p-1.5 rounded-lg transition-colors',
             isLast
-              ? 'bg-white/5 cursor-not-allowed opacity-30'
-              : 'bg-white/10 hover:bg-white/20'
+              ? 'bg-bg-subtle cursor-not-allowed opacity-30'
+              : 'bg-bg-hover hover:bg-bg-hover'
           ]"
           title="向下合并"
           @click="onMergeDown"
         >
-          <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
@@ -1232,18 +1232,18 @@ const handleCopyThumbnail = async (url: string) => {
     >
       <div
         v-if="showCharacterSelectModal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
         @click.self="showCharacterSelectModal = false"
       >
-        <div class="bg-[#1E2025] w-[800px] max-h-[70vh] rounded-2xl shadow-2xl flex flex-col">
+        <div class="bg-bg-elevated w-[800px] max-h-[70vh] rounded shadow-2xl flex flex-col pointer-events-auto">
           <!-- Header -->
-          <div class="flex items-center justify-between p-4 border-b border-white/10">
-            <h3 class="text-white text-base font-semibold">选择角色绑定到分镜 #{{ shot.shotNo }}</h3>
+          <div class="flex items-center justify-between p-4 border-b border-border-default">
+            <h3 class="text-text-primary text-base font-semibold">选择角色绑定到分镜 #{{ shot.shotNo }}</h3>
             <button
-              class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
               @click="showCharacterSelectModal = false"
             >
-              <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -1253,9 +1253,9 @@ const handleCopyThumbnail = async (url: string) => {
           <div class="flex-1 overflow-y-auto p-4 space-y-6">
             <!-- 作品中角色 -->
             <div>
-              <h4 class="text-white text-sm font-semibold mb-3">作品中角色 <span class="text-white/40 font-normal">({{ boundCharacters.length }})</span></h4>
+              <h4 class="text-text-primary text-sm font-semibold mb-3">作品中角色 <span class="text-text-tertiary font-normal">({{ boundCharacters.length }})</span></h4>
               <!-- 空状态提示 -->
-              <div v-if="boundCharacters.length === 0" class="flex items-center justify-center py-8 text-white/40 text-sm">
+              <div v-if="boundCharacters.length === 0" class="flex items-center justify-center py-8 text-text-tertiary text-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -1267,7 +1267,7 @@ const handleCopyThumbnail = async (url: string) => {
                 <div
                   v-for="boundChar in boundCharacters"
                   :key="boundChar.bindingId"
-                  class="group relative flex flex-col items-center cursor-pointer rounded-xl transition-all"
+                  class="group relative flex flex-col items-center cursor-pointer rounded transition-all"
                 >
                   <!-- 图片容器 -->
                   <div class="relative w-full aspect-square mb-2" @click="boundChar.fullCharacter && handleCharacterCardClick(boundChar.fullCharacter)">
@@ -1275,28 +1275,28 @@ const handleCopyThumbnail = async (url: string) => {
                       v-if="boundChar.thumbnailUrl"
                       :src="boundChar.thumbnailUrl"
                       :alt="boundChar.characterName"
-                      class="w-full h-full rounded-xl object-cover transition-transform group-hover:scale-105"
+                      class="w-full h-full rounded object-cover transition-transform group-hover:scale-105"
                     >
-                    <div v-else class="w-full h-full rounded-xl bg-white/10 flex items-center justify-center">
+                    <div v-else class="w-full h-full rounded bg-bg-hover flex items-center justify-center">
                       <svg class="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                       </svg>
                     </div>
                     <!-- 已在作品中标记 -->
-                    <div class="absolute top-2 right-2 w-3 h-3 bg-[#00FFCC] rounded-full border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
+                    <div class="absolute top-2 right-2 w-3 h-3 bg-gray-900 rounded border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
                     
                     <!-- 悬浯操作层（移除按钮） -->
-                    <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         class="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
                         :disabled="unbindingCharacterId === boundChar.bindingId"
                         @click.stop="handleUnbindCharacter(boundChar.bindingId, boundChar.characterName)"
                         title="移除角色"
                       >
-                        <svg v-if="unbindingCharacterId !== boundChar.bindingId" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-if="unbindingCharacterId !== boundChar.bindingId" class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        <svg v-else class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <svg v-else class="w-5 h-5 text-text-primary animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -1304,20 +1304,20 @@ const handleCopyThumbnail = async (url: string) => {
                     </div>
                   </div>
                   <!-- 角色名称 -->
-                  <span class="text-white/80 text-xs text-center truncate w-full px-1">{{ boundChar.characterName }}</span>
+                  <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ boundChar.characterName }}</span>
                 </div>
               </div>
             </div>
 
             <!-- 全部可用角色 -->
             <div>
-              <h4 class="text-white text-sm font-semibold mb-3">全部可用角色 <span class="text-white/40 font-normal">({{ unboundProjectCharacters.length }})</span></h4>
+              <h4 class="text-text-primary text-sm font-semibold mb-3">全部可用角色 <span class="text-text-tertiary font-normal">({{ unboundProjectCharacters.length }})</span></h4>
               <div class="grid grid-cols-4 gap-3">
                 <!-- 未绑定角色卡片 -->
                 <div
                   v-for="char in unboundProjectCharacters"
                   :key="char.id"
-                  class="group relative flex flex-col items-center cursor-pointer rounded-xl transition-all"
+                  class="group relative flex flex-col items-center cursor-pointer rounded transition-all"
                 >
                   <!-- 图片容器 -->
                   <div class="relative w-full aspect-square mb-2" @click="handleCharacterCardClick(char)">
@@ -1325,18 +1325,18 @@ const handleCopyThumbnail = async (url: string) => {
                       v-if="char.thumbnailUrl"
                       :src="char.thumbnailUrl"
                       :alt="(char as any).displayName || char.name"
-                      class="w-full h-full rounded-xl object-cover transition-transform group-hover:scale-105"
+                      class="w-full h-full rounded object-cover transition-transform group-hover:scale-105"
                     >
-                    <div v-else class="w-full h-full rounded-xl bg-white/10 flex items-center justify-center">
+                    <div v-else class="w-full h-full rounded bg-bg-hover flex items-center justify-center">
                       <svg class="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                       </svg>
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-[#00FFCC] text-black text-sm font-medium hover:bg-[#00FFCC]/80 transition-colors"
+                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
                         @click.stop="handleBindCharacter(char.id)"
                       >
                         + 使用角色
@@ -1355,20 +1355,20 @@ const handleCopyThumbnail = async (url: string) => {
                   </div>
                   
                   <!-- 角色名称 -->
-                  <span class="text-white/80 text-xs text-center truncate w-full px-1">{{ (char as any).displayName || char.name }}</span>
+                  <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ (char as any).displayName || char.name }}</span>
                 </div>
                 
                 <!-- 新建角色按钮 -->
                 <div
-                  class="flex flex-col items-center cursor-pointer rounded-xl transition-all hover:bg-white/5"
+                  class="flex flex-col items-center cursor-pointer rounded transition-all hover:bg-bg-subtle"
                   @click="handleCreateNewCharacter"
                 >
-                  <div class="relative w-full aspect-square mb-2 rounded-xl border-2 border-dashed border-white/30 bg-black/10 flex items-center justify-center hover:border-[#00FFCC]/50 transition-colors">
-                    <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="relative w-full aspect-square mb-2 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:border-gray-900/50 transition-colors">
+                    <svg class="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                   </div>
-                  <span class="text-white/60 text-xs text-center">创建</span>
+                  <span class="text-text-tertiary text-xs text-center">创建</span>
                 </div>
               </div>
             </div>
@@ -1386,18 +1386,18 @@ const handleCopyThumbnail = async (url: string) => {
     >
       <div
         v-if="showSceneSelectModal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
         @click.self="showSceneSelectModal = false"
       >
-        <div class="bg-[#1E2025] w-[800px] max-h-[70vh] rounded-2xl shadow-2xl flex flex-col">
+        <div class="bg-bg-elevated w-[800px] max-h-[70vh] rounded shadow-2xl flex flex-col pointer-events-auto">
           <!-- Header -->
-          <div class="flex items-center justify-between p-4 border-b border-white/10">
-            <h3 class="text-white text-base font-semibold">选择场景绑定到分镜 #{{ shot.shotNo }}</h3>
+          <div class="flex items-center justify-between p-4 border-b border-border-default">
+            <h3 class="text-text-primary text-base font-semibold">选择场景绑定到分镜 #{{ shot.shotNo }}</h3>
             <button
-              class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
               @click="showSceneSelectModal = false"
             >
-              <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -1407,9 +1407,9 @@ const handleCopyThumbnail = async (url: string) => {
           <div class="flex-1 overflow-y-auto p-4 space-y-6">
             <!-- 当前分镜场景 -->
             <div>
-              <h4 class="text-white text-sm font-semibold mb-3">当前分镜场景 <span class="text-white/40 font-normal">({{ shot.scene ? 1 : 0 }})</span></h4>
+              <h4 class="text-text-primary text-sm font-semibold mb-3">当前分镜场景 <span class="text-text-tertiary font-normal">({{ shot.scene ? 1 : 0 }})</span></h4>
               <!-- 空状态提示 -->
-              <div v-if="!shot.scene" class="flex items-center justify-center py-8 text-white/40 text-sm">
+              <div v-if="!shot.scene" class="flex items-center justify-center py-8 text-text-tertiary text-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -1418,7 +1418,7 @@ const handleCopyThumbnail = async (url: string) => {
               <!-- 已绑定场景 -->
               <div v-else class="grid grid-cols-4 gap-3">
                 <div
-                  class="group relative flex flex-col items-center cursor-pointer rounded-xl transition-all"
+                  class="group relative flex flex-col items-center cursor-pointer rounded transition-all"
                 >
                   <!-- 图片容器 -->
                   <div class="relative w-full aspect-square mb-2" @click="handleSceneCardClick(editorStore.scenes.find(s => s.id === shot.scene.sceneId))">
@@ -1426,26 +1426,26 @@ const handleCopyThumbnail = async (url: string) => {
                       v-if="shot.scene.thumbnailUrl"
                       :src="shot.scene.thumbnailUrl"
                       :alt="shot.scene.sceneName"
-                      class="w-full h-full rounded-xl object-cover transition-transform group-hover:scale-105"
+                      class="w-full h-full rounded object-cover transition-transform group-hover:scale-105"
                     >
-                    <div v-else class="w-full h-full rounded-xl bg-white/10 flex items-center justify-center">
+                    <div v-else class="w-full h-full rounded bg-bg-hover flex items-center justify-center">
                       <span class="text-3xl">🏞️</span>
                     </div>
                     <!-- 已在作品中标记 -->
-                    <div class="absolute top-2 right-2 w-3 h-3 bg-[#00FFCC] rounded-full border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
+                    <div class="absolute top-2 right-2 w-3 h-3 bg-gray-900 rounded border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
                     
                     <!-- 悬浮操作层（移除按钮） -->
-                    <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         class="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
                         :disabled="unbindingSceneId === shot.scene.bindingId"
                         @click.stop="handleUnbindScene(shot.scene.bindingId, shot.scene.sceneName)"
                         title="移除场景"
                       >
-                        <svg v-if="unbindingSceneId !== shot.scene.bindingId" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-if="unbindingSceneId !== shot.scene.bindingId" class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        <svg v-else class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <svg v-else class="w-5 h-5 text-text-primary animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -1453,20 +1453,20 @@ const handleCopyThumbnail = async (url: string) => {
                     </div>
                   </div>
                   <!-- 场景名称 -->
-                  <span class="text-white/80 text-xs text-center truncate w-full px-1">{{ shot.scene.sceneName }}</span>
+                  <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ shot.scene.sceneName }}</span>
                 </div>
               </div>
             </div>
 
             <!-- 全部可用场景 -->
             <div>
-              <h4 class="text-white text-sm font-semibold mb-3">全部可用场景 <span class="text-white/40 font-normal">({{ unboundProjectScenes.length }})</span></h4>
+              <h4 class="text-text-primary text-sm font-semibold mb-3">全部可用场景 <span class="text-text-tertiary font-normal">({{ unboundProjectScenes.length }})</span></h4>
               <div class="grid grid-cols-4 gap-3">
                 <!-- 未绑定场景卡片 -->
                 <div
                   v-for="scene in unboundProjectScenes"
                   :key="scene.id"
-                  class="group relative flex flex-col items-center cursor-pointer rounded-xl transition-all"
+                  class="group relative flex flex-col items-center cursor-pointer rounded transition-all"
                 >
                   <!-- 图片容器 -->
                   <div class="relative w-full aspect-square mb-2" @click="handleSceneCardClick(scene)">
@@ -1474,16 +1474,16 @@ const handleCopyThumbnail = async (url: string) => {
                       v-if="scene.thumbnailUrl"
                       :src="scene.thumbnailUrl"
                       :alt="scene.displayName || scene.name"
-                      class="w-full h-full rounded-xl object-cover transition-transform group-hover:scale-105"
+                      class="w-full h-full rounded object-cover transition-transform group-hover:scale-105"
                     >
-                    <div v-else class="w-full h-full rounded-xl bg-white/10 flex items-center justify-center">
+                    <div v-else class="w-full h-full rounded bg-bg-hover flex items-center justify-center">
                       <span class="text-3xl">🏞️</span>
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-[#00FFCC] text-black text-sm font-medium hover:bg-[#00FFCC]/80 transition-colors"
+                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
                         @click.stop="handleBindScene(scene.id)"
                       >
                         + 使用场景
@@ -1502,20 +1502,20 @@ const handleCopyThumbnail = async (url: string) => {
                   </div>
                   
                   <!-- 场景名称 -->
-                  <span class="text-white/80 text-xs text-center truncate w-full px-1">{{ scene.displayName || scene.name }}</span>
+                  <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ scene.displayName || scene.name }}</span>
                 </div>
                 
                 <!-- 新建场景按钮 -->
                 <div
-                  class="flex flex-col items-center cursor-pointer rounded-xl transition-all hover:bg-white/5"
+                  class="flex flex-col items-center cursor-pointer rounded transition-all hover:bg-bg-subtle"
                   @click="handleCreateNewScene"
                 >
-                  <div class="relative w-full aspect-square mb-2 rounded-xl border-2 border-dashed border-white/30 bg-black/10 flex items-center justify-center hover:border-[#00FFCC]/50 transition-colors">
-                    <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="relative w-full aspect-square mb-2 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:border-gray-900/50 transition-colors">
+                    <svg class="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                   </div>
-                  <span class="text-white/60 text-xs text-center">创建</span>
+                  <span class="text-text-tertiary text-xs text-center">创建</span>
                 </div>
               </div>
             </div>
@@ -1533,18 +1533,18 @@ const handleCopyThumbnail = async (url: string) => {
     >
       <div
         v-if="showPropSelectModal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
         @click.self="showPropSelectModal = false"
       >
-        <div class="bg-[#1E2025] w-[800px] max-h-[70vh] rounded-2xl shadow-2xl flex flex-col">
+        <div class="bg-bg-elevated w-[800px] max-h-[70vh] rounded shadow-2xl flex flex-col pointer-events-auto">
           <!-- Header -->
-          <div class="flex items-center justify-between p-4 border-b border-white/10">
-            <h3 class="text-white text-base font-semibold">选择道具绑定到分镜 #{{ shot.shotNo }}</h3>
+          <div class="flex items-center justify-between p-4 border-b border-border-default">
+            <h3 class="text-text-primary text-base font-semibold">选择道具绑定到分镜 #{{ shot.shotNo }}</h3>
             <button
-              class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
               @click="showPropSelectModal = false"
             >
-              <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -1554,8 +1554,8 @@ const handleCopyThumbnail = async (url: string) => {
           <div class="flex-1 overflow-y-auto p-4 space-y-6">
             <!-- 全部可用道具 -->
             <div>
-              <h4 class="text-white text-sm font-semibold mb-3">全部可用道具 <span class="text-white/40 font-normal">({{ unboundProjectProps.length }})</span></h4>
-              <div v-if="unboundProjectProps.length === 0" class="flex items-center justify-center py-8 text-white/40 text-sm">
+              <h4 class="text-text-primary text-sm font-semibold mb-3">全部可用道具 <span class="text-text-tertiary font-normal">({{ unboundProjectProps.length }})</span></h4>
+              <div v-if="unboundProjectProps.length === 0" class="flex items-center justify-center py-8 text-text-tertiary text-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -1566,25 +1566,25 @@ const handleCopyThumbnail = async (url: string) => {
                 <div
                   v-for="prop in unboundProjectProps"
                   :key="prop.id"
-                  class="group relative flex flex-col items-center cursor-pointer rounded-xl transition-all hover:bg-white/5"
+                  class="group relative flex flex-col items-center cursor-pointer rounded transition-all hover:bg-bg-subtle"
                 >
                   <div class="relative w-full aspect-square mb-2" @click="handlePropCardClick(prop)">
                     <img
                       v-if="prop.thumbnailUrl"
                       :src="prop.thumbnailUrl"
                       :alt="prop.displayName || prop.name"
-                      class="w-full h-full rounded-xl object-cover transition-transform group-hover:scale-105"
+                      class="w-full h-full rounded object-cover transition-transform group-hover:scale-105"
                     >
-                    <div v-else class="w-full h-full rounded-xl bg-white/10 flex items-center justify-center">
+                    <div v-else class="w-full h-full rounded bg-bg-hover flex items-center justify-center">
                       <svg class="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                       </svg>
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-[#00FFCC] text-black text-sm font-medium hover:bg-[#00FFCC]/80 transition-colors"
+                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
                         @click.stop="handleBindProp(prop.id)"
                       >
                         + 使用道具
@@ -1593,20 +1593,20 @@ const handleCopyThumbnail = async (url: string) => {
                   </div>
                   
                   <!-- 道具名称 -->
-                  <span class="text-white/80 text-xs text-center truncate w-full px-1">{{ prop.displayName || prop.name }}</span>
+                  <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ prop.displayName || prop.name }}</span>
                 </div>
                 
                 <!-- 新建道具按钮 -->
                 <div
-                  class="flex flex-col items-center cursor-pointer rounded-xl transition-all hover:bg-white/5"
+                  class="flex flex-col items-center cursor-pointer rounded transition-all hover:bg-bg-subtle"
                   @click="handleCreateNewProp"
                 >
-                  <div class="relative w-full aspect-square mb-2 rounded-xl border-2 border-dashed border-white/30 bg-black/10 flex items-center justify-center hover:border-[#00FFCC]/50 transition-colors">
-                    <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="relative w-full aspect-square mb-2 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:border-gray-900/50 transition-colors">
+                    <svg class="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                   </div>
-                  <span class="text-white/60 text-xs text-center">创建</span>
+                  <span class="text-text-tertiary text-xs text-center">创建</span>
                 </div>
               </div>
             </div>
@@ -1624,17 +1624,17 @@ const handleCopyThumbnail = async (url: string) => {
     >
       <div
         v-if="isEditing"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
         @click.self="saveScript"
       >
-        <div class="bg-[#1E2025] w-[600px] rounded-2xl p-5 shadow-2xl">
+        <div class="bg-bg-elevated w-[600px] rounded p-5 shadow-2xl pointer-events-auto">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white text-base font-semibold">编辑分镜 #{{ shot.shotNo }}</h3>
+            <h3 class="text-text-primary text-base font-semibold">编辑分镜 #{{ shot.shotNo }}</h3>
             <button
-              class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              class="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
               @click="cancelEditing"
             >
-              <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -1642,7 +1642,7 @@ const handleCopyThumbnail = async (url: string) => {
           
           <textarea
             v-model="editingText"
-            class="w-full h-64 px-4 py-3 bg-[#0D0E12] border border-white/10 rounded-xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50 whitespace-pre-wrap leading-relaxed"
+            class="w-full h-64 px-4 py-3 bg-bg-base border border-border-default rounded text-text-primary text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50 whitespace-pre-wrap leading-relaxed"
             :maxlength="maxLength"
             autofocus
             @keydown.enter.ctrl="saveScript"
@@ -1650,16 +1650,16 @@ const handleCopyThumbnail = async (url: string) => {
           ></textarea>
           
           <div class="flex items-center justify-between mt-3">
-            <span class="text-white/40 text-xs">{{ editingText.length }} / {{ maxLength }}</span>
+            <span class="text-text-tertiary text-xs">{{ editingText.length }} / {{ maxLength }}</span>
             <div class="flex items-center gap-2">
               <button
-                class="px-4 py-1.5 bg-white/10 text-white/60 text-sm rounded-full hover:bg-white/20 transition-colors"
+                class="px-4 py-1.5 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
                 @click="cancelEditing"
               >
                 取消
               </button>
               <button
-                class="px-4 py-1.5 bg-[#00FFCC] text-black font-semibold text-sm rounded-full hover:bg-[#21FFF3] transition-colors"
+                class="px-4 py-1.5 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
                 @click="saveScript"
               >
                 保存

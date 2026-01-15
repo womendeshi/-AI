@@ -52,7 +52,7 @@ const navItems = computed<NavItem[]>(() => [
     </svg>`,
   },
   {
-    name: 'AI 工具箱',
+    name: '工具箱',
     path: '/toolbox',
     icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -140,95 +140,57 @@ const handleSaveProfile = async () => {
 </script>
 
 <template>
-  <aside class="w-72 flex flex-col relative overflow-hidden">
-    <!-- 背景渐变和装饰 -->
-    <div class="absolute inset-0 bg-[#0a0b0f]"></div>
-    <div class="absolute inset-0 bg-gradient-to-b from-indigo-950/30 via-transparent to-transparent"></div>
-    <div class="absolute top-0 right-0 w-40 h-40 bg-violet-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-20 left-0 w-32 h-32 bg-fuchsia-500/5 rounded-full blur-3xl"></div>
-    
-    <!-- 右侧边框 -->
-    <div class="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
-
+  <aside class="w-60 flex flex-col bg-bg-sidebar border-r border-border-default">
     <!-- Logo 区域 -->
-    <div class="relative px-6 py-8">
-      <div class="flex items-center gap-4">
+    <div class="px-5 py-5 border-b border-border-subtle">
+      <div class="flex items-center gap-3">
         <!-- Logo 图标 -->
-        <div class="relative">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center shadow-xl shadow-violet-500/25">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <!-- 光晕效果 -->
-          <div class="absolute -inset-1 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl blur opacity-30"></div>
+        <div class="w-9 h-9 rounded-lg overflow-hidden">
+          <img src="@/assets/images/9724166f3c32d4dac68c7615c5e5de2f.jpg" alt="Logo" class="w-full h-full object-cover" />
         </div>
         <!-- 标题 -->
         <div>
-          <h1 class="text-xl font-bold text-white tracking-tight">圆梦动画</h1>
-          <p class="text-xs text-white/40 mt-0.5 tracking-wide">AI Creative Studio</p>
+          <h1 class="text-base font-semibold text-text-primary">圆梦动画</h1>
+          <p class="text-xs text-text-tertiary mt-0.5">AI Creative Studio</p>
         </div>
       </div>
     </div>
 
-    <!-- 分隔线 -->
-    <div class="relative mx-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+    <!-- 分组标签 -->
+    <div class="px-5 pt-4 pb-2">
+      <span class="text-xs text-text-tertiary font-medium">创作</span>
+    </div>
 
     <!-- 导航区域 -->
-    <nav class="relative flex-1 px-4 py-6">
+    <nav class="flex-1 px-3 pb-4 overflow-y-auto">
       <div class="space-y-1">
         <button
           v-for="(item, index) in navItems"
           :key="item.path"
           :class="[
-            'w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 text-sm font-medium group relative overflow-hidden',
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-sm font-medium group',
             isActive(item.path)
-              ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
+              ? 'bg-[#8B5CF6] text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+              : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
           ]"
           @click="handleNavigate(item)"
         >
-          <!-- 活动状态背景 -->
-          <div 
-            v-if="isActive(item.path)"
-            class="absolute inset-0 bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-transparent rounded-2xl"
-          ></div>
-          <div 
-            v-if="isActive(item.path)"
-            class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-violet-400 to-fuchsia-500 rounded-r-full"
-          ></div>
-          
-          <!-- Hover 效果 -->
-          <div 
-            v-if="!isActive(item.path)"
-            class="absolute inset-0 bg-white/0 group-hover:bg-white/5 rounded-2xl transition-colors duration-300"
-          ></div>
-
           <!-- 图标 -->
           <div 
             :class="[
-              'relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300',
-              isActive(item.path) 
-                ? 'bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20' 
-                : 'bg-white/5 group-hover:bg-white/10'
-            ]"
-          >
-            <span 
-              :class="[
-                'transition-colors duration-300',
-                isActive(item.path) ? 'text-violet-300' : 'text-white/40 group-hover:text-white/70'
-              ]" 
-              v-html="item.icon" 
-            />
-          </div>
+              'w-5 h-5 flex items-center justify-center',
+              isActive(item.path) ? 'text-white' : 'text-text-tertiary group-hover:text-text-secondary'
+            ]" 
+            v-html="item.icon" 
+          />
 
           <!-- 文字 -->
-          <span class="relative flex-1 text-left">{{ item.name }}</span>
+          <span class="flex-1 text-left">{{ item.name }}</span>
 
           <!-- 即将上线标签 -->
           <span
             v-if="item.comingSoon"
-            class="relative px-2.5 py-1 rounded-full bg-white/5 text-white/30 text-xs border border-white/10"
+            class="px-1.5 py-0.5 rounded text-xs bg-bg-subtle text-text-tertiary"
           >
             Soon
           </span>
@@ -236,7 +198,7 @@ const handleSaveProfile = async () => {
           <!-- 徽章 -->
           <span
             v-if="item.badge"
-            class="relative px-2.5 py-1 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25"
+            class="px-1.5 py-0.5 rounded bg-[#8B5CF6] text-white text-xs font-semibold"
           >
             {{ item.badge }}
           </span>
@@ -245,42 +207,39 @@ const handleSaveProfile = async () => {
     </nav>
 
     <!-- 底部用户区域 -->
-    <div class="relative px-4 pb-6">
-      <!-- 分隔线 -->
-      <div class="mx-2 mb-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-      
+    <div class="px-3 pb-4 border-t border-border-subtle pt-3">
       <!-- 用户卡片 -->
       <div
-        class="group p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 transition-all duration-300 cursor-pointer"
+        class="group p-2.5 rounded-lg bg-bg-elevated hover:bg-bg-hover border border-border-default hover:border-border-strong transition-all duration-150 cursor-pointer"
         @click="openProfileModal"
       >
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2.5">
           <!-- 头像 -->
           <div class="relative">
-            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center overflow-hidden ring-2 ring-white/10 group-hover:ring-white/20 transition-all">
+            <div class="w-9 h-9 rounded-lg bg-bg-hover flex items-center justify-center overflow-hidden">
               <img
                 v-if="userStore.userAvatar"
                 :src="userStore.userAvatar"
                 class="w-full h-full object-cover"
                 alt="avatar"
               />
-              <span v-else class="text-base font-bold text-white">
+              <span v-else class="text-sm font-semibold text-text-primary">
                 {{ userStore.userName.charAt(0) }}
               </span>
             </div>
             <!-- 在线状态 -->
-            <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#0a0b0f]"></div>
+            <div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-bg-sidebar"></div>
           </div>
           
           <!-- 用户信息 -->
           <div class="flex-1 min-w-0">
-            <p class="text-white text-sm font-semibold truncate">{{ userStore.userName }}</p>
-            <p class="text-white/30 text-xs mt-0.5">点击编辑个人资料</p>
+            <p class="text-sm font-medium text-text-primary truncate">{{ userStore.userName }}</p>
+            <p class="text-xs text-text-tertiary">点击编辑</p>
           </div>
           
           <!-- 箭头 -->
-          <div class="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-white/10 flex items-center justify-center transition-all">
-            <svg class="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-5 h-5 flex items-center justify-center">
+            <svg class="w-4 h-4 text-text-tertiary group-hover:text-text-secondary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </div>
@@ -289,10 +248,10 @@ const handleSaveProfile = async () => {
 
       <!-- 退出按钮 -->
       <button
-        class="w-full mt-3 px-4 py-2.5 rounded-xl text-white/30 hover:text-white/50 hover:bg-white/5 transition-all duration-300 text-sm flex items-center justify-center gap-2"
+        class="w-full mt-2 px-3 py-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-all duration-150 text-sm flex items-center justify-center gap-2"
         @click="handleLogout"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
         退出登录
@@ -304,21 +263,21 @@ const handleSaveProfile = async () => {
       v-model:show="showProfileModal"
       preset="card"
       title="编辑个人资料"
-      :style="{ width: '400px' }"
+      :style="{ width: '400px', background: '#232323', borderColor: '#333333' }"
       :bordered="false"
       class="profile-modal"
     >
       <div class="space-y-4">
         <!-- 头像上传 -->
         <div class="flex flex-col items-center gap-3">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-mochi-cyan to-mochi-blue flex items-center justify-center overflow-hidden">
+          <div class="w-20 h-20 rounded-lg bg-bg-hover flex items-center justify-center overflow-hidden">
             <img
               v-if="editAvatarUrl"
               :src="editAvatarUrl"
               class="w-full h-full object-cover"
               alt="avatar preview"
             />
-            <span v-else class="text-2xl font-semibold text-mochi-bg">
+            <span v-else class="text-2xl font-semibold text-text-primary">
               {{ editNickname.charAt(0) || '?' }}
             </span>
           </div>
@@ -331,12 +290,12 @@ const handleSaveProfile = async () => {
               {{ uploading ? '上传中...' : '上传头像' }}
             </NButton>
           </NUpload>
-          <p class="text-white/40 text-xs">支持 JPG、PNG 格式，最大 5MB</p>
+          <p class="text-text-tertiary text-xs">支持 JPG、PNG 格式，最大 5MB</p>
         </div>
 
         <!-- 昵称输入 -->
         <div>
-          <label class="block text-white/60 text-sm mb-2">昵称</label>
+          <label class="block text-text-secondary text-sm mb-2">昵称</label>
           <NInput
             v-model:value="editNickname"
             placeholder="请输入昵称（2-20个字符）"
@@ -346,7 +305,7 @@ const handleSaveProfile = async () => {
         </div>
 
         <!-- 错误提示 -->
-        <div v-if="saveError" class="text-red-400 text-sm text-center">
+        <div v-if="saveError" class="text-error text-sm text-center">
           {{ saveError }}
         </div>
 
@@ -374,22 +333,22 @@ const handleSaveProfile = async () => {
     <NModal
       v-model:show="showComingSoonModal"
       preset="card"
-      :style="{ width: '360px' }"
+      :style="{ width: '360px', background: '#232323', borderColor: '#333333' }"
       :bordered="false"
       class="coming-soon-modal"
     >
       <div class="flex flex-col items-center py-6">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center mb-4">
-          <svg class="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <div class="w-16 h-16 rounded-lg bg-bg-hover flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-[#8B5CF6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 class="text-white text-lg font-semibold mb-2">敬请期待</h3>
-        <p class="text-white/50 text-sm text-center leading-relaxed">
+        <h3 class="text-text-primary text-lg font-semibold mb-2">敬请期待</h3>
+        <p class="text-text-secondary text-sm text-center leading-relaxed">
           该功能正在加紧开发中<br/>即将上线，敬请期待！
         </p>
         <button
-          class="mt-6 px-8 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-medium text-sm hover:opacity-90 transition-opacity"
+          class="mt-6 px-8 py-2.5 rounded-lg bg-[#8B5CF6] text-white font-medium text-sm hover:bg-[#A78BFA] transition-colors"
           @click="showComingSoonModal = false"
         >
           我知道了

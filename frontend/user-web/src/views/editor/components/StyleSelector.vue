@@ -88,11 +88,11 @@ onMounted(() => {
   <div class="relative style-selector-wrapper">
     <!-- Selector Button -->
     <button
-      class="flex items-center gap-2 text-sm text-white/60 border border-white/20 rounded-full px-3 py-1.5 hover:bg-white/5 transition-colors"
+      class="flex items-center gap-2 text-sm text-text-tertiary border border-border-default rounded px-3 py-1.5 hover:bg-bg-subtle transition-colors"
       @click.stop="toggleDropdown"
     >
       <span>风格</span>
-      <span class="font-semibold text-white max-w-[120px] truncate">{{ selectedStyleName }}</span>
+      <span class="font-semibold text-text-primary max-w-[120px] truncate">{{ selectedStyleName }}</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -120,13 +120,13 @@ onMounted(() => {
     >
       <div
         v-if="isOpen"
-        class="absolute top-full left-0 mt-2 w-[280px] bg-[#1E2025] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+        class="absolute top-full left-0 mt-2 w-[280px] bg-bg-elevated border border-border-default rounded shadow-2xl overflow-hidden z-50"
         @click.stop
       >
         <!-- Loading State -->
         <div v-if="loading" class="p-6 text-center">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00FFCC] mx-auto mb-2"></div>
-          <p class="text-white/60 text-sm">加载中...</p>
+          <div class="animate-spin rounded h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+          <p class="text-text-tertiary text-sm">加载中...</p>
         </div>
 
         <!-- Style List -->
@@ -134,16 +134,16 @@ onMounted(() => {
           <button
             v-for="style in stylePresets"
             :key="style.id"
-            class="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-colors text-left"
+            class="w-full flex items-center gap-3 p-2.5 rounded hover:bg-bg-subtle transition-colors text-left"
             :class="[
               style.code === currentProject?.styleCode
-                ? 'bg-white/10 ring-1 ring-[#00FFCC]'
+                ? 'bg-bg-hover ring-1 ring-[#00FFCC]'
                 : ''
             ]"
             @click="selectStyle(style)"
           >
             <!-- Thumbnail -->
-            <div class="w-12 h-12 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden">
+            <div class="w-12 h-12 rounded-lg bg-bg-subtle flex-shrink-0 overflow-hidden">
               <img
                 v-if="style.thumbnailUrl"
                 :src="style.thumbnailUrl"
@@ -159,8 +159,8 @@ onMounted(() => {
 
             <!-- Info -->
             <div class="flex-1 min-w-0">
-              <div class="font-medium text-white text-sm truncate">{{ style.name }}</div>
-              <div class="text-xs text-white/40 truncate">{{ style.code }}</div>
+              <div class="font-medium text-text-primary text-sm truncate">{{ style.name }}</div>
+              <div class="text-xs text-text-tertiary truncate">{{ style.code }}</div>
             </div>
 
             <!-- Selected Indicator -->
@@ -168,7 +168,7 @@ onMounted(() => {
               v-if="style.code === currentProject?.styleCode"
               class="flex-shrink-0"
             >
-              <svg class="w-5 h-5 text-[#00FFCC]" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-5 h-5 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
             </div>
@@ -177,7 +177,7 @@ onMounted(() => {
 
         <!-- Empty State -->
         <div v-else class="p-6 text-center">
-          <p class="text-white/60 text-sm">暂无风格预设</p>
+          <p class="text-text-tertiary text-sm">暂无风格预设</p>
         </div>
       </div>
     </Transition>

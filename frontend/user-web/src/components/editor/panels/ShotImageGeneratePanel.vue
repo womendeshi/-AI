@@ -479,25 +479,25 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#2B2D31]">
+  <div class="flex flex-col h-full bg-bg-elevated">
     <!-- 顶部导航 -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
       <button
         @click="$emit('close')"
-        class="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+        class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
         <span class="text-sm font-medium">返回</span>
       </button>
-      <h3 class="text-white text-base font-medium">分镜 #{{ shotNo }}</h3>
+      <h3 class="text-text-primary text-base font-medium">分镜 #{{ shotNo }}</h3>
     </div>
 
     <!-- 主内容区 -->
     <div class="flex-1 overflow-y-auto px-6 py-6">
       <!-- 大图预览区 -->
-      <div class="group relative w-full aspect-video rounded-2xl bg-black/20 mb-4 overflow-hidden">
+      <div class="group relative w-full aspect-video rounded bg-bg-subtle mb-4 overflow-hidden">
         <template v-if="generatedImageUrl">
           <img
             :src="generatedImageUrl"
@@ -509,30 +509,30 @@ onMounted(() => {
             <!-- 下载按钮 -->
             <button
               @click="handleDownloadShotImage"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="下载图片"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             </button>
             <!-- 复制按钮 -->
             <button
               @click="handleCopyShotImage"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="复制图片"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </button>
             <!-- 删除按钮 -->
             <button
               @click="handleClearPreview"
-              class="p-2 rounded-lg bg-black/60 hover:bg-black/80 transition-colors"
+              class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
               title="清除预览图"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
             </button>
@@ -541,7 +541,7 @@ onMounted(() => {
         <template v-else>
           <div class="w-full h-full flex items-center justify-center">
             <div class="text-center">
-              <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
+              <div class="w-16 h-16 mx-auto mb-3 rounded bg-bg-subtle flex items-center justify-center">
                 <svg class="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
@@ -553,7 +553,7 @@ onMounted(() => {
         <!-- 本地图片按钮 -->
         <button
           @click="triggerLocalImageInput"
-          class="absolute bottom-3 right-3 px-4 py-2 bg-black/60 backdrop-blur-sm rounded-2xl text-white/90 text-sm font-medium hover:bg-black/70 transition-colors"
+          class="absolute bottom-3 right-3 px-4 py-2 bg-gray-800 rounded text-white text-sm font-medium hover:bg-gray-600 transition-colors"
         >
           本地图片
         </button>
@@ -571,16 +571,16 @@ onMounted(() => {
         <!-- 上传AI参考图 -->
         <div
           @click="triggerReferenceImageInput"
-          class="w-[120px] h-[120px] flex-shrink-0 rounded-2xl border-2 border-dashed border-white/20 bg-black/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/30 transition-all"
+          class="w-[120px] h-[120px] flex-shrink-0 rounded border-2 border-dashed border-border-default bg-bg-subtle flex flex-col items-center justify-center cursor-pointer hover:bg-bg-subtle hover:border-border-default transition-all"
         >
           <template v-if="!referenceImageUrl">
-            <svg class="w-10 h-10 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-10 h-10 text-text-tertiary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
-            <p class="text-white/40 text-xs text-center px-2">上传AI参考图</p>
+            <p class="text-text-tertiary text-xs text-center px-2">上传AI参考图</p>
           </template>
           <template v-else>
-            <img :src="referenceImageUrl" alt="参考图" class="w-full h-full object-cover rounded-2xl">
+            <img :src="referenceImageUrl" alt="参考图" class="w-full h-full object-cover rounded">
           </template>
         </div>
         <input
@@ -595,26 +595,26 @@ onMounted(() => {
         <textarea
           v-model="scriptDescription"
           placeholder="输入自定义内容（必填）"
-          class="flex-1 h-[120px] px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#00FFCC]/50 resize-none text-sm"
+          class="flex-1 h-[120px] px-4 py-3 bg-bg-subtle border border-border-default rounded text-text-primary placeholder-text-tertiary focus:outline-none focus:border-gray-900/50 resize-none text-sm"
         ></textarea>
       </div>
 
       <!-- 底部控制栏 -->
       <div class="flex items-center justify-between mb-8">
         <!-- 数量选择器 -->
-        <div class="flex items-center gap-0 bg-white/10 rounded-2xl p-1">
+        <div class="flex items-center gap-0 bg-bg-hover rounded p-1">
           <button
             @click="decreaseQuantity"
-            class="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
             </svg>
           </button>
-          <div class="w-12 text-center text-white font-medium">{{ quantity }}</div>
+          <div class="w-12 text-center text-text-primary font-medium">{{ quantity }}</div>
           <button
             @click="increaseQuantity"
-            class="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -625,9 +625,9 @@ onMounted(() => {
         <!-- 比例选择 -->
         <select
           v-model="aspectRatio"
-          class="px-4 py-2.5 bg-white/10 border border-white/10 rounded-2xl text-white text-sm focus:outline-none focus:border-[#00FFCC]/50 cursor-pointer"
+          class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
         >
-          <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-[#2B2D31]">
+          <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
             {{ option.label }}
           </option>
         </select>
@@ -637,10 +637,10 @@ onMounted(() => {
           @click="handleAIGenerate"
           :disabled="isGenerating || !scriptDescription.trim()"
           :class="[
-            'px-10 py-3 rounded-2xl font-semibold text-sm transition-opacity flex items-center gap-2',
+            'px-10 py-3 rounded font-semibold text-sm transition-opacity flex items-center gap-2',
             isGenerating || !scriptDescription.trim()
               ? 'bg-gray-500 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-[#00FFCC] to-[#00CC99] text-[#1E2025] hover:opacity-90'
+              : 'bg-gray-800 text-white hover:opacity-90'
           ]"
         >
           <template v-if="isGenerating">
@@ -657,11 +657,11 @@ onMounted(() => {
       </div>
 
       <!-- 历史记录 -->
-      <div class="border-t border-white/10 pt-6">
-        <h4 class="text-white text-sm font-medium mb-4">生成历史</h4>
+      <div class="border-t border-border-default pt-6">
+        <h4 class="text-text-primary text-sm font-medium mb-4">生成历史</h4>
 
         <div v-if="generationHistory.length === 0" class="text-center py-8">
-          <p class="text-white/40 text-sm">暂无生成记录</p>
+          <p class="text-text-tertiary text-sm">暂无生成记录</p>
         </div>
 
         <div v-else>
@@ -670,7 +670,7 @@ onMounted(() => {
               v-for="item in generationHistory"
               :key="item.id"
               :class="[
-                'group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all',
+                'group relative aspect-square rounded overflow-hidden cursor-pointer transition-all',
                 item.isSelected
                   ? 'ring-2 ring-[#00FFCC]'
                   : 'hover:ring-2 hover:ring-[#00FFCC]/50'
@@ -681,7 +681,7 @@ onMounted(() => {
               <!-- 选中标记 -->
               <div
                 v-if="item.isSelected"
-                class="absolute top-1 right-1 w-6 h-6 bg-[#00FFCC] rounded-full flex items-center justify-center pointer-events-none"
+                class="absolute top-1 right-1 w-6 h-6 bg-gray-900 rounded flex items-center justify-center pointer-events-none"
               >
                 <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -691,17 +691,17 @@ onMounted(() => {
               <!-- 删除按钮（悬浮显示） -->
               <button
                 @click.stop="handleDeleteHistory(item.id)"
-                class="absolute top-1 left-1 w-6 h-6 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 z-10"
+                class="absolute top-1 left-1 w-6 h-6 rounded bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 z-10"
                 title="删除历史记录"
               >
-                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
               
               <!-- 过期时间标签 -->
-              <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-1 py-0.5 pointer-events-none">
-                <p class="text-white/80 text-[10px] text-center truncate">
+              <div class="absolute bottom-0 left-0 right-0 bg-gray-800 px-1 py-0.5 pointer-events-none">
+                <p class="text-text-secondary text-[10px] text-center truncate">
                   {{ item.timestamp }}
                 </p>
               </div>

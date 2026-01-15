@@ -20,13 +20,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0D0E12] text-white p-6">
+  <div class="min-h-screen bg-bg-base text-text-primary p-6">
     <!-- Page Header -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-[#00FFFF] via-[#00CCFF] to-[#6666FF] bg-clip-text text-transparent">
+      <h1 class="text-2xl font-bold text-text-primary ">
         我的钱包
       </h1>
-      <p class="text-white/60 text-sm mt-1">
+      <p class="text-text-tertiary text-sm mt-1">
         查看积分余额和消费记录
       </p>
     </div>

@@ -92,20 +92,20 @@ const handleClose = () => {
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
     @click.self="handleClose"
   >
     <div
-      class="bg-[#1E2025] border border-white/10 rounded-2xl w-[600px] max-h-[80vh] flex flex-col shadow-2xl"
+      class="bg-bg-elevated border border-border-default rounded w-[600px] max-h-[80vh] flex flex-col shadow-2xl pointer-events-auto"
       @click.stop
     >
       <!-- Modal Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <h2 class="text-lg font-bold text-white">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
+        <h2 class="text-lg font-bold text-text-primary">
           {{ isEditMode ? '编辑场景' : '创建场景' }}
         </h2>
         <button
-          class="p-2 rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors"
           :disabled="submitting"
           @click="handleClose"
         >
@@ -120,15 +120,15 @@ const handleClose = () => {
         <div class="space-y-4">
           <!-- Name Input -->
           <div>
-            <label class="text-xs font-bold text-white/60 mb-2 block">
+            <label class="text-xs font-bold text-text-secondary mb-2 block">
               场景名称 <span class="text-red-400">*</span>
             </label>
             <input
               v-model="formData.name"
               type="text"
               placeholder="请输入场景名称"
-              class="w-full px-4 py-3 bg-white/5 border rounded-2xl text-white placeholder-white/40 focus:outline-none transition-colors"
-              :class="nameError ? 'border-red-400/50' : 'border-white/10 focus:border-[#00FFCC]/50'"
+              class="w-full px-4 py-3 bg-bg-subtle border rounded text-text-primary placeholder-text-tertiary focus:outline-none transition-colors"
+              :class="nameError ? 'border-red-400/50' : 'border-border-default focus:border-gray-900/50'"
               :disabled="submitting"
               maxlength="100"
             >
@@ -137,10 +137,10 @@ const handleClose = () => {
 
           <!-- Category Select -->
           <div>
-            <label class="text-xs font-bold text-white/60 mb-2 block">分类</label>
+            <label class="text-xs font-bold text-text-secondary mb-2 block">分类</label>
             <select
               v-model="formData.categoryId"
-              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00FFCC]/50 transition-colors"
+              class="w-full px-4 py-3 bg-bg-subtle border border-border-default rounded text-text-primary focus:outline-none focus:border-gray-900/50 transition-colors"
               :disabled="submitting"
             >
               <option :value="null">无分类</option>
@@ -156,19 +156,19 @@ const handleClose = () => {
 
           <!-- Description Textarea -->
           <div>
-            <label class="text-xs font-bold text-white/60 mb-2 block">描述 / 提示词</label>
+            <label class="text-xs font-bold text-text-secondary mb-2 block">描述 / 提示词</label>
             <textarea
               v-model="formData.description"
               placeholder="请输入场景描述或AI生成提示词..."
               rows="8"
-              class="w-full px-4 py-3 bg-white/5 border rounded-2xl text-white placeholder-white/40 focus:outline-none transition-colors resize-none"
-              :class="descriptionError ? 'border-red-400/50' : 'border-white/10 focus:border-[#00FFCC]/50'"
+              class="w-full px-4 py-3 bg-bg-subtle border rounded text-text-primary placeholder-text-tertiary focus:outline-none transition-colors resize-none"
+              :class="descriptionError ? 'border-red-400/50' : 'border-border-default focus:border-gray-900/50'"
               :disabled="submitting"
               maxlength="2000"
             ></textarea>
             <div class="flex items-center justify-between mt-1">
               <p v-if="descriptionError" class="text-red-400 text-xs">{{ descriptionError }}</p>
-              <p class="text-white/40 text-xs ml-auto">
+              <p class="text-text-tertiary text-xs ml-auto">
                 {{ formData.description.length }} / 2000
               </p>
             </div>
@@ -177,10 +177,10 @@ const handleClose = () => {
       </form>
 
       <!-- Modal Footer -->
-      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-default">
         <button
           type="button"
-          class="px-4 py-2 rounded-2xl border border-white/20 text-white/80 hover:bg-white/5 transition-colors text-sm"
+          class="px-4 py-2 rounded border border-border-default text-text-secondary hover:bg-bg-subtle transition-colors text-sm"
           :disabled="submitting"
           @click="handleClose"
         >
@@ -188,7 +188,7 @@ const handleClose = () => {
         </button>
         <button
           type="submit"
-          class="px-4 py-2 rounded-2xl bg-[#00FFCC] text-black font-medium hover:bg-[#00FFCC]/80 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!isValid || submitting"
           @click="handleSubmit"
         >

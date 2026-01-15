@@ -107,10 +107,10 @@ const triggerFileSelect = () => {
 <template>
   <div
     :class="[
-      'relative border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer',
+      'relative border-2 border-dashed rounded p-8 transition-all cursor-pointer',
       isDragging
-        ? 'border-mochi-cyan bg-mochi-cyan/10'
-        : 'border-white/20 bg-white/5 hover:border-mochi-cyan/50 hover:bg-white/10',
+        ? 'border-gray-900 bg-bg-subtle'
+        : 'border-border-default bg-bg-subtle hover:border-gray-900/50 hover:bg-bg-hover',
       disabled && 'opacity-50 cursor-not-allowed'
     ]"
     @dragover="handleDragOver"
@@ -130,17 +130,17 @@ const triggerFileSelect = () => {
 
     <div class="flex flex-col items-center gap-3 text-center">
       <!-- Upload icon -->
-      <div class="w-12 h-12 rounded-full bg-mochi-cyan/20 flex items-center justify-center">
-        <svg class="w-6 h-6 text-mochi-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="w-12 h-12 rounded bg-bg-subtle flex items-center justify-center">
+        <svg class="w-6 h-6 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
       </div>
 
       <div>
-        <p class="text-white/80 text-sm mb-1">
-          <span class="text-mochi-cyan">点击上传</span> 或拖拽{{ acceptText }}到此处
+        <p class="text-text-secondary text-sm mb-1">
+          <span class="text-text-primary">点击上传</span> 或拖拽{{ acceptText }}到此处
         </p>
-        <p class="text-white/40 text-xs">
+        <p class="text-text-tertiary text-xs">
           支持格式：{{ accept }} | 最大 {{ maxSize }}MB
         </p>
       </div>

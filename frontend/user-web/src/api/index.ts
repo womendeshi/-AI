@@ -11,6 +11,32 @@ const api: AxiosInstance = axios.create({
   timeout: API_CONFIG.timeout,
 })
 
+// 将技术性错误转换为用户友好的提示
+const friendlyErrorMessage = (message: string): string => {
+  // 网络/IO错误
+  if (message.includes('I/O error') || message.includes('GOAWAY') || message.includes('Connection refused')) {
+    return 'AI服务暂时不可用，请稍后重试'
+  }
+  // 超时错误
+  if (message.includes('timeout') || message.includes('Timeout')) {
+    return '请求超时，请稍后重试'
+  }
+  // API调用失败
+  if (message.includes('调用失败') && message.length > 50) {
+    // 截取前面的描述部分
+    const colonIndex = message.indexOf(':')
+    if (colonIndex > 0 && colonIndex < 30) {
+      return message.substring(0, colonIndex) + '，请稍后重试'
+    }
+    return '服务调用失败，请稍后重试'
+  }
+  // 网络错误
+  if (message.includes('Network Error')) {
+    return '网络连接失败，请检查网络'
+  }
+  return message
+}
+
 // Request interceptor - Add JWT token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -34,11 +60,12 @@ api.interceptors.response.use(
       return data as any // Extract data from Result wrapper
     }
 
-    // Business error
+    // Business error - 转换为友好提示
+    const friendlyMsg = friendlyErrorMessage(message || '操作失败')
     console.error('[API Error]', message)
     // @ts-expect-error window.$message is provided by Naive UI
-    window.$message?.error(message || '操作失败')
-    return Promise.reject(new Error(message))
+    window.$message?.error(friendlyMsg)
+    return Promise.reject(new Error(friendlyMsg))
   },
   (error: AxiosError) => {
     // HTTP error
@@ -49,9 +76,10 @@ api.interceptors.response.use(
       router.push('/login')
     } else {
       const message = error.message || '网络错误'
+      const friendlyMsg = friendlyErrorMessage(message)
       console.error('[Network Error]', message)
       // @ts-expect-error window.$message is provided by Naive UI
-      window.$message?.error(message)
+      window.$message?.error(friendlyMsg)
     }
     return Promise.reject(error)
   }

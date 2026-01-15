@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
-import { NConfigProvider, NMessageProvider, darkTheme, useMessage } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, useMessage } from 'naive-ui'
 import MainLayout from '@/components/layout/MainLayout.vue'
 
 const route = useRoute()
@@ -14,7 +14,7 @@ function setupMessage() {
 </script>
 
 <template>
-  <NConfigProvider :theme="darkTheme">
+  <NConfigProvider>
     <NMessageProvider>
       <MessageApiSetup />
       <MainLayout v-if="layoutType === 'main'">

@@ -99,25 +99,25 @@ const handleConfirmVideoGenerate = async () => {
   >
     <div
       v-if="editorStore.hasSelection"
-      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-6 py-4 bg-[#1E2025] border border-white/20 rounded-2xl shadow-2xl backdrop-blur-xl"
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-6 py-4 bg-bg-elevated border border-border-default rounded shadow-2xl "
     >
       <div class="flex items-center gap-4">
         <!-- 选中数量 -->
-        <div class="flex items-center gap-2 px-4 py-2 bg-[#00FFCC]/10 border border-[#00FFCC]/30 rounded-full">
-          <svg class="w-4 h-4 text-[#00FFCC]" fill="currentColor" viewBox="0 0 20 20">
+        <div class="flex items-center gap-2 px-4 py-2 bg-bg-subtle border border-border-default rounded">
+          <svg class="w-4 h-4 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
           </svg>
-          <span class="text-[#00FFCC] text-sm font-semibold">
+          <span class="text-text-primary text-sm font-semibold">
             已选中 {{ editorStore.selectedShotIds.size }} 条
           </span>
         </div>
 
         <!-- 分隔线 -->
-        <div class="w-px h-6 bg-white/10"></div>
+        <div class="w-px h-6 bg-bg-hover"></div>
 
         <!-- 全选按钮 -->
         <button
-          class="px-4 py-2 text-sm text-white/80 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex items-center gap-2"
+          class="px-4 py-2 text-sm text-text-secondary bg-bg-subtle border border-border-default rounded hover:bg-bg-hover transition-colors flex items-center gap-2"
           @click="handleSelectAll"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -128,7 +128,7 @@ const handleConfirmVideoGenerate = async () => {
 
         <!-- 反选按钮 -->
         <button
-          class="px-4 py-2 text-sm text-white/80 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex items-center gap-2"
+          class="px-4 py-2 text-sm text-text-secondary bg-bg-subtle border border-border-default rounded hover:bg-bg-hover transition-colors flex items-center gap-2"
           @click="handleInvertSelection"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -138,11 +138,11 @@ const handleConfirmVideoGenerate = async () => {
         </button>
 
         <!-- 分隔线 -->
-        <div class="w-px h-6 bg-white/10"></div>
+        <div class="w-px h-6 bg-bg-hover"></div>
 
         <!-- 批量生成分镜 -->
         <button
-          class="px-4 py-2 text-sm bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full hover:bg-purple-500/30 transition-colors flex items-center gap-2"
+          class="px-4 py-2 text-sm bg-bg-subtle text-text-secondary border border-border-default rounded hover:bg-bg-hover transition-colors flex items-center gap-2"
           @click="handleOpenShotGenerate"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -153,7 +153,7 @@ const handleConfirmVideoGenerate = async () => {
 
         <!-- 批量生成视频 -->
         <button
-          class="px-4 py-2 text-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full hover:bg-blue-500/30 transition-colors flex items-center gap-2"
+          class="px-4 py-2 text-sm bg-bg-subtle text-text-secondary border border-border-default rounded hover:bg-bg-hover transition-colors flex items-center gap-2"
           @click="handleOpenVideoGenerate"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -163,11 +163,11 @@ const handleConfirmVideoGenerate = async () => {
         </button>
 
         <!-- 分隔线 -->
-        <div class="w-px h-6 bg-white/10"></div>
+        <div class="w-px h-6 bg-bg-hover"></div>
 
         <!-- 取消选择 -->
         <button
-          class="px-4 py-2 text-sm text-white/60 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors"
+          class="px-4 py-2 text-sm text-text-tertiary bg-bg-subtle border border-border-default rounded hover:bg-bg-hover transition-colors"
           @click="handleCancelSelection"
         >
           取消选择
@@ -185,47 +185,47 @@ const handleConfirmVideoGenerate = async () => {
   >
     <div
       v-if="showShotGenerateModal"
-      class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+      class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
       @click.self="showShotGenerateModal = false"
     >
-      <div class="bg-[#1E2025] w-[500px] rounded-2xl p-6 shadow-2xl">
-        <h3 class="text-white text-lg font-semibold mb-4">批量生成分镜图</h3>
+      <div class="bg-bg-elevated w-[500px] rounded p-6 shadow-2xl pointer-events-auto">
+        <h3 class="text-text-primary text-lg font-semibold mb-4">批量生成分镜图</h3>
 
         <div class="space-y-4">
           <!-- 生成模式 -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">生成模式</label>
+            <label class="block text-sm font-medium text-text-secondary mb-2">生成模式</label>
             <div class="flex items-center gap-3">
               <button
                 :class="[
-                  'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                  'flex-1 px-4 py-2.5 rounded text-sm font-medium transition-colors',
                   shotGenerateMode === 'MISSING'
-                    ? 'bg-[#00FFCC]/20 text-[#00FFCC] border-2 border-[#00FFCC]'
-                    : 'bg-white/5 text-white/60 border-2 border-white/10 hover:bg-white/10'
+                    ? 'bg-bg-subtle text-text-primary border-2 border-gray-900'
+                    : 'bg-bg-subtle text-text-tertiary border-2 border-border-default hover:bg-bg-hover'
                 ]"
                 @click="shotGenerateMode = 'MISSING'"
               >
                 缺失生成
-                <span class="block text-xs text-white/40 mt-1">仅为未生成的分镜生成图片</span>
+                <span class="block text-xs text-text-tertiary mt-1">仅为未生成的分镜生成图片</span>
               </button>
               <button
                 :class="[
-                  'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                  'flex-1 px-4 py-2.5 rounded text-sm font-medium transition-colors',
                   shotGenerateMode === 'ALL'
-                    ? 'bg-[#00FFCC]/20 text-[#00FFCC] border-2 border-[#00FFCC]'
-                    : 'bg-white/5 text-white/60 border-2 border-white/10 hover:bg-white/10'
+                    ? 'bg-bg-subtle text-text-primary border-2 border-gray-900'
+                    : 'bg-bg-subtle text-text-tertiary border-2 border-border-default hover:bg-bg-hover'
                 ]"
                 @click="shotGenerateMode = 'ALL'"
               >
                 全部生成
-                <span class="block text-xs text-white/40 mt-1">为所有分镜重新生成图片</span>
+                <span class="block text-xs text-text-tertiary mt-1">为所有分镜重新生成图片</span>
               </button>
             </div>
           </div>
 
           <!-- 生成数量 -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">
+            <label class="block text-sm font-medium text-text-secondary mb-2">
               每条分镜生成数量
             </label>
             <input
@@ -233,16 +233,16 @@ const handleConfirmVideoGenerate = async () => {
               type="number"
               min="1"
               max="4"
-              class="w-full px-4 py-2.5 bg-[#0D0E12] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
+              class="w-full px-4 py-2.5 bg-bg-base border border-border-default rounded text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
             >
-            <p class="text-xs text-white/40 mt-1">建议1-4张，生成多张可供选择最佳效果</p>
+            <p class="text-xs text-text-tertiary mt-1">建议1-4张，生成多张可供选择最佳效果</p>
           </div>
 
           <!-- 消耗预估 -->
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3">
-            <p class="text-white/60 text-xs">
+          <div class="bg-bg-subtle border border-border-default rounded p-3">
+            <p class="text-text-tertiary text-xs">
               💡 预计消耗：
-              <span class="text-[#00FFCC] font-semibold">
+              <span class="text-text-primary font-semibold">
                 {{ editorStore.selectedShotIds.size * shotGenerateCount * 50 }} 积分
               </span>
             </p>
@@ -252,13 +252,13 @@ const handleConfirmVideoGenerate = async () => {
         <!-- 操作按钮 -->
         <div class="flex items-center justify-end gap-3 mt-6">
           <button
-            class="px-5 py-2 bg-white/10 text-white/60 text-sm rounded-2xl hover:bg-white/20 transition-colors"
+            class="px-5 py-2 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
             @click="showShotGenerateModal = false"
           >
             取消
           </button>
           <button
-            class="px-5 py-2 bg-[#00FFCC] text-black font-semibold text-sm rounded-2xl hover:bg-[#21FFF3] transition-colors"
+            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
             @click="handleConfirmShotGenerate"
           >
             确认生成
@@ -277,47 +277,47 @@ const handleConfirmVideoGenerate = async () => {
   >
     <div
       v-if="showVideoGenerateModal"
-      class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+      class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
       @click.self="showVideoGenerateModal = false"
     >
-      <div class="bg-[#1E2025] w-[500px] rounded-2xl p-6 shadow-2xl">
-        <h3 class="text-white text-lg font-semibold mb-4">批量生成视频</h3>
+      <div class="bg-bg-elevated w-[500px] rounded p-6 shadow-2xl pointer-events-auto">
+        <h3 class="text-text-primary text-lg font-semibold mb-4">批量生成视频</h3>
 
         <div class="space-y-4">
           <!-- 生成模式 -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">生成模式</label>
+            <label class="block text-sm font-medium text-text-secondary mb-2">生成模式</label>
             <div class="flex items-center gap-3">
               <button
                 :class="[
-                  'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                  'flex-1 px-4 py-2.5 rounded text-sm font-medium transition-colors',
                   videoGenerateMode === 'MISSING'
-                    ? 'bg-[#00FFCC]/20 text-[#00FFCC] border-2 border-[#00FFCC]'
-                    : 'bg-white/5 text-white/60 border-2 border-white/10 hover:bg-white/10'
+                    ? 'bg-bg-subtle text-text-primary border-2 border-gray-900'
+                    : 'bg-bg-subtle text-text-tertiary border-2 border-border-default hover:bg-bg-hover'
                 ]"
                 @click="videoGenerateMode = 'MISSING'"
               >
                 缺失生成
-                <span class="block text-xs text-white/40 mt-1">仅为未生成的分镜生成视频</span>
+                <span class="block text-xs text-text-tertiary mt-1">仅为未生成的分镜生成视频</span>
               </button>
               <button
                 :class="[
-                  'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                  'flex-1 px-4 py-2.5 rounded text-sm font-medium transition-colors',
                   videoGenerateMode === 'ALL'
-                    ? 'bg-[#00FFCC]/20 text-[#00FFCC] border-2 border-[#00FFCC]'
-                    : 'bg-white/5 text-white/60 border-2 border-white/10 hover:bg-white/10'
+                    ? 'bg-bg-subtle text-text-primary border-2 border-gray-900'
+                    : 'bg-bg-subtle text-text-tertiary border-2 border-border-default hover:bg-bg-hover'
                 ]"
                 @click="videoGenerateMode = 'ALL'"
               >
                 全部生成
-                <span class="block text-xs text-white/40 mt-1">为所有分镜重新生成视频</span>
+                <span class="block text-xs text-text-tertiary mt-1">为所有分镜重新生成视频</span>
               </button>
             </div>
           </div>
 
           <!-- 生成数量 -->
           <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">
+            <label class="block text-sm font-medium text-text-secondary mb-2">
               每条分镜生成数量
             </label>
             <input
@@ -325,16 +325,16 @@ const handleConfirmVideoGenerate = async () => {
               type="number"
               min="1"
               max="3"
-              class="w-full px-4 py-2.5 bg-[#0D0E12] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
+              class="w-full px-4 py-2.5 bg-bg-base border border-border-default rounded text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-[#00FFCC]/50"
             >
-            <p class="text-xs text-white/40 mt-1">建议1-3个，生成多个可供选择最佳效果</p>
+            <p class="text-xs text-text-tertiary mt-1">建议1-3个，生成多个可供选择最佳效果</p>
           </div>
 
           <!-- 消耗预估 -->
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3">
-            <p class="text-white/60 text-xs">
+          <div class="bg-bg-subtle border border-border-default rounded p-3">
+            <p class="text-text-tertiary text-xs">
               💡 预计消耗：
-              <span class="text-[#00FFCC] font-semibold">
+              <span class="text-text-primary font-semibold">
                 {{ editorStore.selectedShotIds.size * videoGenerateCount * 100 }} 积分
               </span>
             </p>
@@ -344,13 +344,13 @@ const handleConfirmVideoGenerate = async () => {
         <!-- 操作按钮 -->
         <div class="flex items-center justify-end gap-3 mt-6">
           <button
-            class="px-5 py-2 bg-white/10 text-white/60 text-sm rounded-2xl hover:bg-white/20 transition-colors"
+            class="px-5 py-2 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
             @click="showVideoGenerateModal = false"
           >
             取消
           </button>
           <button
-            class="px-5 py-2 bg-[#00FFCC] text-black font-semibold text-sm rounded-2xl hover:bg-[#21FFF3] transition-colors"
+            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
             @click="handleConfirmVideoGenerate"
           >
             确认生成

@@ -153,18 +153,18 @@ const handleClose = () => {
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
     @click.self="handleClose"
   >
     <div
-      class="bg-[#1E2025] border border-white/10 rounded-2xl w-[500px] flex flex-col shadow-2xl"
+      class="bg-bg-elevated border border-border-default rounded w-[500px] flex flex-col shadow-2xl pointer-events-auto"
       @click.stop
     >
       <!-- Modal Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <h2 class="text-lg font-bold text-white">扫码支付</h2>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
+        <h2 class="text-lg font-bold text-text-primary">扫码支付</h2>
         <button
-          class="p-2 rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors"
           @click="handleClose"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,19 +176,19 @@ const handleClose = () => {
       <!-- Modal Content -->
       <div class="p-8 flex flex-col items-center">
         <!-- 订单信息 -->
-        <div class="w-full bg-white/5 rounded-2xl p-4 mb-6">
+        <div class="w-full bg-bg-subtle rounded p-4 mb-6">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-white/60 text-sm">订单金额</span>
-            <span class="text-2xl font-bold text-white">¥{{ priceYuan }}</span>
+            <span class="text-text-tertiary text-sm">订单金额</span>
+            <span class="text-2xl font-bold text-text-primary">¥{{ priceYuan }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-white/60 text-sm">获得积分</span>
-            <span class="text-lg font-bold text-[#00FFCC]">{{ order.points }}积分</span>
+            <span class="text-text-tertiary text-sm">获得积分</span>
+            <span class="text-lg font-bold text-text-primary">{{ order.points }}积分</span>
           </div>
         </div>
 
         <!-- 二维码 -->
-        <div class="bg-white p-4 rounded-2xl mb-4">
+        <div class="bg-white p-4 rounded mb-4">
           <img
             v-if="qrCodeDataUrl"
             :src="qrCodeDataUrl"
@@ -196,17 +196,17 @@ const handleClose = () => {
             class="w-64 h-64"
           >
           <div v-else class="w-64 h-64 flex items-center justify-center">
-            <div class="w-12 h-12 border-2 border-[#00FFCC] border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-12 h-12 border-2 border-gray-900 border-t-transparent rounded animate-spin"></div>
           </div>
         </div>
 
         <!-- 提示文字 -->
-        <p class="text-white/60 text-sm text-center mb-2">
+        <p class="text-text-tertiary text-sm text-center mb-2">
           请使用微信扫描二维码完成支付
         </p>
 
         <!-- 倒计时 -->
-        <div class="flex items-center gap-2 text-white/40 text-xs">
+        <div class="flex items-center gap-2 text-text-tertiary text-xs">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -214,16 +214,16 @@ const handleClose = () => {
         </div>
 
         <!-- 轮询状态指示 -->
-        <div v-if="polling" class="mt-4 flex items-center gap-2 text-[#00FFCC] text-xs">
-          <div class="w-2 h-2 rounded-full bg-[#00FFCC] animate-pulse"></div>
+        <div v-if="polling" class="mt-4 flex items-center gap-2 text-text-primary text-xs">
+          <div class="w-2 h-2 rounded bg-gray-900 animate-pulse"></div>
           <span>等待支付中...</span>
         </div>
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-white/10">
+      <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-border-default">
         <button
-          class="px-6 py-2 rounded-2xl border border-white/20 text-white/80 hover:bg-white/5 transition-colors text-sm"
+          class="px-6 py-2 rounded border border-border-default text-text-secondary hover:bg-bg-subtle transition-colors text-sm"
           @click="handleClose"
         >
           取消支付

@@ -319,19 +319,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#2B2D31]">
+  <div class="flex flex-col h-full bg-bg-elevated">
     <!-- 顶部导航 -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
       <button
         @click="$emit('close')"
-        class="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+        class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
         <span class="text-sm font-medium">返回</span>
       </button>
-      <h3 class="text-white text-base font-medium">分镜 #{{ shotNo }}</h3>
+      <h3 class="text-text-primary text-base font-medium">分镜 #{{ shotNo }}</h3>
     </div>
 
     <!-- 主内容区 -->
@@ -339,16 +339,16 @@ onMounted(() => {
       <!-- 视频参考图区域 -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
-          <h4 class="text-white text-base font-medium">视频参考图</h4>
+          <h4 class="text-text-primary text-base font-medium">视频参考图</h4>
         </div>
 
         <!-- 大虚线框预览区 -->
-        <div class="w-full aspect-video rounded-2xl border-2 border-dashed border-white/20 bg-black/10 flex items-center justify-center overflow-hidden">
+        <div class="w-full aspect-video rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center overflow-hidden">
           <template v-if="videoReferenceUrl">
-            <img :src="videoReferenceUrl" alt="视频参考图" class="w-full h-full object-cover rounded-2xl">
+            <img :src="videoReferenceUrl" alt="视频参考图" class="w-full h-full object-cover rounded">
           </template>
           <template v-else>
-            <p class="text-white/40 text-sm">参考图</p>
+            <p class="text-text-tertiary text-sm">参考图</p>
           </template>
         </div>
       </div>
@@ -358,7 +358,7 @@ onMounted(() => {
         <textarea
           v-model="scriptDescription"
           placeholder="请输入自定义内容（将添加到内嵌规则和分镜剧本之后）"
-          class="w-full h-24 px-4 py-3 bg-white/10 border border-white/10 rounded-2xl text-white text-sm placeholder-white/40 resize-none focus:outline-none focus:border-[#00FFCC]/50"
+          class="w-full h-24 px-4 py-3 bg-bg-hover border border-border-default rounded text-text-primary text-sm placeholder-text-tertiary resize-none focus:outline-none focus:border-gray-900/50"
         ></textarea>
       </div>
 
@@ -367,9 +367,9 @@ onMounted(() => {
         <!-- 比例选择 -->
         <select
           v-model="aspectRatio"
-          class="px-4 py-2.5 bg-white/10 border border-white/10 rounded-2xl text-white text-sm focus:outline-none focus:border-[#00FFCC]/50 cursor-pointer"
+          class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
         >
-          <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-[#2B2D31]">
+          <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
             {{ option.label }}
           </option>
         </select>
@@ -378,38 +378,38 @@ onMounted(() => {
         <button
           @click="handleAIGenerate"
           :disabled="isGenerating"
-          class="px-10 py-3 bg-gradient-to-r from-[#00FFCC] to-[#00CC99] rounded-2xl text-[#1E2025] font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-10 py-3 bg-bg-subtle rounded text-text-secondary font-medium text-sm hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ isGenerating ? '生成中...' : 'AI生成' }}
         </button>
       </div>
 
       <!-- 待生成区域 -->
-      <div class="mb-6 border-t border-white/10 pt-6">
-        <h4 class="text-white text-sm font-medium mb-4">待生成</h4>
-        <div class="w-full aspect-video rounded-2xl border-2 border-dashed border-white/20 bg-black/10 flex items-center justify-center overflow-hidden">
+      <div class="mb-6 border-t border-border-default pt-6">
+        <h4 class="text-text-primary text-sm font-medium mb-4">待生成</h4>
+        <div class="w-full aspect-video rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center overflow-hidden">
           <template v-if="generatedVideoThumbnail">
-            <img :src="generatedVideoThumbnail" alt="待生成缩略图" class="w-full h-full object-cover rounded-2xl">
+            <img :src="generatedVideoThumbnail" alt="待生成缩略图" class="w-full h-full object-cover rounded">
           </template>
           <template v-else>
             <div class="text-center">
-              <svg class="w-16 h-16 mx-auto text-white/20 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-16 h-16 mx-auto text-text-disabled mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
               </svg>
-              <p class="text-white/40 text-sm">待生成</p>
+              <p class="text-text-tertiary text-sm">待生成</p>
             </div>
           </template>
         </div>
       </div>
 
       <!-- 备选素材 -->
-      <div class="border-t border-white/10 pt-6 mb-6">
+      <div class="border-t border-border-default pt-6 mb-6">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-white text-sm font-medium">备选素材 ({{ availableMaterials.length }})</h4>
+          <h4 class="text-text-primary text-sm font-medium">备选素材 ({{ availableMaterials.length }})</h4>
         </div>
 
         <div v-if="availableMaterials.length === 0" class="text-center py-8">
-          <p class="text-white/40 text-sm">暂无备选素材</p>
+          <p class="text-text-tertiary text-sm">暂无备选素材</p>
         </div>
 
         <div v-else class="grid grid-cols-4 gap-2">
@@ -417,18 +417,18 @@ onMounted(() => {
             v-for="material in availableMaterials"
             :key="material.id"
             @click="handleSelectMaterial(material)"
-            class="relative aspect-square rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#00FFCC]/50 transition-all group"
+            class="relative aspect-square rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#00FFCC]/50 transition-all group"
           >
             <img :src="material.imageUrl" alt="备选素材" class="w-full h-full object-cover">
             
             <!-- 悬浮按钮 -->
-            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <div class="absolute inset-0 bg-gray-800 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <button 
                 @click.stop="handleDownloadVideo(material.imageUrl, '备选素材')"
-                class="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                class="p-2 bg-bg-subtle rounded hover:bg-bg-hover transition-colors"
                 title="下载"
               >
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
               </button>
@@ -438,13 +438,13 @@ onMounted(() => {
       </div>
 
       <!-- 历史记录 -->
-      <div class="border-t border-white/10 pt-6">
+      <div class="border-t border-border-default pt-6">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-white text-sm font-medium">历史记录</h4>
+          <h4 class="text-text-primary text-sm font-medium">历史记录</h4>
         </div>
 
         <div v-if="generationHistory.length === 0" class="text-center py-8">
-          <p class="text-white/40 text-sm mb-2">暂无生成记录</p>
+          <p class="text-text-tertiary text-sm mb-2">暂无生成记录</p>
           <p class="text-[#FF6B9D] text-xs">
             未被使用的生成记录仅保疙7天，请及时下载文件
           </p>
@@ -456,13 +456,13 @@ onMounted(() => {
               v-for="item in generationHistory.slice(0, 8)"
               :key="item.id"
               @click="handleHistoryClick(item)"
-              class="relative aspect-square rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#00FFCC]/50 transition-all group"
+              class="relative aspect-square rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#00FFCC]/50 transition-all group"
             >
               <img :src="item.thumbnailUrl" alt="历史记录" class="w-full h-full object-cover">
 
               <!-- 播放按钮覆盖 -->
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <svg class="w-10 h-10 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+              <div class="absolute inset-0 bg-bg-subtle flex items-center justify-center">
+                <svg class="w-10 h-10 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"></path>
                 </svg>
               </div>
@@ -471,19 +471,19 @@ onMounted(() => {
               <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                 <button 
                   @click.stop="handleDownloadVideo(item.videoUrl, `分镜${props.shotNo}_视频`)"
-                  class="p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
+                  class="p-1.5 bg-gray-800 rounded hover:bg-gray-700 transition-colors"
                   title="下载"
                 >
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                   </svg>
                 </button>
                 <button 
                   @click.stop="handleDeleteHistory(item.id)"
-                  class="p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
+                  class="p-1.5 bg-gray-800 rounded hover:bg-gray-700 transition-colors"
                   title="删除"
                 >
-                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
                 </button>

@@ -16,10 +16,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-mochi-bg">
+  <div class="h-screen flex flex-col bg-bg-base">
     <!-- Header -->
-    <div class="flex-shrink-0 px-8 py-4 border-b border-white/10">
-      <h1 class="text-2xl font-bold text-white">邀请好友</h1>
+    <div class="flex-shrink-0 px-8 py-4 border-b border-border-default">
+      <h1 class="text-2xl font-bold text-text-primary">邀请好友</h1>
     </div>
 
     <!-- Main Content -->
@@ -32,7 +32,7 @@ onMounted(async () => {
         </div>
 
         <!-- Invite Records -->
-        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+        <div class="p-6 rounded bg-bg-subtle border border-border-default">
           <RecordsTable />
         </div>
 

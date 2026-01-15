@@ -17,7 +17,6 @@ import type { ProjectVO, FolderVO } from '@/types/api'
 import GlassCard from '@/components/base/GlassCard.vue'
 import PillButton from '@/components/base/PillButton.vue'
 import ProjectCard from '@/components/home/ProjectCard.vue'
-import FolderCard from '@/components/home/FolderCard.vue'
 import ProjectTable from '@/components/home/ProjectTable.vue'
 import CreateProjectModal from '@/components/home/CreateProjectModal.vue'
 import FolderModal from '@/components/home/FolderModal.vue'
@@ -28,6 +27,7 @@ const projectStore = useProjectStore()
 const userStore = useUserStore()
 
 const searchKeyword = ref('')
+const showSearchInput = ref(false)
 const showCreateProjectModal = ref(false)
 const showCreateFolderModal = ref(false)
 const showEditFolderModal = ref(false)
@@ -202,11 +202,6 @@ const selectedFolder = computed(() => {
   return projectStore.getFolderById(projectStore.selectedFolderId)
 })
 
-const handleFolderClick = async (folder: FolderVO) => {
-  projectStore.setSelectedFolder(folder.id)
-  await projectStore.fetchProjects(1, searchKeyword.value)
-}
-
 const handleShowAllProjects = async () => {
   projectStore.setSelectedFolder(null)
   await projectStore.fetchProjects(1, searchKeyword.value)
@@ -217,93 +212,104 @@ const handleShowAllProjects = async () => {
 </script>
 
 <template>
-  <div class="p-8 space-y-8">
-      <!-- Header with actions -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-white mb-2">我的项目</h1>
-          <p class="text-white/60 text-sm">
-            共 {{ projectStore.total }} 个项目 · {{ projectStore.folders.length }} 个文件夹
-          </p>
-        </div>
-
-        <div class="flex gap-3">
-          <PillButton
-            label="新建文件夹"
-            variant="secondary"
-            icon='<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>'
-            @click="showCreateFolderModal = true"
-          />
-          <button
-            class="flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-mochi-cyan to-mochi-blue text-mochi-bg font-medium text-sm hover:shadow-neon-cyan transition-all"
-            @click="showCreateProjectModal = true"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            新建项目
-          </button>
-        </div>
+  <div class="min-h-screen bg-bg-base">
+    <div class="max-w-[1400px] mx-auto px-8 py-6">
+      <!-- 轮播图区域 -->
+      <div class="mb-6 rounded-2xl overflow-hidden h-[266cpx] relative">
+        <img 
+          src="@/assets/images/轮播图.jpg" 
+          alt="轮播图" 
+          class="w-full h-full object-cover"
+        />
       </div>
 
-      <!-- Search bar -->
-      <GlassCard padding="p-4">
-        <div class="flex gap-3">
-          <div class="flex-1 flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-mochi-cyan transition-all">
-            <svg class="w-5 h-5 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              v-model="searchKeyword"
-              type="text"
-              placeholder="搜索项目..."
-              class="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none text-sm"
-              @keydown.enter="handleSearch"
-            >
-          </div>
-          <PillButton
-            label="搜索"
-            variant="primary"
-            @click="handleSearch"
-          />
-        </div>
-      </GlassCard>
-
-      <!-- Folder grid -->
-      <div v-if="projectStore.folders.length > 0 && !selectedFolder">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-white">我的文件夹</h2>
-          <span class="text-white/40 text-sm">{{ projectStore.folders.length }} 个文件夹</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <FolderCard
-            v-for="folder in projectStore.folders"
-            :key="folder.id"
-            :folder="folder"
-            @click="handleFolderClick(folder)"
-            @edit="handleEditFolder(folder)"
-            @delete="handleDeleteFolder(folder)"
-          />
-        </div>
-      </div>
-
-      <!-- All projects table -->
+      <!-- 项目区域 -->
       <div>
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <button
               v-if="selectedFolder"
-              class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all text-sm"
+              class="btn btn-ghost text-sm"
               @click="handleShowAllProjects"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              返回所有项目
+              返回
             </button>
-            <h2 class="text-xl font-semibold text-white">
-              {{ selectedFolder ? `${selectedFolder.name} 中的项目` : '所有项目' }}
-            </h2>
+            <div>
+              <h2 class="text-lg font-semibold text-text-primary">
+                {{ selectedFolder ? `${selectedFolder.name} 中的项目` : '所有项目' }}
+              </h2>
+              <p class="text-xs text-text-tertiary mt-0.5">
+                共 {{ projectStore.total }} 个项目 · {{ projectStore.folders.length }} 个文件夹
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- 新建项目按钮 -->
+            <button
+              class="btn btn-secondary text-sm"
+              @click="showCreateProjectModal = true"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              新建项目
+            </button>
+            <!-- 新建文件夹按钮 -->
+            <button
+              class="btn btn-secondary text-sm"
+              @click="showCreateFolderModal = true"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              新建文件夹
+            </button>
+            <!-- 搜索按钮 -->
+            <button
+              v-if="!showSearchInput"
+              class="btn btn-secondary text-sm"
+              @click="showSearchInput = true"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              搜索
+            </button>
+            <!-- 搜索输入框 -->
+            <div v-else class="flex items-center gap-2 bg-bg-subtle rounded-lg px-3 py-1.5 border border-border-default">
+              <svg class="w-4 h-4 text-text-tertiary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                v-model="searchKeyword"
+                type="text"
+                placeholder="搜索项目..."
+                class="w-40 bg-transparent text-sm text-text-primary placeholder-text-tertiary focus:outline-none"
+                @keydown.enter="handleSearch"
+                @keydown.esc="showSearchInput = false; searchKeyword = ''"
+                autofocus
+              />
+              <button
+                v-if="searchKeyword"
+                class="text-text-tertiary hover:text-text-primary"
+                @click="searchKeyword = ''"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <button
+                class="text-text-tertiary hover:text-text-primary"
+                @click="showSearchInput = false; searchKeyword = ''"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         <ProjectTable
@@ -313,6 +319,7 @@ const handleShowAllProjects = async () => {
           @move-project="handleMoveProject"
         />
       </div>
+    </div>
 
     <!-- Modals -->
     <CreateProjectModal

@@ -87,7 +87,7 @@ onUnmounted(() => {
           {{ option.label }}
           <svg 
             v-if="option.value === modelValue" 
-            class="w-3.5 h-3.5 text-accent" 
+            class="w-3.5 h-3.5 text-[#8B5CF6]" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -111,9 +111,9 @@ onUnmounted(() => {
   gap: 6px;
   padding: 6px 10px 6px 12px;
   border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #d5dce0;
-  color: #2c3e50;
+  background: #2a2d32;
+  border: 1px solid #3a3d42;
+  color: #e5e7eb;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -121,8 +121,8 @@ onUnmounted(() => {
 }
 
 .select-trigger:hover {
-  background: #f5f6f7;
-  border-color: #3498db;
+  background: #32363c;
+  border-color: #4a4d52;
 }
 
 .select-value {
@@ -134,7 +134,7 @@ onUnmounted(() => {
 .select-arrow {
   width: 14px;
   height: 14px;
-  color: #7f8c8d;
+  color: #9ca3af;
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -146,10 +146,10 @@ onUnmounted(() => {
   min-width: 100%;
   max-height: 200px;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #d5dce0;
+  background: #2a2d32;
+  border: 1px solid #3a3d42;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   z-index: 100;
   padding: 4px;
 }
@@ -160,7 +160,7 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 8px 12px;
   font-size: 12px;
-  color: #2c3e50;
+  color: #e5e7eb;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -168,13 +168,13 @@ onUnmounted(() => {
 }
 
 .select-option:hover {
-  background: #ecf0f1;
-  color: #3498db;
+  background: #3a3d42;
+  color: #8B5CF6;
 }
 
 .select-option.is-selected {
-  background: #3498db/10;
-  color: #3498db;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8B5CF6;
 }
 
 .select-option.is-disabled {
@@ -184,7 +184,7 @@ onUnmounted(() => {
 
 .select-option.is-disabled:hover {
   background: transparent;
-  color: #2c3e50;
+  color: #e5e7eb;
 }
 
 /* 下拉动画 - 向上展开 */
@@ -209,7 +209,7 @@ onUnmounted(() => {
 }
 
 .select-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(44, 62, 80, 0.2);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
 }
 </style>

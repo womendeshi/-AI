@@ -28,13 +28,13 @@ const formatDate = (dateStr: string) => {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'GENERATING':
-      return { text: '生成中', class: 'bg-mochi-blue/20 text-mochi-blue' }
+      return { text: '生成中', class: 'bg-bg-subtle text-text-secondary' }
     case 'READY':
-      return { text: '已完成', class: 'bg-mochi-cyan/20 text-mochi-cyan' }
+      return { text: '已完成', class: 'bg-bg-subtle text-text-primary' }
     case 'FAILED':
-      return { text: '失败', class: 'bg-mochi-pink/20 text-mochi-pink' }
+      return { text: '失败', class: 'bg-bg-subtle text-red-400' }
     default:
-      return { text: '未知', class: 'bg-white/10 text-white/60' }
+      return { text: '未知', class: 'bg-bg-hover text-text-tertiary' }
   }
 }
 
@@ -120,8 +120,8 @@ const sortedHistory = computed(() => {
       v-if="toolboxStore.history.length === 0"
       class="text-center py-12"
     >
-      <DocumentIcon class="w-16 h-16 text-white/20 mx-auto mb-3" />
-      <p class="text-white/40 text-sm">暂无生成记录</p>
+      <DocumentIcon class="w-16 h-16 text-text-disabled mx-auto mb-3" />
+      <p class="text-text-tertiary text-sm">暂无生成记录</p>
     </div>
 
     <!-- History List -->
@@ -129,12 +129,12 @@ const sortedHistory = computed(() => {
       <div
         v-for="item in sortedHistory"
         :key="item.id"
-        class="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+        class="p-4 rounded bg-bg-subtle border border-border-default hover:bg-bg-hover transition-all"
       >
         <div class="flex gap-3">
           <!-- Icon -->
           <div class="flex-shrink-0">
-            <component :is="getTypeIconComponent(item.type)" class="w-6 h-6 text-white/60" />
+            <component :is="getTypeIconComponent(item.type)" class="w-6 h-6 text-text-tertiary" />
           </div>
 
           <!-- Content -->
@@ -142,12 +142,12 @@ const sortedHistory = computed(() => {
             <!-- Header -->
             <div class="flex items-start justify-between mb-2">
               <div class="flex items-center gap-2">
-                <span :class="`px-2 py-0.5 rounded-full text-xs ${getStatusBadge(item.status).class}`">
+                <span :class="`px-2 py-0.5 rounded text-xs ${getStatusBadge(item.status).class}`">
                   {{ getStatusBadge(item.status).text }}
                 </span>
-                <span class="text-white/40 text-xs">{{ item.model }}</span>
+                <span class="text-text-tertiary text-xs">{{ item.model }}</span>
               </div>
-              <div class="text-white/40 text-xs whitespace-nowrap">
+              <div class="text-text-tertiary text-xs whitespace-nowrap">
                 {{ formatDate(item.createdAt) }}
               </div>
             </div>
@@ -157,8 +157,8 @@ const sortedHistory = computed(() => {
             </p>
 
             <!-- Preview: TEXT type -->
-            <div v-if="item.type === 'TEXT' && item.text" class="mb-3 p-3 rounded-xl bg-white/5 border border-white/10">
-              <p class="text-white/80 text-sm line-clamp-3 whitespace-pre-wrap">
+            <div v-if="item.type === 'TEXT' && item.text" class="mb-3 p-3 rounded bg-bg-subtle border border-border-default">
+              <p class="text-text-secondary text-sm line-clamp-3 whitespace-pre-wrap">
                 {{ item.text }}
               </p>
             </div>
@@ -167,7 +167,7 @@ const sortedHistory = computed(() => {
             <div v-if="item.resultUrl && item.type === 'IMAGE'" class="mb-3">
               <img
                 :src="item.resultUrl"
-                class="max-w-[180px] rounded-xl border border-white/10 cursor-pointer hover:border-mochi-cyan transition-all"
+                class="max-w-[180px] rounded border border-border-default cursor-pointer hover:border-gray-900 transition-all"
                 @click="handlePreview(item)"
               >
             </div>
@@ -176,7 +176,7 @@ const sortedHistory = computed(() => {
             <div v-if="item.resultUrl && item.type === 'VIDEO'" class="mb-3">
               <video
                 :src="item.resultUrl"
-                class="max-w-[240px] rounded-xl border border-white/10 cursor-pointer hover:border-mochi-cyan transition-all"
+                class="max-w-[240px] rounded border border-border-default cursor-pointer hover:border-gray-900 transition-all"
                 controls
                 preload="metadata"
               />
@@ -186,27 +186,24 @@ const sortedHistory = computed(() => {
             <div class="flex items-center gap-2">
               <button
                 v-if="item.status === 'READY' && (item.resultUrl || (item.type === 'TEXT' && item.text))"
-                class="px-3 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/60 hover:border-mochi-cyan hover:text-mochi-cyan transition-all"
+                class="px-3 py-1 rounded text-xs bg-bg-subtle border border-border-default text-text-tertiary hover:border-gray-900 hover:text-text-primary transition-all"
                 @click="handlePreview(item)"
               >
                 预览
               </button>
               <button
                 v-if="item.status === 'READY'"
-                class="px-3 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/60 hover:border-mochi-cyan hover:text-mochi-cyan transition-all"
+                class="px-3 py-1 rounded text-xs bg-bg-subtle border border-border-default text-text-tertiary hover:border-gray-900 hover:text-text-primary transition-all"
                 @click="handleSaveToAssets(item.id)"
               >
                 保存
               </button>
               <button
-                class="px-3 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/60 hover:border-mochi-pink hover:text-mochi-pink transition-all"
+                class="px-3 py-1 rounded text-xs bg-bg-subtle border border-border-default text-text-tertiary hover:border-mochi-pink hover:text-red-400 transition-all"
                 @click="handleDelete(item.id)"
               >
                 删除
               </button>
-              <span class="ml-auto text-white/40 text-xs">
-                {{ item.costPoints }} 积分
-              </span>
             </div>
           </div>
         </div>
