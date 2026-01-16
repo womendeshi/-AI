@@ -39,6 +39,19 @@ const aspectRatioOptions = [
 // 生成状态
 const isGenerating = ref(false)
 
+// 轮询进度信息
+const pollingInfo = ref<{
+  isPolling: boolean
+  jobId: number | null
+  status: string
+  progress: number
+}>({
+  isPolling: false,
+  jobId: null,
+  status: '',
+  progress: 0
+})
+
 // 视频参考图URL（拼接后的图片）
 const videoReferenceUrl = ref<string>('')
 const referenceImageFile = ref<File | null>(null)
@@ -180,16 +193,34 @@ const updateHistoryVideoUrl = (jobId: number, resultUrl: string) => {
 }
 
 const startPollingJobStatus = async (jobId: number) => {
+  // 开始轮询
+  pollingInfo.value = {
+    isPolling: true,
+    jobId,
+    status: 'RUNNING',
+    progress: 0
+  }
+  
   try {
-    const job = await pollJobStatus(jobId)
+    const job = await pollJobStatus(jobId, (progressJob) => {
+      // 更新轮询进度
+      pollingInfo.value.status = progressJob.status || 'RUNNING'
+      pollingInfo.value.progress = progressJob.progress || 0
+      console.log('[VideoGeneratePanel] 轮询进度:', progressJob.status, progressJob.progress + '%')
+    })
+    
     if (job.resultUrl) {
       updateHistoryVideoUrl(jobId, job.resultUrl)
+      window.$message?.success('视频生成完成！')
     } else {
       window.$message?.warning('Video ready but url missing')
     }
   } catch (error) {
     console.error('[VideoGeneratePanel] poll job failed:', error)
     window.$message?.error('Video generation failed')
+  } finally {
+    // 结束轮询
+    pollingInfo.value.isPolling = false
   }
 }
 
@@ -472,10 +503,18 @@ onMounted(() => {
         <!-- AI生成按钮 -->
         <button
           @click="handleAIGenerate"
-          :disabled="isGenerating"
+          :disabled="isGenerating || pollingInfo.isPolling"
           class="px-10 py-3 bg-bg-subtle rounded text-text-secondary font-medium text-sm hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ isGenerating ? '生成中...' : 'AI生成' }}
+          <template v-if="pollingInfo.isPolling">
+            生成中... {{ pollingInfo.progress }}%
+          </template>
+          <template v-else-if="isGenerating">
+            提交中...
+          </template>
+          <template v-else>
+            AI生成
+          </template>
         </button>
       </div>
 
