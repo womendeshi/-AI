@@ -82,12 +82,19 @@ public class ProjectSceneServiceImpl implements ProjectSceneService {
 
         // 转换为VO
         return projectScenes.stream().map(ps -> {
-            // 查询全局场景信息
-            SceneLibrary libScene = sceneLibraryMapper.selectById(ps.getLibrarySceneId());
+            // 查询全局场景信息（可能为null，自定义场景不关联场景库）
+            SceneLibrary libScene = ps.getLibrarySceneId() != null 
+                    ? sceneLibraryMapper.selectById(ps.getLibrarySceneId()) 
+                    : null;
 
-            String librarySceneName = (libScene != null) ? libScene.getName() : "场景已删除";
+            // librarySceneName: 优先使用场景库名称，自定义场景显示"自定义场景"
+            String librarySceneName = (libScene != null) ? libScene.getName() : "自定义场景";
             String libraryDescription = (libScene != null) ? libScene.getDescription() : null;
-            String thumbnailUrl = (libScene != null) ? libScene.getThumbnailUrl() : null;
+            
+            // thumbnailUrl: 优先使用项目场景的缩略图，其次使用场景库的缩略图
+            String thumbnailUrl = StringUtils.hasText(ps.getThumbnailUrl()) 
+                    ? ps.getThumbnailUrl() 
+                    : (libScene != null ? libScene.getThumbnailUrl() : null);
 
             // displayName: 优先使用项目内显示名称,否则使用全局名称
             String displayName = StringUtils.hasText(ps.getDisplayName())

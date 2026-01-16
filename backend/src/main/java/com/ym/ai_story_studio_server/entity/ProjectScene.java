@@ -39,6 +39,11 @@ public class ProjectScene {
     private String overrideDescription;
 
     /**
+     * 项目场景缩略图URL（自定义场景或项目内覆盖的图片）
+     */
+    private String thumbnailUrl;
+
+    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
