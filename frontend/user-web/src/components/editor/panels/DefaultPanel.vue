@@ -138,13 +138,32 @@ const handleClosePropLibraryModal = () => {
 // 点击角色卡片
 const handleCharacterClick = (characterId: number) => {
   const character = editorStore.characters.find(c => c.id === characterId)
-  panelManagerStore.openPanel('asset-edit', {
-    assetType: 'character',
-    assetId: characterId,
-    characterName: (character as any)?.displayName || character?.name,
-    existingThumbnailUrl: character?.thumbnailUrl,
-    existingDescription: (character as any)?.finalDescription || (character as any)?.description
-  })
+  
+  // 如果角色没有图片，传递剧本文本让AI解析
+  if (!character?.thumbnailUrl) {
+    let scriptText = editorStore.originalScript || ''
+    // 限制文本长度
+    if (scriptText.length > 2000) {
+      scriptText = scriptText.substring(0, 2000) + '...'
+    }
+    
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'character',
+      assetId: characterId,
+      characterName: (character as any)?.displayName || character?.name,
+      prefillDescription: scriptText,  // 让AI解析
+      existingDescription: (character as any)?.finalDescription || (character as any)?.description
+    })
+  } else {
+    // 已有图片，正常打开编辑面板
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'character',
+      assetId: characterId,
+      characterName: (character as any)?.displayName || character?.name,
+      existingThumbnailUrl: character?.thumbnailUrl,
+      existingDescription: (character as any)?.finalDescription || (character as any)?.description
+    })
+  }
 }
 
 // 点击场景卡片

@@ -9,6 +9,7 @@
 
 package com.ym.ai_story_studio_server.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ym.ai_story_studio_server.client.VectorEngineClient;
 import com.ym.ai_story_studio_server.common.ResultCode;
 import com.ym.ai_story_studio_server.config.AiProperties;
@@ -16,12 +17,14 @@ import com.ym.ai_story_studio_server.entity.Job;
 import com.ym.ai_story_studio_server.exception.BusinessException;
 import com.ym.ai_story_studio_server.mapper.JobMapper;
 import com.ym.ai_story_studio_server.util.UserContext;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -67,6 +70,72 @@ public class AsyncVideoTaskService {
     private final JobMapper jobMapper;
     private final AiProperties aiProperties;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    /**
+     * 服务启动时恢复中断的视频生成任务
+     * 
+     * <p>参考huobao-drama-master项目的RecoverPendingTasks实现
+     * 
+     * <p><strong>恢复逻辑:</strong>
+     * <ul>
+     *   <li>查找所有RUNNING状态且有apiTaskId的视频生成任务</li>
+     *   <li>为每个任务启动异步轮询</li>
+     * </ul>
+     */
+    @PostConstruct
+    public void recoverPendingVideoTasks() {
+        try {
+            // 查找所有RUNNING状态的视频生成任务
+            List<Job> pendingJobs = jobMapper.selectList(
+                    new LambdaQueryWrapper<Job>()
+                            .eq(Job::getStatus, "RUNNING")
+                            .eq(Job::getJobType, "SINGLE_SHOT_VIDEO")
+            );
+            
+            if (pendingJobs.isEmpty()) {
+                log.info("服务启动: 没有需要恢复的视频生成任务");
+                return;
+            }
+            
+            log.info("服务启动: 发现 {} 个需要恢复的视频生成任务", pendingJobs.size());
+            
+            for (Job job : pendingJobs) {
+                try {
+                    // 从metaJson中提取必要信息
+                    String apiTaskId = extractFieldFromJson(job.getMetaJson(), "apiTaskId");
+                    String model = extractFieldFromJson(job.getMetaJson(), "model");
+                    String aspectRatio = extractFieldFromJson(job.getMetaJson(), "aspectRatio");
+                    String durationStr = extractFieldFromJson(job.getMetaJson(), "duration");
+                    Integer duration = durationStr != null ? Integer.parseInt(durationStr) : 5;
+                    
+                    if (apiTaskId == null || apiTaskId.isBlank()) {
+                        log.warn("任务没有apiTaskId,跳过恢复 - jobId: {}", job.getId());
+                        continue;
+                    }
+                    
+                    log.info("恢复视频生成任务轮询 - jobId: {}, apiTaskId: {}", job.getId(), apiTaskId);
+                    
+                    // 启动异步轮询
+                    pollVideoGenerationTask(
+                            job.getId(),
+                            apiTaskId,
+                            model != null ? model : "sora-2",
+                            aspectRatio != null ? aspectRatio : "16:9",
+                            duration,
+                            job.getUserId()
+                    );
+                    
+                } catch (Exception e) {
+                    log.error("恢复任务失败 - jobId: {}", job.getId(), e);
+                }
+            }
+            
+            log.info("服务启动: 视频生成任务恢复完成");
+            
+        } catch (Exception e) {
+            log.error("服务启动: 恢复视频生成任务失败", e);
+        }
+    }
 
     /**
      * 轮询视频生成任务(异步方法)
@@ -123,35 +192,35 @@ public class AsyncVideoTaskService {
                 // 等待一段时间后再查询(避免过于频繁的API调用)
                 Thread.sleep(pollInterval);
 
-                // ✅ 查询任务状态 (改为info级别,便于生产环境诊断)
+                // 查询任务状态
                 log.info("轮询第 {}/{} 次 - jobId: {}, apiTaskId: {}",
                         pollCount, maxPollCount, jobId, apiTaskId);
 
-                // ✅ 添加重试机制：前3次轮询如果失败，等待后重试（防止查询太快，任务还未就绪）
+                // 带容错的轮询(单次失败不终止整个任务,参考huobao-drama-master)
                 VectorEngineClient.TaskStatusApiResponse statusResponse = null;
-                int retryCount = 0;
-                int maxRetries = (pollCount <= 3) ? 3 : 1;  // 前3次轮询允许重试3次，后续只允许1次
+                int queryRetryCount = 0;
+                int maxQueryRetries = 3;
 
-                while (retryCount < maxRetries) {
+                while (queryRetryCount < maxQueryRetries) {
                     try {
                         statusResponse = vectorEngineClient.queryTaskStatus(apiTaskId);
                         break;  // 查询成功，跳出重试循环
 
-                    } catch (BusinessException e) {
-                        retryCount++;
-                        if (e.getMessage().contains("data字段为null") && retryCount < maxRetries) {
-                            log.warn("任务查询失败(可能查询过快) - jobId: {}, 第{}/{}次重试, 等待2秒后重试...",
-                                    jobId, retryCount, maxRetries);
-                            Thread.sleep(2000);  // 等待2秒后重试
-                        } else {
-                            throw e;  // 重试次数耗尽或其他错误，抛出异常
+                    } catch (Exception e) {
+                        queryRetryCount++;
+                        log.warn("任务查询失败 - jobId: {}, 第{}/{}次重试, 错误: {}",
+                                jobId, queryRetryCount, maxQueryRetries, e.getMessage());
+                        
+                        if (queryRetryCount < maxQueryRetries) {
+                            Thread.sleep(3000);  // 等待3秒后重试
                         }
                     }
                 }
-
+                
+                // 如果查询失败但未超过最大轮询次数,继续下一轮(参考huobao的continue逻辑)
                 if (statusResponse == null) {
-                    throw new BusinessException(ResultCode.AI_SERVICE_ERROR,
-                            "查询任务状态失败: 重试" + maxRetries + "次后仍未获取到有效响应");
+                    log.warn("本次轮询查询失败,继续下一轮 - jobId: {}, pollCount: {}", jobId, pollCount);
+                    continue;  // 不抛异常，继续下一次轮询
                 }
 
                 String status = statusResponse.status();

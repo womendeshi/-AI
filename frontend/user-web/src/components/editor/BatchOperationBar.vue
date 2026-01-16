@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useEditorStore } from '@/stores/editor'
+import { jobApi, pollJobStatus } from '@/api/job'
+import type { JobVO } from '@/types/api'
 
 const editorStore = useEditorStore()
 
@@ -8,11 +10,43 @@ const editorStore = useEditorStore()
 const showShotGenerateModal = ref(false)
 const shotGenerateMode = ref<'ALL' | 'MISSING'>('MISSING')
 const shotGenerateCount = ref(1)
+const isShotGenerating = ref(false)
+const shotGenerateSeconds = ref(0)
+let shotGenerateTimer: ReturnType<typeof setInterval> | null = null
 
 // 批量生成视频模态框
 const showVideoGenerateModal = ref(false)
 const videoGenerateMode = ref<'ALL' | 'MISSING'>('MISSING')
 const videoGenerateCount = ref(1)
+const isVideoGenerating = ref(false)
+const videoGenerateSeconds = ref(0)
+let videoGenerateTimer: ReturnType<typeof setInterval> | null = null
+
+// 计算属性：分镜生成按钮文本
+const shotGenerateButtonText = computed(() => {
+  if (isShotGenerating.value) {
+    return `生成中... ${shotGenerateSeconds.value}s`
+  }
+  return '确认生成'
+})
+
+// 计算属性：分镜取消/后台运行按钮文本
+const shotCancelButtonText = computed(() => {
+  return isShotGenerating.value ? '后台运行' : '取消'
+})
+
+// 计算属性：视频生成按钮文本
+const videoGenerateButtonText = computed(() => {
+  if (isVideoGenerating.value) {
+    return `生成中... ${videoGenerateSeconds.value}s`
+  }
+  return '确认生成'
+})
+
+// 计算属性：视频取消/后台运行按钮文本
+const videoCancelButtonText = computed(() => {
+  return isVideoGenerating.value ? '后台运行' : '取消'
+})
 
 // 全选
 const handleSelectAll = () => {
@@ -47,19 +81,72 @@ const handleOpenShotGenerate = () => {
 
 // 确认批量生成分镜
 const handleConfirmShotGenerate = async () => {
+  if (isShotGenerating.value) return
+  
   try {
-    await editorStore.batchGenerateShots({
+    // 开始生成，显示进度
+    isShotGenerating.value = true
+    shotGenerateSeconds.value = 0
+    shotGenerateTimer = setInterval(() => {
+      shotGenerateSeconds.value++
+    }, 1000)
+    
+    // 提交批量生成任务
+    const response = await editorStore.batchGenerateShots({
       targetIds: Array.from(editorStore.selectedShotIds),
       mode: shotGenerateMode.value,
       countPerItem: shotGenerateCount.value,
       aspectRatio: '21:9',
     })
+    
+    console.log('[BatchOperationBar] 批量生成分镜任务已提交:', response)
+    
+    // 轮询Job状态直到完成
+    if (response.jobId) {
+      const finalJob = await pollJobStatus(
+        response.jobId,
+        (job: JobVO) => {
+          console.log('[BatchOperationBar] 分镜生成Job进度:', job.progress, '%')
+        },
+        3000
+      )
+      
+      console.log('[BatchOperationBar] 分镜生成Job完成:', finalJob)
+      
+      // 刷新分镜列表，更新显示
+      await editorStore.fetchShots()
+      
+      window.$message?.success('批量生成分镜完成!')
+    }
+    
+    // 关闭弹框并取消选择
     showShotGenerateModal.value = false
     editorStore.deselectAll()
-    window.$message?.success('批量生成分镜任务已提交')
+    
   } catch (error: any) {
     console.error('[BatchOperationBar] Failed to batch generate shots:', error)
     window.$message?.error(error.message || '批量生成分镜失败')
+  } finally {
+    // 清理定时器
+    if (shotGenerateTimer) {
+      clearInterval(shotGenerateTimer)
+      shotGenerateTimer = null
+    }
+    isShotGenerating.value = false
+    shotGenerateSeconds.value = 0
+  }
+}
+
+// 分镜弹框取消/后台运行处理
+const handleShotModalClose = () => {
+  if (isShotGenerating.value) {
+    // 正在生成中，转为后台运行
+    window.$message?.info('任务已转为后台运行，完成后会自动刷新')
+    showShotGenerateModal.value = false
+    // 不清除定时器，让轮询继续在后台运行
+  } else {
+    // 未开始生成，直接关闭
+    showShotGenerateModal.value = false
   }
 }
 
@@ -68,21 +155,72 @@ const handleOpenVideoGenerate = () => {
   showVideoGenerateModal.value = true
 }
 
+// 视频弹框取消/后台运行处理
+const handleVideoModalClose = () => {
+  if (isVideoGenerating.value) {
+    // 正在生成中，转为后台运行
+    window.$message?.info('任务已转为后台运行，完成后会自动刷新')
+    showVideoGenerateModal.value = false
+  } else {
+    showVideoGenerateModal.value = false
+  }
+}
+
 // 确认批量生成视频
 const handleConfirmVideoGenerate = async () => {
+  if (isVideoGenerating.value) return
+  
   try {
-    await editorStore.batchGenerateVideos({
+    // 开始生成，显示进度
+    isVideoGenerating.value = true
+    videoGenerateSeconds.value = 0
+    videoGenerateTimer = setInterval(() => {
+      videoGenerateSeconds.value++
+    }, 1000)
+    
+    // 提交批量生成任务
+    const response = await editorStore.batchGenerateVideos({
       targetIds: Array.from(editorStore.selectedShotIds),
       mode: videoGenerateMode.value,
       countPerItem: videoGenerateCount.value,
       aspectRatio: '16:9',
     })
+    
+    console.log('[BatchOperationBar] 批量生成视频任务已提交:', response)
+    
+    // 轮询Job状态直到完成
+    if (response.jobId) {
+      const finalJob = await pollJobStatus(
+        response.jobId,
+        (job: JobVO) => {
+          console.log('[BatchOperationBar] 视频生成Job进度:', job.progress, '%')
+        },
+        5000  // 视频生成时间较长，5秒轮询一次
+      )
+      
+      console.log('[BatchOperationBar] 视频生成Job完成:', finalJob)
+      
+      // 刷新分镜列表，更新显示
+      await editorStore.fetchShots()
+      
+      window.$message?.success('批量生成视频完成!')
+    }
+    
+    // 关闭弹框并取消选择
     showVideoGenerateModal.value = false
     editorStore.deselectAll()
-    window.$message?.success('批量生成视频任务已提交')
+    
   } catch (error: any) {
     console.error('[BatchOperationBar] Failed to batch generate videos:', error)
     window.$message?.error(error.message || '批量生成视频失败')
+  } finally {
+    // 清理定时器
+    if (videoGenerateTimer) {
+      clearInterval(videoGenerateTimer)
+      videoGenerateTimer = null
+    }
+    isVideoGenerating.value = false
+    videoGenerateSeconds.value = 0
   }
 }
 </script>
@@ -238,30 +376,31 @@ const handleConfirmVideoGenerate = async () => {
             <p class="text-xs text-text-tertiary mt-1">建议1-4张，生成多张可供选择最佳效果</p>
           </div>
 
-          <!-- 消耗预估 -->
-          <div class="bg-bg-subtle border border-border-default rounded p-3">
+          <!-- 消耗预估（暂时注释） -->
+          <!-- <div class="bg-bg-subtle border border-border-default rounded p-3">
             <p class="text-text-tertiary text-xs">
               💡 预计消耗：
               <span class="text-text-primary font-semibold">
                 {{ editorStore.selectedShotIds.size * shotGenerateCount * 50 }} 积分
               </span>
             </p>
-          </div>
+          </div> -->
         </div>
 
         <!-- 操作按钮 -->
         <div class="flex items-center justify-end gap-3 mt-6">
           <button
             class="px-5 py-2 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
-            @click="showShotGenerateModal = false"
+            @click="handleShotModalClose"
           >
-            取消
+            {{ shotCancelButtonText }}
           </button>
           <button
-            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
+            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isShotGenerating"
             @click="handleConfirmShotGenerate"
           >
-            确认生成
+            {{ shotGenerateButtonText }}
           </button>
         </div>
       </div>
@@ -330,30 +469,31 @@ const handleConfirmVideoGenerate = async () => {
             <p class="text-xs text-text-tertiary mt-1">建议1-3个，生成多个可供选择最佳效果</p>
           </div>
 
-          <!-- 消耗预估 -->
-          <div class="bg-bg-subtle border border-border-default rounded p-3">
+          <!-- 消耗预估（暂时注释） -->
+          <!-- <div class="bg-bg-subtle border border-border-default rounded p-3">
             <p class="text-text-tertiary text-xs">
               💡 预计消耗：
               <span class="text-text-primary font-semibold">
                 {{ editorStore.selectedShotIds.size * videoGenerateCount * 100 }} 积分
               </span>
             </p>
-          </div>
+          </div> -->
         </div>
 
         <!-- 操作按钮 -->
         <div class="flex items-center justify-end gap-3 mt-6">
           <button
             class="px-5 py-2 bg-bg-hover text-text-tertiary text-sm rounded hover:bg-bg-hover transition-colors"
-            @click="showVideoGenerateModal = false"
+            @click="handleVideoModalClose"
           >
-            取消
+            {{ videoCancelButtonText }}
           </button>
           <button
-            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors"
+            class="px-5 py-2 bg-bg-subtle text-text-secondary font-medium text-sm rounded hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isVideoGenerating"
             @click="handleConfirmVideoGenerate"
           >
-            确认生成
+            {{ videoGenerateButtonText }}
           </button>
         </div>
       </div>

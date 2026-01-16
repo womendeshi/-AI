@@ -631,6 +631,8 @@ public class BatchGenerationService {
                 shotId,
                 request.prompt(),
                 request.aspectRatio(),
+                request.duration(),
+                request.size(),
                 request.referenceImageUrl(),
                 request.scene(),
                 request.characters(),

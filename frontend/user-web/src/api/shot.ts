@@ -101,11 +101,13 @@ export const shotApi = {
    *
    * @param projectId 项目ID
    * @param fullScript 完整剧本文本
+   * @param signal 可选的 AbortSignal，用于取消请求
    * @returns 创建的分镜列表
    */
-  async parseAndCreateShots(projectId: number, fullScript: string): Promise<StoryboardShotVO[]> {
+  async parseAndCreateShots(projectId: number, fullScript: string, signal?: AbortSignal): Promise<StoryboardShotVO[]> {
     return api.post(`/projects/${projectId}/shots/parse-script`, { fullScript }, {
-      timeout: 120000  // 2分钟超时，AI解析需要更长时间
+      timeout: 120000,  // 2分钟超时，AI解析需要更长时间
+      signal
     })
   },
 }

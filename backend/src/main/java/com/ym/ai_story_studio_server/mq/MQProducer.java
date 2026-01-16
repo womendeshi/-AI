@@ -178,17 +178,20 @@ public class MQProducer {
      * @param shotId 分镜ID
      * @param prompt 完整提示词(内嵌规则 + 剧本 + 用户自定义)
      * @param aspectRatio 画幅比例
+     * @param duration 视频时长(秒)
+     * @param size 输出分辨率
      * @param referenceImageUrl 首帧参考图URL(可选)
      * @param scene 场景信息(可选)
      * @param characters 角色列表(可选)
      * @param props 道具列表(可选)
      */
     public void sendSingleShotVideoTask(Long jobId, Long userId, Long projectId, Long shotId,
-                                        String prompt, String aspectRatio, String referenceImageUrl,
+                                        String prompt, String aspectRatio, Integer duration, String size,
+                                        String referenceImageUrl,
                                         AssetResource scene, java.util.List<AssetResource> characters,
                                         java.util.List<AssetResource> props) {
         SingleShotVideoMessage message = new SingleShotVideoMessage(
-                jobId, userId, projectId, shotId, prompt, aspectRatio, referenceImageUrl, scene, characters, props
+                jobId, userId, projectId, shotId, prompt, aspectRatio, duration, size, referenceImageUrl, scene, characters, props
         );
         
         log.info("发送消息 - 交换机: {}, 路由键: {}, jobId: {}, shotId: {}, promptLength: {}, hasScene: {}, characterCount: {}, propCount: {}", 

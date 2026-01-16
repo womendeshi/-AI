@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import api from '@/api'
 import { uploadApi } from '@/api/apis'
 import axios from 'axios'
-import * as generationApi from '@/api/generation'
 import { jobApi, pollJobStatus } from '@/api/job'
 
 // Props定义
@@ -28,14 +27,23 @@ const currentShot = computed(() => {
 // 用户自定义提示词（暂未开放）
 const scriptDescription = ref('')
 
-// 比例选择
-const aspectRatio = ref('16:9')
-const aspectRatioOptions = [
-  { label: '16:9', value: '16:9' },
-  { label: '21:9', value: '21:9' },
-  { label: '1:1', value: '1:1' },
-  { label: '9:16', value: '9:16' },
+// 视频格式 / 时长选择
+const size = ref('1280x720')
+const sizeOptions = [
+  { label: '1280x720 (16:9)', value: '1280x720' },
+  { label: '1792x1024 (16:9)', value: '1792x1024' },
+  { label: '720x1280 (9:16)', value: '720x1280' },
+  { label: '1024x1792 (9:16)', value: '1024x1792' },
 ]
+
+const duration = ref(4)
+const durationOptions = [4, 8, 12]
+
+const mapSizeToAspectRatio = (value: string) => {
+  if (value === '1280x720' || value === '1792x1024') return '16:9'
+  if (value === '720x1280' || value === '1024x1792') return '9:16'
+  return '16:9'
+}
 
 // 生成状态
 const isGenerating = ref(false)
@@ -43,6 +51,7 @@ const isGenerating = ref(false)
 // 视频参考图URL（拼接后的图片）
 const videoReferenceUrl = ref<string>('')
 const referenceImageFile = ref<File | null>(null)
+const isMergingReference = ref(false)
 
 // 当前显示的缩略图URL（待生成区域）
 const generatedVideoThumbnail = ref<string>('')
@@ -67,7 +76,6 @@ interface VideoHistoryItem {
 
 const generationHistory = ref<VideoHistoryItem[]>([])
 const loadingHistory = ref(false)
-const mockVideoUrl = 'https://yuanmeng-logo.oss-cn-hangzhou.aliyuncs.com/2026/01/16/2051510e-718d-4c59-81bb-a1f6828babd1_ai_video_105.mp4'
 
 const handleReferenceImageUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -91,6 +99,78 @@ const triggerReferenceImageInput = () => {
   const input = document.getElementById('video-reference-image-input') as HTMLInputElement
   input?.click()
 }
+
+const handleReferencePreview = () => {
+  if (videoReferenceUrl.value) {
+    window.open(videoReferenceUrl.value, '_blank', 'noopener')
+    return
+  }
+  window.$message?.info('请先上传或拼接参考图')
+}
+
+const mergeReferenceImages = async () => {
+  if (isMergingReference.value) return
+
+  const imageUrls: string[] = []
+  if (videoReferenceUrl.value) imageUrls.push(videoReferenceUrl.value)
+  if (currentShot.value?.shotImage?.currentUrl) {
+    imageUrls.push(currentShot.value.shotImage.currentUrl)
+  } else if (currentShot.value?.shotImage?.thumbnailUrl) {
+    imageUrls.push(currentShot.value.shotImage.thumbnailUrl)
+  }
+  if (currentShot.value?.scene?.thumbnailUrl) imageUrls.push(currentShot.value.scene.thumbnailUrl)
+  if (currentShot.value?.characters?.length) {
+    currentShot.value.characters.forEach((char) => {
+      if (char.thumbnailUrl) imageUrls.push(char.thumbnailUrl)
+    })
+  } else if (editorStore.characters?.length) {
+    editorStore.characters.forEach((char) => {
+      if (char.thumbnailUrl) imageUrls.push(char.thumbnailUrl)
+    })
+  }
+  if (currentShot.value?.props?.length) {
+    currentShot.value.props.forEach((prop) => {
+      if (prop.thumbnailUrl) imageUrls.push(prop.thumbnailUrl)
+    })
+  } else if (editorStore.props?.length) {
+    editorStore.props.forEach((prop) => {
+      if (prop.thumbnailUrl) imageUrls.push(prop.thumbnailUrl)
+    })
+  }
+
+  const filteredUrls = Array.from(new Set(imageUrls)).filter(
+    (url) => url && !url.includes('via.placeholder.com')
+  )
+
+  if (filteredUrls.length === 0) {
+    window.$message?.warning('没有可拼接的参考图')
+    return
+  }
+
+  if (filteredUrls.length === 1) {
+    videoReferenceUrl.value = filteredUrls[0]
+    generatedVideoThumbnail.value = filteredUrls[0]
+    window.$message?.success('已设置首帧参考图')
+    return
+  }
+
+  isMergingReference.value = true
+  try {
+    const response = await api.post('/utils/images/merge', { imageUrls: filteredUrls })
+    if (response?.mergedImageUrl) {
+      videoReferenceUrl.value = response.mergedImageUrl
+      generatedVideoThumbnail.value = response.mergedImageUrl
+      window.$message?.success('首帧拼接完成')
+    } else {
+      window.$message?.error('拼接失败')
+    }
+  } catch (error) {
+    console.error('[VideoGeneratePanel] 拼接参考图失败:', error)
+    window.$message?.error('拼接失败')
+  } finally {
+    isMergingReference.value = false
+  }
+}
 // 收集当前分镜的所有资源（不拼接，直接传递）
 const collectAssetResources = () => {
   if (!currentShot.value) return null
@@ -98,7 +178,8 @@ const collectAssetResources = () => {
   console.log('[VideoGeneratePanel] ========== 开始收集资源 ==========')
   
   const resources = {
-    script: currentShot.value.script || '',
+    script: currentShot.value.scriptText || '',
+    shotImage: null as { thumbnailUrl: string } | null,
     scene: null as { id: number; name: string; thumbnailUrl: string } | null,
     characters: [] as Array<{ id: number; name: string; thumbnailUrl: string }>,
     props: [] as Array<{ id: number; name: string; thumbnailUrl: string }>
@@ -107,6 +188,14 @@ const collectAssetResources = () => {
   // 收集剧本
   if (resources.script) {
     console.log('[VideoGeneratePanel] ✅ 剧本已收集')
+  }
+  
+  // 收集分镜图
+  if (currentShot.value.shotImage?.thumbnailUrl) {
+    resources.shotImage = {
+      thumbnailUrl: currentShot.value.shotImage.thumbnailUrl
+    }
+    console.log('[VideoGeneratePanel] ✅ 分镜图已收集')
   }
   
   // 收集场景
@@ -149,6 +238,7 @@ const collectAssetResources = () => {
   
   console.log('[VideoGeneratePanel] 资源收集完成:', {
     hasScript: !!resources.script,
+    hasShotImage: !!resources.shotImage,
     hasScene: !!resources.scene,
     characterCount: resources.characters.length,
     propCount: resources.props.length
@@ -251,7 +341,7 @@ const handleAIGenerate = async () => {
   isGenerating.value = true
   
   try {
-    // 1. 收集当前分镜的所有资源（剧本、场景、角色、道具）
+    // 1. 收集当前分镜的所有资源（剧本、分镜图、场景、角色、道具）
     const resources = collectAssetResources()
     
     if (!resources) {
@@ -259,17 +349,23 @@ const handleAIGenerate = async () => {
       return
     }
     
-    // 2. 默认仅使用分镜剧本作为提示词
-    const customPrompt = resources.script?.trim() || ''
-    if (!customPrompt) {
-      window.$message?.warning('分镜剧本为空，暂无法生成视频')
-      return
+    // 2. 构建完整的提示词：内嵌规则 + 分镜剧本
+    const fixedTemplate = '根据参考图的设定，使用参考图中的角色、场景、道具，运用合理的构建分镜，合理的动作，合理的运镜，合理的环境渲染，发散你的想象力，生成保持风格一致性的2D动漫视频，要求不要字幕和BGM，没有台词时禁止说话，线条细致，人物画风保持与参考图一致，清晰不模糊，颜色鲜艳，光影效果，超清画质，电影级镜头（cinematicdvnamiccamera）,音质清晰无杂质，第一个镜头0.3秒空境，请忠实原文，不增加原文没有的内容，不减少原文包含的信息，分镜要求如下：'
+    
+    // 构建prompt：内嵌规则 + 分镜剧本
+    let customPrompt = fixedTemplate
+    if (resources.script) {
+      customPrompt += resources.script
+    } else {
+      customPrompt += '（无剧本内容）'
     }
     
     console.log('[VideoGeneratePanel] 生成参数:', {
       shotId: props.shotId,
       customPrompt,
-      aspectRatio: aspectRatio.value,
+      size: size.value,
+      duration: duration.value,
+      aspectRatio: mapSizeToAspectRatio(size.value),
       resources
     })
     
@@ -278,8 +374,11 @@ const handleAIGenerate = async () => {
       `/projects/${editorStore.projectId}/generate/shot-video/${props.shotId}`,
       {
         prompt: customPrompt,
-        aspectRatio: aspectRatio.value || '16:9',
+        aspectRatio: mapSizeToAspectRatio(size.value),
+        size: size.value,
+        duration: duration.value,
         referenceImageUrl: videoReferenceUrl.value || undefined,
+        shotImage: resources.shotImage,
         scene: resources.scene,
         characters: resources.characters,
         props: resources.props
@@ -291,9 +390,11 @@ const handleAIGenerate = async () => {
     // 4. 获取返回的jobId
     const jobId = response.jobId
     
-    // 使用第一个可用的图片作为缩略图
+    // 使用第一个可用的图片作为缩略图（优先使用分镜图）
     let mockThumbnailUrl = 'https://via.placeholder.com/400x225'
-    if (resources.scene?.thumbnailUrl) {
+    if (resources.shotImage?.thumbnailUrl) {
+      mockThumbnailUrl = resources.shotImage.thumbnailUrl
+    } else if (resources.scene?.thumbnailUrl) {
       mockThumbnailUrl = resources.scene.thumbnailUrl
     } else if (resources.characters.length > 0) {
       mockThumbnailUrl = resources.characters[0].thumbnailUrl
@@ -335,24 +436,6 @@ const handleAIGenerate = async () => {
   }
 }
 
-const handleMockVideoResult = () => {
-  const mockThumbnailUrl = getFallbackThumbnailUrl()
-
-  const newHistoryItem: VideoHistoryItem = {
-    id: Date.now(),
-    videoUrl: mockVideoUrl,
-    thumbnailUrl: mockThumbnailUrl,
-    timestamp: new Date().toLocaleString('zh-CN'),
-    prompt: '[mock]',
-    userInput: scriptDescription.value,
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-  }
-
-  generationHistory.value.unshift(newHistoryItem)
-  generatedVideoThumbnail.value = mockThumbnailUrl
-  saveHistory()
-  window.$message?.success('Mock video ready')
-}
 
 // 选择备选素材（切换待生成缩略图）
 const handleSelectMaterial = (material: any) => {
@@ -421,8 +504,17 @@ const handleApplyVideo = async (videoUrl: string) => {
 onMounted(() => {
   console.log('[VideoGeneratePanel] 组件挂载, shotId:', props.shotId)
   loadHistory()
+  ;(window as any).__shot = currentShot.value
   // TODO: 加载备选素材（从分镜图历史记录）
 })
+
+watch(
+  currentShot,
+  (value) => {
+    ;(window as any).__shot = value
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -445,14 +537,29 @@ onMounted(() => {
     <div class="flex-1 overflow-y-auto px-6 py-6">
       <!-- 视频参考图区域 -->
       <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-text-primary text-base font-medium">视频参考图</h4>
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-text-primary text-base font-medium">视频参考图</h4>
+        <div class="flex items-center gap-2">
+          <button
+            @click="triggerReferenceImageInput"
+            class="px-3 py-1.5 bg-bg-subtle rounded text-text-secondary text-xs hover:bg-bg-hover transition-colors"
+          >
+            上传参考图
+          </button>
+          <button
+            @click="mergeReferenceImages"
+            :disabled="isMergingReference"
+            class="px-3 py-1.5 bg-bg-subtle rounded text-text-secondary text-xs hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ isMergingReference ? '拼接中...' : '拼接首帧' }}
+          </button>
         </div>
+      </div>
 
         <!-- 大虚线框预览区 -->
         <div
           class="w-full aspect-video rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center overflow-hidden cursor-pointer hover:bg-bg-hover transition-colors"
-          @click="triggerReferenceImageInput"
+          @click="handleReferencePreview"
         >
           <template v-if="videoReferenceUrl">
             <img :src="videoReferenceUrl" alt="视频参考图" class="w-full h-full object-cover rounded">
@@ -482,32 +589,34 @@ onMounted(() => {
 
       <!-- 底部控制栏 -->
       <div class="flex items-center justify-between mb-6">
-        <!-- 比例选择 -->
-        <select
-          v-model="aspectRatio"
-          class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
-        >
-          <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
-            {{ option.label }}
-          </option>
-        </select>
+        <!-- 格式 / 时长选择 -->
+        <div class="flex items-center gap-3">
+          <select
+            v-model="size"
+            class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
+          >
+            <option v-for="option in sizeOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
+              {{ option.label }}
+            </option>
+          </select>
+          <select
+            v-model="duration"
+            class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
+          >
+            <option v-for="option in durationOptions" :key="option" :value="option" class="bg-bg-elevated">
+              {{ option }} 秒
+            </option>
+          </select>
+        </div>
 
         <!-- AI生成按钮 -->
-        <div class="flex items-center gap-2">
-          <button
-            @click="handleMockVideoResult"
-            class="px-4 py-3 bg-bg-subtle rounded text-text-secondary font-medium text-sm hover:bg-bg-hover transition-colors"
-          >
-            Mock Result
-          </button>
-          <button
-            @click="handleAIGenerate"
-            :disabled="isGenerating"
-            class="px-10 py-3 bg-bg-subtle rounded text-text-secondary font-medium text-sm hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ isGenerating ? '生成中...' : 'AI生成' }}
-          </button>
-        </div>
+        <button
+          @click="handleAIGenerate"
+          :disabled="isGenerating"
+          class="px-10 py-3 bg-bg-subtle rounded text-text-secondary font-medium text-sm hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ isGenerating ? '生成中...' : 'AI生成' }}
+        </button>
       </div>
 
       <!-- 待生成区域 -->

@@ -109,9 +109,9 @@ const goToPage = (page: number) => {
 </script>
 
 <template>
-  <div class="card overflow-hidden">
+  <div class="card overflow-hidden flex flex-col h-full">
     <!-- Tab 切换 -->
-    <div class="flex items-center gap-1 px-6 py-3 border-b border-border-default">
+    <div class="flex items-center gap-1 px-4 py-2 border-b border-border-default">
       <button
         :class="[
           'px-4 py-1.5 rounded text-sm font-medium transition-colors',
@@ -151,7 +151,7 @@ const goToPage = (page: number) => {
     </div>
 
     <!-- Table header -->
-    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-bg-subtle border-b border-border-default text-xs font-medium text-text-secondary">
+    <div class="grid grid-cols-12 gap-4 px-4 py-2 bg-bg-subtle border-b border-border-default text-xs font-medium text-text-secondary">
       <div class="col-span-6">名称</div>
       <div class="col-span-3">更新时间</div>
       <div class="col-span-3 text-right">操作</div>
@@ -168,14 +168,14 @@ const goToPage = (page: number) => {
     </div>
 
     <!-- 项目列表 -->
-    <div v-else-if="activeTab === 'projects'" class="divide-y divide-border-subtle">
+    <div v-else-if="activeTab === 'projects'" class="divide-y divide-border-subtle flex-1 overflow-y-auto">
       <div
         v-for="project in paginatedList as ProjectVO[]"
         :key="project.id"
-        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-bg-hover transition-all"
+        class="grid grid-cols-12 gap-4 px-4 py-2 hover:bg-bg-hover transition-all"
       >
-        <div class="col-span-6 flex items-center gap-3">
-          <div class="w-12 h-12 rounded bg-bg-subtle overflow-hidden flex-shrink-0">
+        <div class="col-span-6 flex items-center gap-2">
+          <div class="w-8 h-8 rounded bg-bg-subtle overflow-hidden flex-shrink-0">
             <img
               v-if="project.coverUrl"
               :src="project.coverUrl"
@@ -183,7 +183,7 @@ const goToPage = (page: number) => {
               class="w-full h-full object-cover"
             >
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
@@ -209,16 +209,16 @@ const goToPage = (page: number) => {
     </div>
 
     <!-- 文件夹列表 -->
-    <div v-else class="divide-y divide-border-subtle">
+    <div v-else class="divide-y divide-border-subtle flex-1 overflow-y-auto">
       <div
         v-for="folder in paginatedList as FolderVO[]"
         :key="folder.id"
-        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-bg-hover transition-all cursor-pointer"
+        class="grid grid-cols-12 gap-4 px-4 py-2 hover:bg-bg-hover transition-all cursor-pointer"
         @click="handleFolderClick(folder)"
       >
-        <div class="col-span-6 flex items-center gap-3">
-          <div class="w-12 h-12 rounded bg-[#8B5CF6]/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
+        <div class="col-span-6 flex items-center gap-2">
+          <div class="w-8 h-8 rounded bg-[#8B5CF6]/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
             </svg>
           </div>
@@ -242,7 +242,7 @@ const goToPage = (page: number) => {
     </div>
 
     <!-- 分页 -->
-    <div v-if="currentList.length > pageSize" class="px-6 py-4 border-t border-border-default flex items-center justify-between">
+    <div v-if="currentList.length > pageSize" class="px-4 py-2 border-t border-border-default flex items-center justify-between">
       <div class="text-sm text-text-tertiary">
         显示 {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, currentList.length) }} / 共 {{ currentList.length }} 个{{ activeTab === 'projects' ? '项目' : '文件夹' }}
       </div>

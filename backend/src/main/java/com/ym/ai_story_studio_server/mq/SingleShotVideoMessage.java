@@ -54,6 +54,16 @@ public class SingleShotVideoMessage implements Serializable {
     private String aspectRatio;
 
     /**
+     * 视频时长(秒)
+     */
+    private Integer duration;
+
+    /**
+     * 输出分辨率(如: 1280x720)
+     */
+    private String size;
+
+    /**
      * 首帧参考图URL(可选)
      */
     private String referenceImageUrl;

@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/projects")
 @RequiredArgsConstructor
 public class ExportController {
 
@@ -43,7 +42,7 @@ public class ExportController {
      * @param request 导出请求
      * @return 导出任务响应
      */
-    @PostMapping("/{projectId}/export")
+    @PostMapping("/api/projects/{projectId}/export")
     public Result<ExportResponse> submitExportTask(
             @PathVariable("projectId") Long projectId,
             @Valid @RequestBody ExportRequest request) {
@@ -69,7 +68,7 @@ public class ExportController {
      * @param jobId 导出任务ID
      * @return 文件资源
      */
-    @GetMapping("/exports/{jobId}/download")
+    @GetMapping("/api/exports/{jobId}/download")
     public ResponseEntity<Resource> downloadExportFile(@PathVariable("jobId") Long jobId) {
         Long userId = UserContext.getUserId();
         log.info("下载导出文件: userId={}, jobId={}", userId, jobId);

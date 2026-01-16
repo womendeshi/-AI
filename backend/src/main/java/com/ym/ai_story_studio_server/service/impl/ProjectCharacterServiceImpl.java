@@ -80,12 +80,32 @@ public class ProjectCharacterServiceImpl implements ProjectCharacterService {
 
         // 转换为VO
         return projectCharacters.stream().map(pc -> {
-            // 查询全局角色信息
-            CharacterLibrary libChar = characterLibraryMapper.selectById(pc.getLibraryCharacterId());
+            // 查询全局角色信息（可能为null，支持自定义角色）
+            CharacterLibrary libChar = pc.getLibraryCharacterId() != null 
+                    ? characterLibraryMapper.selectById(pc.getLibraryCharacterId()) 
+                    : null;
+            
+            // 判断是否为自定义角色（未关联角色库）
+            boolean isCustomCharacter = (libChar == null);
 
-            String libraryCharacterName = (libChar != null) ? libChar.getName() : "角色已删除";
-            String libraryDescription = (libChar != null) ? libChar.getDescription() : null;
-            String thumbnailUrl = (libChar != null) ? libChar.getThumbnailUrl() : null;
+            String libraryCharacterName;
+            String libraryDescription;
+            String thumbnailUrl;
+            
+            if (isCustomCharacter) {
+                // 自定义角色：使用项目角色自己的信息
+                libraryCharacterName = pc.getDisplayName() != null ? pc.getDisplayName() : "自定义角色";
+                libraryDescription = pc.getOverrideDescription();
+                thumbnailUrl = pc.getThumbnailUrl();  // 使用项目角色的缩略图
+            } else {
+                // 关联角色库：使用库的信息
+                libraryCharacterName = libChar.getName();
+                libraryDescription = libChar.getDescription();
+                // 缩略图优先级：项目角色自己的 > 角色库的
+                thumbnailUrl = StringUtils.hasText(pc.getThumbnailUrl()) 
+                        ? pc.getThumbnailUrl() 
+                        : libChar.getThumbnailUrl();
+            }
 
             // displayName: 优先使用项目内显示名称,否则使用全局名称
             String displayName = StringUtils.hasText(pc.getDisplayName())

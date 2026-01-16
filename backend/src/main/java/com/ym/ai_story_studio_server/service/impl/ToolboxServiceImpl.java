@@ -187,6 +187,7 @@ public class ToolboxServiceImpl implements ToolboxService {
                 request.prompt(),
                 request.aspectRatio(),
                 request.duration(),
+                null,
                 referenceImageUrl,
                 null   // projectId为null(工具箱不关联项目)
         );

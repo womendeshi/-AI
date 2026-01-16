@@ -141,6 +141,13 @@ public class AiVideoService {
         String model = videoConfig.getModel();
         String aspectRatio = request.aspectRatio() != null ? request.aspectRatio() : videoConfig.getDefaultAspectRatio();
         Integer duration = request.duration() != null ? request.duration() : videoConfig.getDefaultDuration();
+        String size = request.size();
+        if (size != null && !size.isBlank()) {
+            String mappedAspectRatio = mapSizeToAspectRatio(size);
+            if (mappedAspectRatio != null) {
+                aspectRatio = mappedAspectRatio;
+            }
+        }
 
         // 验证视频时长
         if (duration > videoConfig.getMaxDuration()) {
@@ -150,10 +157,10 @@ public class AiVideoService {
             );
         }
 
-        log.debug("应用配置 - model: {}, aspectRatio: {}, duration: {}秒", model, aspectRatio, duration);
+        log.debug("应用配置 - model: {}, aspectRatio: {}, duration: {}秒, size: {}", model, aspectRatio, duration, size);
 
         // 2. ✅ 创建任务记录(MyBatis-Plus的insert会自动提交) - 修复: 传入 prompt
-        Job job = createJob(userId, request.projectId(), model, aspectRatio, duration, request.prompt());
+        Job job = createJob(userId, request.projectId(), model, aspectRatio, duration, size, request.prompt());
         log.info("✅ 任务已创建 - jobId: {}, jobType: VIDEO_GENERATION", job.getId());
 
         try {
@@ -164,6 +171,7 @@ public class AiVideoService {
                     model,
                     aspectRatio,
                     duration,
+                    size,
                     request.referenceImageUrl()
             );
 
@@ -176,6 +184,7 @@ public class AiVideoService {
                 metaData.put("model", model);
                 metaData.put("aspectRatio", aspectRatio);
                 metaData.put("duration", duration);
+                metaData.put("size", size);
                 metaData.put("prompt", request.prompt());
                 metaData.put("apiTaskId", apiTaskId);
                 job.setMetaJson(objectMapper.writeValueAsString(metaData));
@@ -237,7 +246,7 @@ public class AiVideoService {
      * @param prompt 用户提示词
      * @return 任务对象
      */
-    private Job createJob(Long userId, Long projectId, String model, String aspectRatio, Integer duration, String prompt) {
+    private Job createJob(Long userId, Long projectId, String model, String aspectRatio, Integer duration, String size, String prompt) {
         Job job = new Job();
         job.setUserId(userId);
         job.setProjectId(projectId != null ? projectId : 0L);
@@ -253,6 +262,7 @@ public class AiVideoService {
             metaData.put("model", model);
             metaData.put("aspectRatio", aspectRatio);
             metaData.put("duration", duration);
+            metaData.put("size", size);
             metaData.put("prompt", prompt);
             job.setMetaJson(objectMapper.writeValueAsString(metaData));
         } catch (Exception e) {
@@ -274,6 +284,14 @@ public class AiVideoService {
         job.setStatus("FAILED");
         job.setErrorMessage(errorMessage);
         jobMapper.updateById(job);
+    }
+
+    private String mapSizeToAspectRatio(String size) {
+        return switch (size) {
+            case "1280x720", "1792x1024" -> "16:9";
+            case "720x1280", "1024x1792" -> "9:16";
+            default -> null;
+        };
     }
 }
 // {{END_MODIFICATIONS}}

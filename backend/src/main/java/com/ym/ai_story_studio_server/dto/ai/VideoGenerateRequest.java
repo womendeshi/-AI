@@ -49,6 +49,7 @@ import org.hibernate.validator.constraints.URL;
  * @param prompt 提示词(必填,1-1000字符)
  * @param aspectRatio 画幅比例(可选,默认使用配置值)
  * @param duration 视频时长(秒,可选,1-10秒,默认使用配置值)
+ * @param size 输出分辨率(可选,默认由画幅比例决定)
  * @param referenceImageUrl 首帧参考图URL(可选,用于图生视频)
  * @param projectId 所属项目ID(必填)
  *
@@ -66,6 +67,12 @@ public record VideoGenerateRequest(
         @Min(value = 1, message = "视频时长不能小于1秒")
         @Max(value = 10, message = "视频时长不能大于10秒")
         Integer duration,
+
+        @Pattern(
+                regexp = "720x1280|1280x720|1024x1792|1792x1024",
+                message = "不支持的输出分辨率"
+        )
+        String size,
 
         @URL(message = "参考图URL格式不正确")
         String referenceImageUrl,
