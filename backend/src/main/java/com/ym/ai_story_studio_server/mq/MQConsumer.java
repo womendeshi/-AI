@@ -641,21 +641,35 @@ public class MQConsumer {
                 throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.SHOT_NOT_FOUND);
             }
 
-            // 2. 如果没有提供参考图，尝试从资产系统查询分镜当前图片
+            // 2. 如果没有提供参考图，尝试从资产系统查询分镜图片
             if (referenceImageUrl == null || referenceImageUrl.isBlank()) {
-                // 查询分镜当前图片资产
-                AssetRef currentImageRef = assetRefMapper.selectOne(
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AssetRef>()
-                        .eq(AssetRef::getRefType, "SHOT_IMG_CURRENT")
-                        .eq(AssetRef::getRefOwnerId, shotId)
-                );
+                // 直接从 assets + asset_versions 表查询分镜图片
+                com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
+                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "SHOT")
+                        .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
+                        .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
+                        .orderByDesc(com.ym.ai_story_studio_server.entity.Asset::getCreatedAt)
+                        .last("LIMIT 1");
                 
-                if (currentImageRef != null) {
-                    // 查询资产版本获取URL
-                    AssetVersion assetVersion = assetVersionMapper.selectById(currentImageRef.getAssetVersionId());
-                    if (assetVersion != null && assetVersion.getUrl() != null) {
-                        referenceImageUrl = assetVersion.getUrl();
-                        log.info("未提供参考图，使用分镜当前图片 - shotId: {}, imageUrl: {}", shotId, referenceImageUrl);
+                com.ym.ai_story_studio_server.entity.Asset shotAsset = assetMapper.selectOne(assetQuery);
+                
+                if (shotAsset != null) {
+                    // 查询最新的READY状态版本
+                    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AssetVersion> versionQuery =
+                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                    versionQuery.eq(AssetVersion::getAssetId, shotAsset.getId())
+                            .eq(AssetVersion::getStatus, "READY")
+                            .isNotNull(AssetVersion::getUrl)
+                            .orderByDesc(AssetVersion::getVersionNo)
+                            .last("LIMIT 1");
+                    
+                    AssetVersion latestVersion = assetVersionMapper.selectOne(versionQuery);
+                    
+                    if (latestVersion != null && latestVersion.getUrl() != null) {
+                        referenceImageUrl = latestVersion.getUrl();
+                        log.info("未提供参考图，使用分镜图片 - shotId: {}, assetId: {}, imageUrl: {}", 
+                                shotId, shotAsset.getId(), referenceImageUrl);
                     }
                 }
             }
