@@ -1204,6 +1204,12 @@ const handleCharacterGenerate = async () => {
     // 为现有角色生成新图片
     targetCharacterId = props.assetId
     console.log('[AssetEditPanel] 为现有角色生成图片:', targetCharacterId)
+    
+    // ✅ 先更新角色描述（AI分析后的内容）
+    await api.put(`/projects/${editorStore.projectId}/characters/${targetCharacterId}`, {
+      overrideDescription: aiDescription.value
+    })
+    console.log('[AssetEditPanel] 角色描述已更新:', aiDescription.value.substring(0, 50) + '...')
   } else {
     // 创建新角色
     const characterName = currentCharacterName.value || '新角色'

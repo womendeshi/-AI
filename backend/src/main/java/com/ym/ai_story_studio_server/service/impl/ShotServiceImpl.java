@@ -3,6 +3,7 @@ package com.ym.ai_story_studio_server.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ym.ai_story_studio_server.client.VectorEngineClient;
 import com.ym.ai_story_studio_server.config.AiProperties;
+import com.ym.ai_story_studio_server.dto.ai.AiParseScriptResult;
 import com.ym.ai_story_studio_server.exception.BusinessException;
 import com.ym.ai_story_studio_server.common.ResultCode;
 import com.ym.ai_story_studio_server.dto.shot.*;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -417,9 +420,14 @@ public class ShotServiceImpl implements ShotService {
         // 1. 验证项目存在且属于当前用户
         validateProjectOwnership(userId, projectId);
 
-        // 2. 调用AI解析剧本，拆分成多条
-        List<String> scriptSegments = parseScriptToSegments(request.fullScript());
-        log.info("AI解析完成，拆分为{}条分镜", scriptSegments.size());
+        // 2. 调用AI解析剧本，拆分成多条分镜、角色和场景
+        AiParseScriptResult parseResult = parseScriptWithCharactersAndScenes(request.fullScript());
+        List<String> scriptSegments = parseResult.getScriptSegments();
+        List<String> characters = parseResult.getCharacters();
+        List<String> scenes = parseResult.getScenes();
+        
+        log.info("AI解析完成，拆分为{}条分镜，{}个角色，{}个场景", 
+                scriptSegments.size(), characters.size(), scenes.size());
 
         if (scriptSegments.isEmpty()) {
             throw new BusinessException(ResultCode.PARAM_INVALID, "AI解析结果为空，请检查剧本内容");
@@ -435,12 +443,250 @@ public class ShotServiceImpl implements ShotService {
             createdShots.add(shot);
         }
 
+        // 4. 创建项目角色和场景，并绑定到分镜
+        createAndBindCharactersAndScenes(userId, projectId, createdShots, characters, scenes);
+
         log.info("批量创建分镜完成: count={}", createdShots.size());
         return createdShots;
     }
 
     /**
-     * 解析完整剧本，拆分成分镜段落
+     * 解析完整剧本，提取分镜、角色和场景
+     *
+     * @param fullScript 完整剧本文本
+     * @return AI解析结果，包含分镜段落、角色名称和场景描述
+     */
+    private AiParseScriptResult parseScriptWithCharactersAndScenes(String fullScript) {
+        String systemPrompt = """
+            一、你是一个专业的剧本大师，请将以下文案转换为剧本格式，并提取角色和场景信息
+            
+            要求：
+            1.将内容分镜化，每个镜头的字数严格控制在99字以内
+            2.保持文案所有情节，角色对话全部保留，不得增删改一字
+            3.严格按照剧本格式输出
+            4.提取剧本中出现的所有角色名称
+            5.提取剧本中涉及的所有场景描述
+            
+            格式规范:
+            -场景编号格式:场x-y，如"场1-1"代表第1集第一个场景
+            -时间信息:夜/日，清晰表明是晚上还是白天
+            -地点类型:外/内，明确是室外还是室内
+            -具体地点:如别墅、酒店、广场等
+            -使用括号标注镜头和动作
+            -不要使用**等非剧本格式的符号
+            -允许使用的景别：中景、近景、特写
+            -中景：用于展示两人互动、相对位置或上半身动作
+            -近景：用于常规对话、面部表情捕捉
+            -特写：用于强调手部动作、物品细节或眼神微表情
+            
+            输出格式要求：
+            1. 使用JSON格式输出，包含三个字段：script_segments、characters、scenes
+            2. script_segments: 分镜段落列表，每个分镜之间用 "---" 分隔
+            3. characters: 角色名称列表，去重，只包含人名，不包含描述
+            4. scenes: 场景描述列表，包含时间、地点、环境等描述
+            5. JSON格式如下：
+            {
+                "script_segments": [
+                    "场1-1 日 内 咖啡厅\n出场人物:林辰、林清雪\n（中景）林辰和林清雪面对面坐着，桌上放着咖啡，叶辰说：\"我想和你谈谈我们的未来。\"\n（近景）叶辰表情严肃，镜头切至林清雪抬头看他，林清雪说：\"什么意思？\"\n（特写）叶辰的手从包里拿出户口本放在桌上，叶辰说：\"我想和你结婚。\"",
+                    "场1-2 日 内 咖啡厅\n出场人物:林辰、林清雪\n（近景）林清雪震惊地看着户口本，林清雪说：\"可是...我爸不同意。\"\n（特写）叶辰紧紧握住林清雪的手，叶辰说：\"我会说服他的，相信我。\"\n（中景）林清雪流泪，随后坚定地点头。林清雪说：\"我相信你。\""
+                ],
+                "characters": ["林辰", "林清雪"],
+                "scenes": ["咖啡厅 日 内", "咖啡厅 日 内"]
+            }
+            
+            直接输出JSON，不要其他说明。
+            """;
+
+        String prompt = systemPrompt + "\n\n用户文案：\n" + fullScript;
+
+        // 调用AI生成
+        AiProperties.Text textConfig = aiProperties.getText();
+        VectorEngineClient.TextApiResponse response = vectorEngineClient.generateText(
+                prompt,
+                textConfig.getModel(),
+                textConfig.getMaxTokens(),
+                0.3,  // 使用较低的温度以获得更稳定的输出
+                0.9
+        );
+
+        // 提取生成的文本
+        String generatedText = response.choices() == null || response.choices().isEmpty()
+                ? "{}"
+                : response.choices().get(0).message().content();
+
+        log.debug("AI解析结果: {}", generatedText);
+        
+        // 解析JSON响应
+        return parseAiResponseToJson(generatedText);
+    }
+    
+    /**
+     * 解析AI返回的JSON响应
+     *
+     * @param jsonResponse AI返回的JSON字符串
+     * @return 解析后的AI解析结果
+     */
+    private AiParseScriptResult parseAiResponseToJson(String jsonResponse) {
+        try {
+            // 尝试从AI响应中提取JSON部分
+            String cleanJson = extractJsonFromResponse(jsonResponse);
+            
+            // 使用Jackson ObjectMapper解析JSON
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            
+            // 解析为Map
+            @SuppressWarnings("unchecked")
+            Map<String, Object> jsonMap = mapper.readValue(cleanJson, Map.class);
+            
+            // 提取各个字段
+            List<String> scriptSegments = (List<String>) jsonMap.getOrDefault("script_segments", new ArrayList<>());
+            List<String> characters = (List<String>) jsonMap.getOrDefault("characters", new ArrayList<>());
+            List<String> scenes = (List<String>) jsonMap.getOrDefault("scenes", new ArrayList<>());
+            
+            // 如果scriptSegments为空，尝试从AI响应中提取分镜内容
+            if (scriptSegments == null || scriptSegments.isEmpty()) {
+                scriptSegments = extractScriptSegmentsFromText(jsonResponse);
+            }
+            
+            // 如果characters为空，尝试从分镜中提取角色
+            if (characters == null || characters.isEmpty()) {
+                characters = extractCharactersFromScriptSegments(scriptSegments);
+            }
+            
+            // 如果scenes为空，尝试从分镜中提取场景
+            if (scenes == null || scenes.isEmpty()) {
+                scenes = extractScenesFromScriptSegments(scriptSegments);
+            }
+            
+            return new AiParseScriptResult(scriptSegments, characters, scenes);
+        } catch (Exception e) {
+            log.error("解析AI JSON响应失败: {}", e.getMessage(), e);
+            // 如果JSON解析失败，使用备用方法解析
+            return fallbackParseScriptWithCharactersAndScenes(jsonResponse);
+        }
+    }
+    
+    /**
+     * 从AI响应中提取JSON部分
+     *
+     * @param response AI响应字符串
+     * @return 提取出的JSON字符串
+     */
+    private String extractJsonFromResponse(String response) {
+        // 查找第一个 { 和最后一个 }
+        int startIndex = response.indexOf('{');
+        int endIndex = response.lastIndexOf('}');
+        
+        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+            return response.substring(startIndex, endIndex + 1);
+        }
+        
+        // 如果找不到JSON结构，返回原响应
+        return response;
+    }
+    
+    /**
+     * 从文本中提取分镜段落
+     *
+     * @param text 包含分镜的文本
+     * @return 分镜段落列表
+     */
+    private List<String> extractScriptSegmentsFromText(String text) {
+        // 按 "---" 分割
+        String[] segments = text.split("---");
+        List<String> result = new ArrayList<>();
+        
+        for (String segment : segments) {
+            String trimmedSegment = segment.trim();
+            if (!trimmedSegment.isEmpty()) {
+                result.add(trimmedSegment);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 从分镜段落中提取角色名称
+     *
+     * @param scriptSegments 分镜段落列表
+     * @return 角色名称列表
+     */
+    private List<String> extractCharactersFromScriptSegments(List<String> scriptSegments) {
+        List<String> allCharacters = new ArrayList<>();
+        
+        for (String segment : scriptSegments) {
+            // 匹配 "出场人物:" 后面的角色名称
+            Pattern pattern = Pattern.compile("出场人物[::：]([^\\n]+)");
+            Matcher matcher = pattern.matcher(segment);
+            
+            if (matcher.find()) {
+                String charactersText = matcher.group(1);
+                // 按逗号、顿号或空格分割角色名称
+                String[] names = charactersText.split("[,、，。 ]+");
+                for (String name : names) {
+                    name = name.trim();
+                    if (!name.isEmpty() && !allCharacters.contains(name)) {
+                        allCharacters.add(name);
+                    }
+                }
+            }
+        }
+        
+        return allCharacters;
+    }
+    
+    /**
+     * 从分镜段落中提取场景描述
+     *
+     * @param scriptSegments 分镜段落列表
+     * @return 场景描述列表
+     */
+    private List<String> extractScenesFromScriptSegments(List<String> scriptSegments) {
+        List<String> allScenes = new ArrayList<>();
+        
+        for (String segment : scriptSegments) {
+            // 匹配场次开头的场景信息，如 "场1-1 日 内 咖啡厅"
+            Pattern pattern = Pattern.compile("^场\\d+-\\d+\\s+([^\\n]+)");
+            Matcher matcher = pattern.matcher(segment);
+            
+            if (matcher.find()) {
+                String sceneInfo = matcher.group(1).trim();
+                // 提取场景描述部分（去除时间、内外景信息）
+                String[] parts = sceneInfo.split("\\s+");
+                if (parts.length >= 3) {
+                    String sceneDesc = parts[2]; // 通常第三部分是具体的地点
+                    if (!allScenes.contains(sceneDesc)) {
+                        allScenes.add(sceneDesc);
+                    }
+                }
+            }
+        }
+        
+        return allScenes;
+    }
+    
+    /**
+     * 备用方法：当JSON解析失败时，解析剧本并提取角色和场景
+     *
+     * @param fullScript 完整剧本文本
+     * @return AI解析结果
+     */
+    private AiParseScriptResult fallbackParseScriptWithCharactersAndScenes(String fullScript) {
+        log.info("使用备用方法解析剧本");
+        
+        // 使用原来的分镜解析方法
+        List<String> scriptSegments = parseScriptToSegments(fullScript);
+        
+        // 从分镜中提取角色和场景
+        List<String> characters = extractCharactersFromScriptSegments(scriptSegments);
+        List<String> scenes = extractScenesFromScriptSegments(scriptSegments);
+        
+        return new AiParseScriptResult(scriptSegments, characters, scenes);
+    }
+    
+    /**
+     * 解析完整剧本，拆分成分镜段落（原有方法，保留用于备选）
      *
      * @param fullScript 完整剧本文本
      * @return 分镜段落列表
@@ -512,6 +758,252 @@ public class ShotServiceImpl implements ShotService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * 创建项目角色和场景，并绑定到分镜
+     *
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param shots 分镜列表
+     * @param characters 角色名称列表
+     * @param scenes 场景描述列表
+     */
+    private void createAndBindCharactersAndScenes(Long userId, Long projectId, List<ShotVO> shots, 
+                                                  List<String> characters, List<String> scenes) {
+        log.info("开始创建角色和场景并绑定到分镜: characters={}, scenes={}", 
+                characters.size(), scenes.size());
+        
+        // 创建项目角色
+        Map<String, ProjectCharacter> projectCharacterMap = createProjectCharacters(userId, projectId, characters);
+        
+        // 创建项目场景
+        Map<String, ProjectScene> projectSceneMap = createProjectScenes(userId, projectId, scenes);
+        
+        // 绑定角色和场景到分镜
+        bindCharactersAndScenesToShots(userId, projectId, shots, projectCharacterMap, projectSceneMap);
+    }
+    
+    /**
+     * 创建项目角色
+     *
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param characters 角色名称列表
+     * @return 项目角色映射（角色名 -> 项目角色对象）
+     */
+    private Map<String, ProjectCharacter> createProjectCharacters(Long userId, Long projectId, List<String> characters) {
+        Map<String, ProjectCharacter> characterMap = new java.util.HashMap<>();
+        
+        for (String characterName : characters) {
+            if (characterName == null || characterName.trim().isEmpty()) {
+                continue;
+            }
+            
+            characterName = characterName.trim();
+            
+            // 检查是否已存在同名角色
+            LambdaQueryWrapper<ProjectCharacter> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ProjectCharacter::getProjectId, projectId)
+                      .eq(ProjectCharacter::getDisplayName, characterName);
+            
+            ProjectCharacter existingCharacter = projectCharacterMapper.selectOne(queryWrapper);
+            
+            if (existingCharacter == null) {
+                // 创建新角色
+                ProjectCharacter character = new ProjectCharacter();
+                character.setProjectId(projectId);
+                character.setDisplayName(characterName);
+                character.setLibraryCharacterId(null); // 无库角色关联，使用项目内自定义
+                
+                projectCharacterMapper.insert(character);
+                characterMap.put(characterName, character);
+                
+                log.info("创建项目角色: {}", characterName);
+            } else {
+                characterMap.put(characterName, existingCharacter);
+                log.info("角色已存在，跳过创建: {}", characterName);
+            }
+        }
+        
+        return characterMap;
+    }
+    
+    /**
+     * 创建项目场景
+     *
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param scenes 场景描述列表
+     * @return 项目场景映射（场景名 -> 项目场景对象）
+     */
+    private Map<String, ProjectScene> createProjectScenes(Long userId, Long projectId, List<String> scenes) {
+        Map<String, ProjectScene> sceneMap = new java.util.HashMap<>();
+        
+        for (String sceneName : scenes) {
+            if (sceneName == null || sceneName.trim().isEmpty()) {
+                continue;
+            }
+            
+            sceneName = sceneName.trim();
+            
+            // 只保留地点名称，去掉"日/夜"和"内/外"等信息
+            // 例如 "宿舍 日 内" -> "宿舍"
+            String[] parts = sceneName.split("\\s+");
+            if (parts.length > 0) {
+                sceneName = parts[0];
+            }
+            
+            // 检查是否已存在同名场景
+            LambdaQueryWrapper<ProjectScene> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ProjectScene::getProjectId, projectId)
+                      .eq(ProjectScene::getDisplayName, sceneName);
+            
+            ProjectScene existingScene = projectSceneMapper.selectOne(queryWrapper);
+            
+            if (existingScene == null) {
+                // 创建新场景
+                ProjectScene scene = new ProjectScene();
+                scene.setProjectId(projectId);
+                scene.setDisplayName(sceneName);
+                scene.setLibrarySceneId(null); // 无库场景关联，使用项目内自定义
+                
+                projectSceneMapper.insert(scene);
+                sceneMap.put(sceneName, scene);
+                
+                log.info("创建项目场景: {}", sceneName);
+            } else {
+                sceneMap.put(sceneName, existingScene);
+                log.info("场景已存在，跳过创建: {}", sceneName);
+            }
+        }
+        
+        return sceneMap;
+    }
+    
+    /**
+     * 绑定角色和场景到分镜
+     *
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param shots 分镜列表
+     * @param characterMap 项目角色映射
+     * @param sceneMap 项目场景映射
+     */
+    private void bindCharactersAndScenesToShots(Long userId, Long projectId, List<ShotVO> shots,
+                                               Map<String, ProjectCharacter> characterMap,
+                                               Map<String, ProjectScene> sceneMap) {
+        for (ShotVO shot : shots) {
+            String scriptText = shot.scriptText();
+            
+            // 从剧本文本中提取出场人物
+            List<String> shotCharacters = extractCharactersFromScript(scriptText);
+            
+            // 绑定角色到分镜
+            for (String characterName : shotCharacters) {
+                ProjectCharacter projectCharacter = characterMap.get(characterName);
+                if (projectCharacter != null) {
+                    createBindingIfNotExists(userId, projectId, shot.id(), "PCHAR", projectCharacter.getId());
+                }
+            }
+            
+            // 提取地点名称并匹配场景
+            String placeName = extractSceneFromScript(scriptText);
+            log.debug("提取到的地点名称: {}, shotId={}", placeName, shot.id());
+            
+            if (placeName != null && !placeName.isEmpty()) {
+                ProjectScene projectScene = sceneMap.get(placeName);
+                if (projectScene != null) {
+                    createBindingIfNotExists(userId, projectId, shot.id(), "PSCENE", projectScene.getId());
+                    log.info("场景绑定成功: shotId={}, sceneName={}", shot.id(), placeName);
+                } else {
+                    log.warn("场景未找到: placeName={}, sceneMapKeys={}", placeName, sceneMap.keySet());
+                }
+            }
+        }
+    }
+    
+    /**
+     * 创建绑定关系（如果不存在）
+     *
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param shotId 分镜ID
+     * @param bindType 绑定类型
+     * @param bindId 绑定对象ID
+     */
+    private void createBindingIfNotExists(Long userId, Long projectId, Long shotId, String bindType, Long bindId) {
+        try {
+            // 检查是否已存在相同的绑定
+            LambdaQueryWrapper<ShotBinding> checkWrapper = new LambdaQueryWrapper<>();
+            checkWrapper.eq(ShotBinding::getShotId, shotId)
+                      .eq(ShotBinding::getBindType, bindType)
+                      .eq(ShotBinding::getBindId, bindId);
+            
+            long count = bindingMapper.selectCount(checkWrapper);
+            
+            if (count == 0) {
+                // 创建绑定记录
+                ShotBinding binding = new ShotBinding();
+                binding.setShotId(shotId);
+                binding.setBindType(bindType);
+                binding.setBindId(bindId);
+                
+                bindingMapper.insert(binding);
+                
+                log.info("创建绑定关系: shotId={}, bindType={}, bindId={}", shotId, bindType, bindId);
+            } else {
+                log.info("绑定关系已存在: shotId={}, bindType={}, bindId={}", shotId, bindType, bindId);
+            }
+        } catch (Exception e) {
+            log.error("创建绑定关系失败: shotId={}, bindType={}, bindId={}", shotId, bindType, bindId, e);
+        }
+    }
+    
+    /**
+     * 从剧本文本中提取角色名称
+     *
+     * @param scriptText 剧本文本
+     * @return 角色名称列表
+     */
+    private List<String> extractCharactersFromScript(String scriptText) {
+        List<String> characters = new ArrayList<>();
+        
+        // 匹配 "出场人物:" 后面的角色名称
+        Pattern pattern = Pattern.compile("出场人物[::：]([^\\n]+)");
+        Matcher matcher = pattern.matcher(scriptText);
+        
+        if (matcher.find()) {
+            String charactersText = matcher.group(1);
+            // 按逗号、顿号或空格分割角色名称
+            String[] names = charactersText.split("[,、，。 ]+");
+            for (String name : names) {
+                name = name.trim();
+                if (!name.isEmpty() && !characters.contains(name)) {
+                    characters.add(name);
+                }
+            }
+        }
+        
+        return characters;
+    }
+    
+    /**
+     * 从剧本文本中提取场景名称
+     *
+     * @param scriptText 剧本文本
+     * @return 场景名称
+     */
+    private String extractSceneFromScript(String scriptText) {
+        // 匹配场次开头的场景信息，如 "场1-1 日 内 咖啡厅"
+        Pattern pattern = Pattern.compile("^场\\d+-\\d+\\s+[^\\s]+\\s+[^\\s]+\\s+(.+?)\\s*$", Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(scriptText);
+        
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        
+        return null;
     }
 
     /**
@@ -649,17 +1141,31 @@ public class ShotServiceImpl implements ShotService {
                             System.out.println("角色名称: " + character.getDisplayName());
                             System.out.println("角色ID: " + character.getId());
                             System.out.println("库角色ID: " + character.getLibraryCharacterId());
+                            System.out.println("项目角色thumbnailUrl: " + character.getThumbnailUrl());
                             
-                            // 优先使用库的缩略图
-                            if (character.getLibraryCharacterId() != null) {
-                                thumbnailUrl = thumbnailMap.get(character.getLibraryCharacterId());
-                                System.out.println("库缩略图URL: " + thumbnailUrl);
-                                log.debug("角色[{}] 库ID:{}, 库缩略图:{}", character.getDisplayName(), character.getLibraryCharacterId(), thumbnailUrl);
+                            // 判断是否为自定义角色（未关联角色库）
+                            boolean isCustomCharacter = (character.getLibraryCharacterId() == null);
+                            
+                            if (isCustomCharacter) {
+                                // 自定义角色：直接使用项目角色的缩略图
+                                thumbnailUrl = character.getThumbnailUrl();
+                                System.out.println("自定义角色，使用项目角色缩略图: " + thumbnailUrl);
+                                log.debug("自定义角色[{}] thumbnailUrl:{}", character.getDisplayName(), thumbnailUrl);
+                            } else {
+                                // 关联角色库：优先使用项目角色的缩略图，其次使用库的缩略图
+                                if (character.getThumbnailUrl() != null && !character.getThumbnailUrl().isEmpty()) {
+                                    thumbnailUrl = character.getThumbnailUrl();
+                                    System.out.println("使用项目角色缩略图: " + thumbnailUrl);
+                                } else {
+                                    thumbnailUrl = thumbnailMap.get(character.getLibraryCharacterId());
+                                    System.out.println("使用库缩略图URL: " + thumbnailUrl);
+                                }
+                                log.debug("角色[{}] 库ID:{}, thumbnailUrl:{}", character.getDisplayName(), character.getLibraryCharacterId(), thumbnailUrl);
                             }
                             
-                            // 如果没有库缩略图，查询角色的资产版本作为缩略图
+                            // 如果还没有缩略图，查询角色的资产版本作为缩略图
                             if (thumbnailUrl == null) {
-                                System.out.println("库缩略图为空，查询角色资产...");
+                                System.out.println("缩略图为空，查询角色资产...");
                                 AssetStatusVO assetStatus = getAssetStatus(character.getId(), "PCHAR", "IMAGE");
                                 System.out.println("资产ID: " + (assetStatus != null ? assetStatus.assetId() : "null"));
                                 System.out.println("资产URL: " + (assetStatus != null ? assetStatus.currentUrl() : "null"));

@@ -39,6 +39,11 @@ public class ProjectCharacter {
     private String overrideDescription;
 
     /**
+     * 角色缩略图URL（自定义角色用，当library_character_id为空时使用此字段）
+     */
+    private String thumbnailUrl;
+
+    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

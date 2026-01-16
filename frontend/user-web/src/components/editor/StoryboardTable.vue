@@ -175,6 +175,17 @@ const newShotScript = ref('')
 const showParseModal = ref(false)
 const fullScript = ref('')
 const isParsing = ref(false)
+const parseSeconds = ref(0)  // 秒读计时
+let parseTimer: ReturnType<typeof setInterval> | null = null
+let parseAbortController: AbortController | null = null  // 用于取消请求
+
+// 计算属性：解析按钮文本
+const parseButtonText = computed(() => {
+  if (isParsing.value) {
+    return `解析中... ${parseSeconds.value}s`
+  }
+  return '开始解析'
+})
 
 const handleAddShot = async () => {
   if (!newShotScript.value.trim()) {
@@ -195,17 +206,39 @@ const handleParseScript = async () => {
   }
 
   isParsing.value = true
+  parseSeconds.value = 0
+  
+  // 创建新的 AbortController
+  parseAbortController = new AbortController()
+  
+  // 启动秒读计时器
+  parseTimer = setInterval(() => {
+    parseSeconds.value++
+    console.log('[StoryboardTable] parseSeconds:', parseSeconds.value)
+  }, 1000)
+  
   let success = false
   
   try {
     console.log('[StoryboardTable] Starting AI parse...')
-    await editorStore.parseAndCreateShots(fullScript.value.trim())
+    await editorStore.parseAndCreateShots(fullScript.value.trim(), parseAbortController.signal)
     console.log('[StoryboardTable] AI parse completed successfully')
     success = true
   } catch (error: any) {
-    console.error('[StoryboardTable] Parse script failed:', error)
-    alert(error.message || 'AI解析失败，请重试')
+    // 如果是用户主动取消，不显示错误提示
+    if (error.name === 'CanceledError' || error.message === 'canceled') {
+      console.log('[StoryboardTable] Parse cancelled by user')
+    } else {
+      console.error('[StoryboardTable] Parse script failed:', error)
+      alert(error.message || 'AI解析失败，请重试')
+    }
   } finally {
+    // 停止计时器
+    if (parseTimer) {
+      clearInterval(parseTimer)
+      parseTimer = null
+    }
+    parseAbortController = null
     isParsing.value = false
     
     // 成功后关闭模态框并重置
@@ -213,6 +246,18 @@ const handleParseScript = async () => {
       fullScript.value = ''
       showParseModal.value = false
     }
+  }
+}
+
+// Handle cancel parse
+const handleCancelParse = () => {
+  if (isParsing.value && parseAbortController) {
+    parseAbortController.abort()
+    window.$message?.info('已取消解析')
+  } else {
+    // 如果没有在解析，直接关闭弹窗
+    fullScript.value = ''
+    showParseModal.value = false
   }
 }
 
@@ -225,6 +270,16 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopPolling()
+  // 清理解析计时器
+  if (parseTimer) {
+    clearInterval(parseTimer)
+    parseTimer = null
+  }
+  // 取消进行中的解析请求
+  if (parseAbortController) {
+    parseAbortController.abort()
+    parseAbortController = null
+  }
 })
 
 // Watch for generating status changes
@@ -370,13 +425,13 @@ computed(() => {
             <th class="px-3 py-3 text-left flex-1 min-w-[200px] text-text-tertiary text-xs font-semibold uppercase">
               剧本
             </th>
-            <th class="px-3 py-3 text-left w-[180px] text-text-tertiary text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
               角色画像
             </th>
-            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[120px] text-text-tertiary text-xs font-semibold uppercase">
               场景画像
             </th>
-            <th class="px-3 py-3 text-left w-[140px] text-text-tertiary text-xs font-semibold uppercase">
+            <th class="px-3 py-3 text-left w-[120px] text-text-tertiary text-xs font-semibold uppercase">
               道具画像
             </th>
             <th class="w-0 hidden"></th>
@@ -464,7 +519,7 @@ computed(() => {
       >
         <div class="bg-bg-elevated w-[700px] rounded-xl p-8 shadow-2xl border border-border-default pointer-events-auto">
           <h3 class="text-text-primary text-xl font-bold mb-2">AI解析剧本</h3>
-          <p class="text-text-tertiary text-sm mb-6">粘贴完整剧本，AI将自动提取角色、场景并拆分成多条分镜</p>
+          <p class="text-text-tertiary text-sm mb-6">粘贴完整剧本，AI将自动提取角色、场景并拆分成多条分镜，同时自动绑定角色和场景到分镜</p>
 
           <textarea
             v-model="fullScript"
@@ -474,14 +529,13 @@ computed(() => {
           ></textarea>
 
           <div class="flex items-center justify-between mt-6">
-            <span class="text-text-tertiary text-xs">提示：AI将自动提取角色形象、场景描述，并拆分成专业剧本格式</span>
+            <span class="text-text-tertiary text-xs">提示：AI将自动提取角色形象、场景描述，并拆分成专业剧本格式，同时自动绑定角色和场景到分镜</span>
             <div class="flex items-center gap-3">
               <button
                 class="px-6 py-2.5 bg-bg-hover text-text-secondary text-sm rounded-lg hover:bg-bg-subtle transition-colors"
-                @click="showParseModal = false; fullScript = ''"
-                :disabled="isParsing"
+                @click="handleCancelParse"
               >
-                取消
+                {{ isParsing ? '取消' : '关闭' }}
               </button>
               <button
                 class="px-6 py-2.5 bg-purple-600 text-white font-semibold text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -492,7 +546,8 @@ computed(() => {
                 <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                {{ isParsing ? '解析中...' : '开始解析' }}
+                <span v-if="isParsing">解析中... {{ parseSeconds }}s</span>
+                <span v-else>开始解析</span>
               </button>
             </div>
           </div>

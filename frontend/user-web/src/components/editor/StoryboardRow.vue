@@ -315,21 +315,30 @@ const handleCharacterClick = (characterId: number) => {
   // 从 editorStore 获取完整的角色信息
   const fullChar = editorStore.characters.find(c => c.id === characterId)
   
-  if (fullChar) {
+  const hasThumbnail = fullChar?.thumbnailUrl || boundChar?.thumbnailUrl
+  
+  // 如果角色没有图片，传递剧本文本让AI解析
+  if (!hasThumbnail) {
+    let scriptText = editorStore.originalScript || props.shot.scriptText
+    if (scriptText.length > 2000) {
+      scriptText = scriptText.substring(0, 2000) + '...'
+    }
+    
     panelManagerStore.openPanel('asset-edit', {
       assetType: 'character',
       assetId: characterId,
-      characterName: (fullChar as any).displayName || fullChar.name,
-      existingThumbnailUrl: fullChar.thumbnailUrl || boundChar?.thumbnailUrl,
-      existingDescription: (fullChar as any).finalDescription || (fullChar as any).description
+      characterName: fullChar ? ((fullChar as any).displayName || fullChar.name) : boundChar?.characterName,
+      prefillDescription: scriptText,  // 让AI解析
+      existingDescription: fullChar ? ((fullChar as any).finalDescription || (fullChar as any).description) : undefined
     })
   } else {
-    // 如果找不到完整信息，使用绑定信息
+    // 已有图片，正常打开编辑面板
     panelManagerStore.openPanel('asset-edit', {
       assetType: 'character',
       assetId: characterId,
-      characterName: boundChar?.characterName,
-      existingThumbnailUrl: boundChar?.thumbnailUrl
+      characterName: fullChar ? ((fullChar as any).displayName || fullChar.name) : boundChar?.characterName,
+      existingThumbnailUrl: fullChar?.thumbnailUrl || boundChar?.thumbnailUrl,
+      existingDescription: fullChar ? ((fullChar as any).finalDescription || (fullChar as any).description) : undefined
     })
   }
 }
@@ -449,13 +458,30 @@ const handleDeleteCharacter = async (characterId: number, event: Event) => {
 
 // 点击角色卡片 - 跳转到编辑面板
 const handleCharacterCardClick = (character: any) => {
-  panelManagerStore.openPanel('asset-edit', {
-    assetType: 'character',
-    assetId: character.id,
-    characterName: (character as any).displayName || character.name,
-    existingThumbnailUrl: character.thumbnailUrl,
-    existingDescription: (character as any).finalDescription || (character as any).description
-  })
+  // 如果角色没有图片，传递剧本文本让AI解析
+  if (!character.thumbnailUrl) {
+    let scriptText = editorStore.originalScript || props.shot.scriptText
+    if (scriptText.length > 2000) {
+      scriptText = scriptText.substring(0, 2000) + '...'
+    }
+    
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'character',
+      assetId: character.id,
+      characterName: (character as any).displayName || character.name,
+      prefillDescription: scriptText,  // 让AI解析
+      existingDescription: (character as any).finalDescription || (character as any).description
+    })
+  } else {
+    // 已有图片，正常打开编辑面板
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'character',
+      assetId: character.id,
+      characterName: (character as any).displayName || character.name,
+      existingThumbnailUrl: character.thumbnailUrl,
+      existingDescription: (character as any).finalDescription || (character as any).description
+    })
+  }
 }
 
 // 点击新建角色 - 第一次带AI描述，后续自定义
@@ -817,16 +843,16 @@ const handleCopyThumbnail = async (url: string) => {
     </td>
 
     <!-- Characters -->
-    <td class="px-3 py-3 w-[180px]">
-      <div class="flex items-center gap-1.5">
+    <td class="px-3 py-3 w-[140px]">
+      <div class="flex flex-col gap-1">
         <!-- 已绑定的角色（胶囊样式：头像+名字） -->
         <div
           v-for="char in shot.characters.slice(0, 3)"
           :key="char.bindingId"
-          class="relative group/bound flex-shrink-0"
+          class="relative group/bound"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
+            class="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-subtle transition-colors h-8"
             @click="handleCharacterClick(char.characterId)"
             :title="char.characterName"
           >
@@ -870,7 +896,7 @@ const handleCopyThumbnail = async (url: string) => {
                 </button>
               </div>
             </div>
-            <span class="text-text-secondary text-xs font-medium truncate max-w-[50px] pr-1">{{ char.characterName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ char.characterName }}</span>
           </div>
           <!-- 解绑按钮（悬浮显示） -->
           <button
@@ -884,19 +910,18 @@ const handleCopyThumbnail = async (url: string) => {
           </button>
         </div>
         <!-- 更多角色数量提示 -->
-        <span v-if="shot.characters.length > 3" class="text-text-tertiary text-xs font-medium">
-          +{{ shot.characters.length - 3 }}
+        <span v-if="shot.characters.length > 3" class="text-text-tertiary text-xs h-8 flex items-center justify-center">
+          +{{ shot.characters.length - 3 }}更多
         </span>
-        <!-- 从剧本提取的人物（显示图片卡片或紫色标签） -->
+        <!-- 从剧本提取的人物 -->
         <div
-          v-for="charName in unboundCharacters"
+          v-for="charName in unboundCharacters.slice(0, 2)"
           :key="charName"
-          class="relative group/char flex-shrink-0"
+          class="relative group/char"
         >
-          <!-- 如果有对应的角色且有缩略图，显示图片卡片 -->
           <div
             v-if="getCharacterByName(charName)?.thumbnailUrl"
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
+            class="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-subtle transition-colors h-8"
             @click="handleGenerateCharacterFromScript(charName)"
             :title="charName"
           >
@@ -932,20 +957,20 @@ const handleCopyThumbnail = async (url: string) => {
                 </button>
               </div>
             </div>
-            <span class="text-text-secondary text-xs font-medium truncate max-w-[50px] pr-1">{{ charName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ charName }}</span>
           </div>
-          <!-- 否则显示紫色标签 -->
-          <button
+          <!-- 否则显示标签 -->
+          <div
             v-else
             @click="handleGenerateCharacterFromScript(charName)"
-            class="min-w-[32px] h-8 px-2 pr-6 rounded bg-bg-subtle flex items-center justify-center gap-1 hover:bg-bg-hover transition-colors"
+            class="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-subtle transition-colors h-8"
             :title="`点击生成角色: ${charName}`"
           >
-            <svg class="w-3.5 h-3.5 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-            <span class="text-text-secondary text-xs font-medium truncate max-w-[60px]">{{ charName }}</span>
-          </button>
+            <div class="w-6 h-6 rounded bg-bg-subtle flex items-center justify-center text-text-tertiary text-xs font-bold flex-shrink-0">
+              {{ charName?.[0] || '?' }}
+            </div>
+            <span class="text-text-secondary text-xs truncate flex-1">{{ charName }}</span>
+          </div>
           <!-- 删除按钮（悬浮显示） -->
           <button
             @click.stop="handleDismissCharacter(charName)"
@@ -957,29 +982,30 @@ const handleCopyThumbnail = async (url: string) => {
             </svg>
           </button>
         </div>
-        <!-- 添加角色按钮（始终显示） -->
+        <!-- 添加角色按钮 -->
         <button
           @click="handleAddCharacter"
-          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
+          class="h-8 rounded border-2 border-dashed border-border-default bg-transparent flex items-center justify-center gap-1 hover:bg-bg-subtle transition-colors"
           title="添加角色"
         >
           <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
+          <span class="text-text-tertiary text-xs">添加</span>
         </button>
       </div>
     </td>
 
     <!-- Scene -->
-    <td class="px-3 py-3 w-[180px]">
-      <div class="flex items-center gap-1.5">
-        <!-- 已绑定的场景（胶囊样式：缩略图+名字） -->
+    <td class="px-3 py-3 w-[120px]">
+      <div class="flex flex-col gap-1">
+        <!-- 已绑定的场景 -->
         <div
           v-if="shot.scene"
-          class="relative group/bound flex-shrink-0"
+          class="relative group/bound"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
+            class="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-subtle transition-colors h-8"
             @click="handleSceneClick(shot.scene.sceneId)"
             :title="shot.scene.sceneName"
           >
@@ -1023,7 +1049,7 @@ const handleCopyThumbnail = async (url: string) => {
                 </button>
               </div>
             </div>
-            <span class="text-text-secondary text-xs font-medium truncate max-w-[60px] pr-1">{{ shot.scene.sceneName }}</span>
+            <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ shot.scene.sceneName }}</span>
           </div>
           <!-- 解绑按钮（悬浮显示） -->
           <button
@@ -1036,16 +1062,16 @@ const handleCopyThumbnail = async (url: string) => {
             </svg>
           </button>
         </div>
-        <!-- 添加/更换场景按钮 -->
+        <!-- 添加场景按钮 -->
         <button
-          v-if="!shot.scene"
           @click="handleAddScene"
-          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
+          class="h-8 rounded border-2 border-dashed border-border-default bg-transparent flex items-center justify-center gap-1 hover:bg-bg-subtle transition-colors"
           title="添加场景"
         >
           <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
+          <span class="text-text-tertiary text-xs">添加</span>
         </button>
       </div>
     </td>
@@ -1054,16 +1080,16 @@ const handleCopyThumbnail = async (url: string) => {
     <td class="w-0 hidden"></td>
 
     <!-- Prop 道具画像 -->
-    <td class="px-3 py-3 w-[140px]">
-      <div class="flex items-center gap-1.5">
-        <!-- 已绑定的道具（胶囊样式：缩略图+名字） -->
+    <td class="px-3 py-3 w-[120px]">
+      <div class="flex flex-col gap-1">
+        <!-- 已绑定的道具 -->
         <div
-          v-for="prop in shot.props.slice(0, 2)"
+          v-for="prop in shot.props.slice(0, 3)"
           :key="prop.bindingId"
-          class="relative group/bound flex-shrink-0"
+          class="relative group/bound"
         >
           <div
-            class="flex items-center gap-1.5 px-1.5 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-hover transition-colors"
+            class="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-hover cursor-pointer hover:bg-bg-subtle transition-colors h-8"
             @click="handlePropClick(prop.propId)"
             :title="prop.propName"
           >
@@ -1107,6 +1133,7 @@ const handleCopyThumbnail = async (url: string) => {
                 </button>
               </div>
             </div>
+            <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ prop.propName }}</span>
           </div>
           <!-- 解绑按钮（悬浮显示） -->
           <button
@@ -1121,14 +1148,14 @@ const handleCopyThumbnail = async (url: string) => {
         </div>
         <!-- 添加道具按钮 -->
         <button
-          v-if="shot.props.length === 0"
           @click="handleAddProp"
-          class="w-8 h-8 rounded border-2 border-dashed border-border-default bg-bg-subtle flex items-center justify-center hover:bg-bg-subtle hover:border-gray-900/50 transition-colors flex-shrink-0"
+          class="h-8 rounded border-2 border-dashed border-border-default bg-transparent flex items-center justify-center gap-1 hover:bg-bg-subtle transition-colors"
           title="添加道具"
         >
           <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
+          <span class="text-text-tertiary text-xs">添加</span>
         </button>
       </div>
     </td>

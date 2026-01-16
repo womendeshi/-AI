@@ -212,18 +212,25 @@ export const useEditorStore = defineStore('editor', {
 
     /**
      * AI解析剧本并批量创建分镜
+     * @param fullScript 完整剧本文本
+     * @param signal 可选的 AbortSignal，用于取消请求
      */
-    async parseAndCreateShots(fullScript: string) {
+    async parseAndCreateShots(fullScript: string, signal?: AbortSignal) {
       if (!this.projectId) return
       try {
         console.log('[EditorStore] Parsing script and creating shots...')
         // 保存原始剧本文本
         this.originalScript = fullScript
-        await shotApi.parseAndCreateShots(this.projectId, fullScript)
+        await shotApi.parseAndCreateShots(this.projectId, fullScript, signal)
         await this.fetchShots()
         this.saveHistory()
         window.$message?.success('AI解析完成，分镜已创建')
       } catch (error: any) {
+        // 如果是用户主动取消，不显示错误消息
+        if (error.name === 'CanceledError' || error.message === 'canceled') {
+          console.log('[EditorStore] Parse request was cancelled by user')
+          return
+        }
         console.error('[EditorStore] Failed to parse and create shots:', error)
         window.$message?.error(error.message || 'AI解析失败')
         throw error

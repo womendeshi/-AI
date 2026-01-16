@@ -8,12 +8,17 @@ import com.ym.ai_story_studio_server.dto.ai.VideoGenerateRequest;
 import com.ym.ai_story_studio_server.entity.Job;
 import com.ym.ai_story_studio_server.exception.BusinessException;
 import com.ym.ai_story_studio_server.entity.CharacterLibrary;
+import com.ym.ai_story_studio_server.entity.AssetRef;
+import com.ym.ai_story_studio_server.entity.AssetVersion;
 import com.ym.ai_story_studio_server.entity.ProjectCharacter;
 import com.ym.ai_story_studio_server.entity.ProjectScene;
 import com.ym.ai_story_studio_server.entity.PropLibrary;
 import com.ym.ai_story_studio_server.entity.ProjectProp;
 import com.ym.ai_story_studio_server.entity.SceneLibrary;
+import com.ym.ai_story_studio_server.entity.ShotBinding;
 import com.ym.ai_story_studio_server.mapper.AssetMapper;
+import com.ym.ai_story_studio_server.mapper.AssetRefMapper;
+import com.ym.ai_story_studio_server.mapper.AssetVersionMapper;
 import com.ym.ai_story_studio_server.mapper.CharacterLibraryMapper;
 import com.ym.ai_story_studio_server.mapper.JobMapper;
 import com.ym.ai_story_studio_server.mapper.ProjectCharacterMapper;
@@ -21,6 +26,7 @@ import com.ym.ai_story_studio_server.mapper.ProjectSceneMapper;
 import com.ym.ai_story_studio_server.mapper.PropLibraryMapper;
 import com.ym.ai_story_studio_server.mapper.ProjectPropMapper;
 import com.ym.ai_story_studio_server.mapper.SceneLibraryMapper;
+import com.ym.ai_story_studio_server.mapper.ShotBindingMapper;
 import com.ym.ai_story_studio_server.mapper.StoryboardShotMapper;
 import com.ym.ai_story_studio_server.service.AiTextService;
 import com.ym.ai_story_studio_server.service.AiVideoService;
@@ -70,6 +76,8 @@ public class MQConsumer {
     private final JobMapper jobMapper;
     private final AiProperties aiProperties;
     private final AssetMapper assetMapper;
+    private final AssetRefMapper assetRefMapper;
+    private final AssetVersionMapper assetVersionMapper;
     private final StoryboardShotMapper storyboardShotMapper;
     private final ProjectCharacterMapper projectCharacterMapper;
     private final CharacterLibraryMapper characterLibraryMapper;
@@ -77,6 +85,7 @@ public class MQConsumer {
     private final PropLibraryMapper propLibraryMapper;
     private final ProjectPropMapper projectPropMapper;
     private final SceneLibraryMapper sceneLibraryMapper;
+    private final ShotBindingMapper shotBindingMapper;
     private final ObjectMapper objectMapper;
 
     /**
@@ -326,10 +335,10 @@ public class MQConsumer {
                 throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.SHOT_NOT_FOUND);
             }
     
-            // 2. 准备prompt: 优先使用customPrompt，否则使用分镜剧本
-            String prompt = customPrompt != null ? customPrompt : 
-                          (shot.getScriptText() != null ? shot.getScriptText() : 
-                           "为分镜生成图片 - shotId: " + shotId);
+            // 2. 准备prompt: 优先使用customPrompt，否则使用分镜剧本 + 内嵌规则
+            String scriptText = shot.getScriptText() != null ? shot.getScriptText() : 
+                          "为分镜生成图片 - shotId: " + shotId;
+            String prompt = customPrompt != null ? customPrompt : buildShotImagePrompt(scriptText);
     
             // 日志中不显示完整的内嵌提示词，只显示用户自定义部分
             String logPrompt = customPrompt != null ? "[自定义内容]" : prompt;
@@ -454,19 +463,25 @@ public class MQConsumer {
                     }
                 }
 
-                String prompt = shot.getScriptText() != null ? shot.getScriptText() :
+                String scriptText = shot.getScriptText() != null ? shot.getScriptText() :
                                "为分镜生成图片 - shotId: " + shotId;
+                String prompt = buildShotImagePrompt(scriptText);
+
+                // 查询分镜绑定的角色图片作为参考图
+                List<String> referenceImageUrls = getBoundCharacterImages(shotId);
+                log.info("分镜绑定的角色图片数量 - shotId: {}, count: {}", shotId, referenceImageUrls.size());
 
                 // 为每个分镜生成多张图片
                 for (int j = 0; j < countPerItem; j++) {
                     try {
-                        // 1. 调用AI生成图片
-                        log.info("调用AI生成图片 [{}/{}] - shotId: {}, prompt: {}", j + 1, countPerItem, shotId, prompt);
+                        // 1. 调用AI生成图片，传入角色图片作为参考图
+                        log.info("调用AI生成图片 [{}/{}] - shotId: {}, prompt: {}, referenceImages: {}", 
+                                j + 1, countPerItem, shotId, prompt, referenceImageUrls.size());
                         VectorEngineClient.ImageApiResponse apiResponse = vectorEngineClient.generateImage(
                                 prompt,
                                 finalModel,
                                 finalAspectRatio,
-                                Collections.emptyList()
+                                referenceImageUrls  // 传入绑定的角色图片作为参考图
                         );
 
                         if (apiResponse == null || apiResponse.data() == null || apiResponse.data().isEmpty()) {
@@ -626,12 +641,40 @@ public class MQConsumer {
                 throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.SHOT_NOT_FOUND);
             }
 
-            // 2. 准备prompt
+            // 2. 如果没有提供参考图，尝试从资产系统查询分镜当前图片
+            if (referenceImageUrl == null || referenceImageUrl.isBlank()) {
+                // 查询分镜当前图片资产
+                AssetRef currentImageRef = assetRefMapper.selectOne(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AssetRef>()
+                        .eq(AssetRef::getRefType, "SHOT_IMG_CURRENT")
+                        .eq(AssetRef::getRefOwnerId, shotId)
+                );
+                
+                if (currentImageRef != null) {
+                    // 查询资产版本获取URL
+                    AssetVersion assetVersion = assetVersionMapper.selectById(currentImageRef.getAssetVersionId());
+                    if (assetVersion != null && assetVersion.getUrl() != null) {
+                        referenceImageUrl = assetVersion.getUrl();
+                        log.info("未提供参考图，使用分镜当前图片 - shotId: {}, imageUrl: {}", shotId, referenceImageUrl);
+                    }
+                }
+            }
+
+            // 3. 验证参考图是否存在
+            if (referenceImageUrl == null || referenceImageUrl.isBlank()) {
+                String errorMsg = "该分镜尚未生成图片，请先生成分镜图片后再生成视频";
+                log.error(errorMsg + " - shotId: {}", shotId);
+                updateJobFailed(jobId, errorMsg);
+                throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.AI_SERVICE_ERROR, errorMsg);
+            }
+
+            // 4. 准备prompt
             String finalPrompt = prompt != null ? prompt :
                     (shot.getScriptText() != null ? shot.getScriptText() :
                             "为分镜生成视频 - shotId: " + shotId);
 
-            log.info("调用AI生成视频 - shotId: {}, promptLength: {}", shotId, finalPrompt.length());
+            log.info("调用AI生成视频 - shotId: {}, promptLength: {}, referenceImage: {}", 
+                    shotId, finalPrompt.length(), referenceImageUrl);
 
             UserContext.setUserId(userId);
             try {
@@ -719,28 +762,55 @@ public class MQConsumer {
                     continue;
                 }
 
-                // 2. 查询角色库中的角色
-                CharacterLibrary character = characterLibraryMapper.selectById(projectCharacter.getLibraryCharacterId());
-                if (character == null) {
-                    log.warn("角色库角色不存在 - libraryCharacterId: {}", projectCharacter.getLibraryCharacterId());
-                    failCount.incrementAndGet();
-                    continue;
+                // 2. 查询角色库中的角色（可能为NULL，支持自定义角色）
+                CharacterLibrary character = null;
+                if (projectCharacter.getLibraryCharacterId() != null) {
+                    character = characterLibraryMapper.selectById(projectCharacter.getLibraryCharacterId());
                 }
+                
+                // 判断是否为自定义角色（未关联角色库）
+                boolean isCustomCharacter = (character == null);
+                log.info("角色类型 - projectCharacterId: {}, 自定义角色: {}", projectCharacterId, isCustomCharacter);
 
                 // 3. MISSING模式：检查是否已有图片
-                if ("MISSING".equals(msg.getMode()) && character.getThumbnailUrl() != null) {
-                    log.info("MISSING模式 - 角色已有图片,跳过 - characterId: {}", character.getId());
+                String existingThumbnail = isCustomCharacter ? 
+                        projectCharacter.getThumbnailUrl() : character.getThumbnailUrl();
+                if ("MISSING".equals(msg.getMode()) && existingThumbnail != null && !existingThumbnail.isEmpty()) {
+                    log.info("MISSING模式 - 角色已有图片,跳过 - projectCharacterId: {}", projectCharacterId);
                     successCount.incrementAndGet();
                     continue;
                 }
 
-                // 4. 构建提示词：使用角色描述生成角色立绘
-                String description = projectCharacter.getOverrideDescription() != null ?
-                        projectCharacter.getOverrideDescription() : character.getDescription();
-                String prompt = String.format("角色立绘，%s，%s，高质量，精细绘制，全身像",
-                        character.getName(), description != null ? description : "");
+                // 4. 构建提示词：基于AI分析的描述生成角色立绘
+                // 内嵌规则：提取角色的年龄、性别、外貌、服装
+                String characterName;
+                String description;
+                if (isCustomCharacter) {
+                    // 自定义角色：使用项目角色的信息
+                    characterName = projectCharacter.getDisplayName() != null ? 
+                            projectCharacter.getDisplayName() : "未命名角色";
+                    description = projectCharacter.getOverrideDescription();
+                } else {
+                    // 关联角色库：优先使用覆盖描述
+                    characterName = projectCharacter.getDisplayName() != null ?
+                            projectCharacter.getDisplayName() : character.getName();
+                    description = projectCharacter.getOverrideDescription() != null ?
+                            projectCharacter.getOverrideDescription() : character.getDescription();
+                }
+                
+                // 构建优化的提示词：强调角色特征（年龄、性别、外貌、服装）
+                String prompt;
+                if (description != null && !description.trim().isEmpty()) {
+                    // 有AI分析描述：直接使用描述作为主要提示词
+                    prompt = String.format("角色立绘，%s，2D动漫风格，高质量，精细绘制，全身像，正面站立，面向镜头",
+                            description.trim());
+                } else {
+                    // 无描述：使用角色名称
+                    prompt = String.format("角色立绘，%s，2D动漫风格，高质量，精细绘制，全身像，正面站立",
+                            characterName);
+                }
 
-                log.info("生成角色图片 - characterId: {}, name: {}, prompt: {}", character.getId(), character.getName(), prompt);
+                log.info("生成角色图片 - projectCharacterId: {}, name: {}, prompt: {}", projectCharacterId, characterName, prompt);
 
                 // 5. 调用向量引擎生成图片
                 UserContext.setUserId(userId);
@@ -759,7 +829,7 @@ public class MQConsumer {
 
                     // 获取所有返回的图片数据（即梦模型返回4张图片）
                     List<ImageApiResponse.ImageData> allResults = response.data();
-                    log.info("AI返回 {} 张图片 - characterId: {}", allResults.size(), character.getId());
+                    log.info("AI返回 {} 张图片 - projectCharacterId: {}", allResults.size(), projectCharacterId);
 
                     // 7. 处理所有图片并上传到OSS
                     List<String> ossUrls = new java.util.ArrayList<>();
@@ -779,18 +849,28 @@ public class MQConsumer {
                         throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.AI_SERVICE_ERROR, "无法获取有效的图片数据");
                     }
 
-                    // 8. 使用第一张图片更新角色库的缩略图URL
+                    // 8. 使用第一张图片更新缩略图URL
                     String primaryOssUrl = ossUrls.get(0);
-                    character.setThumbnailUrl(primaryOssUrl);
-                    characterLibraryMapper.updateById(character);
+                    if (isCustomCharacter) {
+                        // 自定义角色：保存到项目角色表
+                        projectCharacter.setThumbnailUrl(primaryOssUrl);
+                        projectCharacterMapper.updateById(projectCharacter);
+                        log.info("自定义角色图片保存成功 - projectCharacterId: {}, ossUrl: {}", projectCharacterId, primaryOssUrl);
+                    } else {
+                        // 关联角色库：保存到角色库表
+                        character.setThumbnailUrl(primaryOssUrl);
+                        characterLibraryMapper.updateById(character);
+                        log.info("角色库图片更新成功 - characterId: {}, ossUrl: {}", character.getId(), primaryOssUrl);
+                    }
 
-                    log.info("角色图片生成成功 - characterId: {}, 总图片数: {}, 主图: {}", 
-                            character.getId(), ossUrls.size(), primaryOssUrl);
+                    log.info("角色图片生成成功 - projectCharacterId: {}, 总图片数: {}, 主图: {}", 
+                            projectCharacterId, ossUrls.size(), primaryOssUrl);
 
                     // 9. 扣除积分（按批次扣费，不按图片张数）
                     Map<String, Object> metaData = new HashMap<>();
-                    metaData.put("characterId", character.getId());
-                    metaData.put("characterName", character.getName());
+                    metaData.put("projectCharacterId", projectCharacterId);
+                    metaData.put("characterName", characterName);
+                    metaData.put("isCustomCharacter", isCustomCharacter);
                     metaData.put("model", finalModel);
                     metaData.put("imageCount", ossUrls.size());
                     metaData.put("allImageUrls", ossUrls);
@@ -876,7 +956,7 @@ public class MQConsumer {
                         projectScene.getOverrideDescription() : scene.getDescription();
                 String sceneName = projectScene.getDisplayName() != null ?
                         projectScene.getDisplayName() : scene.getName();
-                String prompt = String.format("场景画像，%s，%s，2D动漫风格，高质量高清，画质细腻，不要出现任何人物",
+                String prompt = String.format("纯场景背景图，%s，%s，2D动漫风格，高质量高清，画质细腻，空无一人的场景，禁止出现任何人物、角色、人影、动物，只有纯背景环境",
                         sceneName, description != null ? description : "");
 
                 log.info("生成场景图片 - sceneId: {}, name: {}, prompt: {}", scene.getId(), sceneName, prompt);
@@ -1315,5 +1395,160 @@ public class MQConsumer {
             case "image/gif" -> ".gif";
             default -> ".jpg";
         };
+    }
+
+    // ==================== 分镜图生成内嵌规则 ====================
+
+    /**
+     * 分镜图生成的内嵌规则前缀
+     * 指定2D动漫风格，确保生成的图片风格一致
+     */
+    private static final String SHOT_IMAGE_PROMPT_PREFIX = 
+            "根据参考图的设定，使用参考图中的角色、场景、道具，" +
+            "运用合理的构建分镜，合理的动作，合理的运镜，合理的环境渲染，" +
+            "发散你的想象力，生成保持风格一致性的2D动漫图片，" +
+            "要求线条细致，人物画风保持与参考图一致，" +
+            "清晰不模糊，颜色鲜艳，光影效果，超清画质，电影级镜头（cinematic dynamic camera），" +
+            "请忠实原文，不增加原文没有的内容，不减少原文包含的信息。" +
+            "分镜要求如下：";
+
+    /**
+     * 构建分镜图生成的完整提示词
+     * 
+     * @param scriptText 分镜剧本文本
+     * @return 带风格前缀的完整提示词
+     */
+    private String buildShotImagePrompt(String scriptText) {
+        return SHOT_IMAGE_PROMPT_PREFIX + scriptText;
+    }
+
+    // ==================== 分镜绑定角色图片查询 ====================
+
+    /**
+     * 获取分镜绑定的角色图片URL列表
+     * 
+     * <p>查询逻辑：
+     * <ol>
+     *   <li>查询shot_bindings表，找到shot_id=分镜ID且bind_type=PCHAR的记录</li>
+     *   <li>获取项目角色的缩略图URL</li>
+     *   <li>如果项目角色没有缩略图，查询角色库的缩略图</li>
+     *   <li>如果仍无缩略图，查询角色的资产版本</li>
+     * </ol>
+     * 
+     * @param shotId 分镜ID
+     * @return 角色图片URL列表
+     */
+    private List<String> getBoundCharacterImages(Long shotId) {
+        List<String> imageUrls = new java.util.ArrayList<>();
+        
+        try {
+            // 1. 查询分镜绑定的角色（bind_type=PCHAR）
+            var bindingQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ShotBinding>();
+            bindingQuery.eq(ShotBinding::getShotId, shotId)
+                       .eq(ShotBinding::getBindType, "PCHAR");
+            List<ShotBinding> bindings = shotBindingMapper.selectList(bindingQuery);
+            
+            if (bindings.isEmpty()) {
+                log.debug("分镜未绑定角色 - shotId: {}", shotId);
+                return imageUrls;
+            }
+            
+            // 2. 获取项目角色ID列表
+            List<Long> characterIds = bindings.stream()
+                    .map(ShotBinding::getBindId)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // 3. 批量查询项目角色
+            List<ProjectCharacter> characters = projectCharacterMapper.selectBatchIds(characterIds);
+            
+            // 4. 获取关联的角色库ID，用于查询库缩略图
+            List<Long> libraryCharacterIds = characters.stream()
+                    .map(ProjectCharacter::getLibraryCharacterId)
+                    .filter(id -> id != null)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+            
+            Map<Long, String> libraryThumbnailMap = new java.util.HashMap<>();
+            if (!libraryCharacterIds.isEmpty()) {
+                List<CharacterLibrary> libraryCharacters = characterLibraryMapper.selectBatchIds(libraryCharacterIds);
+                libraryThumbnailMap = libraryCharacters.stream()
+                        .filter(c -> c.getThumbnailUrl() != null && !c.getThumbnailUrl().isEmpty())
+                        .collect(java.util.stream.Collectors.toMap(CharacterLibrary::getId, CharacterLibrary::getThumbnailUrl));
+            }
+            
+            // 5. 遍历每个角色，获取图片URL
+            for (ProjectCharacter character : characters) {
+                String thumbnailUrl = null;
+                
+                // 优先级：项目角色缩略图 > 角色库缩略图 > 角色资产
+                if (character.getThumbnailUrl() != null && !character.getThumbnailUrl().isEmpty()) {
+                    thumbnailUrl = character.getThumbnailUrl();
+                    log.debug("使用项目角色缩略图 - characterId: {}, url: {}", character.getId(), thumbnailUrl);
+                } else if (character.getLibraryCharacterId() != null) {
+                    thumbnailUrl = libraryThumbnailMap.get(character.getLibraryCharacterId());
+                    if (thumbnailUrl != null) {
+                        log.debug("使用角色库缩略图 - characterId: {}, libraryId: {}, url: {}", 
+                                character.getId(), character.getLibraryCharacterId(), thumbnailUrl);
+                    }
+                }
+                
+                // 如果还没有缩略图，查询角色资产
+                if (thumbnailUrl == null) {
+                    thumbnailUrl = getCharacterAssetUrl(character.getId());
+                    if (thumbnailUrl != null) {
+                        log.debug("使用角色资产 - characterId: {}, url: {}", character.getId(), thumbnailUrl);
+                    }
+                }
+                
+                if (thumbnailUrl != null && !thumbnailUrl.isEmpty()) {
+                    imageUrls.add(thumbnailUrl);
+                }
+            }
+            
+            log.info("获取分镜绑定角色图片完成 - shotId: {}, characterCount: {}, imageCount: {}", 
+                    shotId, characters.size(), imageUrls.size());
+            
+        } catch (Exception e) {
+            log.error("获取分镜绑定角色图片失败 - shotId: {}", shotId, e);
+        }
+        
+        return imageUrls;
+    }
+    
+    /**
+     * 获取角色的资产图URL
+     * 
+     * @param characterId 项目角色ID
+     * @return 资产图URL，不存在返回null
+     */
+    private String getCharacterAssetUrl(Long characterId) {
+        try {
+            // 查询角色的图片资产
+            var assetQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset>();
+            assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "PCHAR")
+                     .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, characterId)
+                     .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "CHAR_IMG")
+                     .orderByDesc(com.ym.ai_story_studio_server.entity.Asset::getCreatedAt)
+                     .last("LIMIT 1");
+            
+            var asset = assetMapper.selectOne(assetQuery);
+            if (asset == null) {
+                return null;
+            }
+            
+            // 查询资产的最新版本
+            var versionQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AssetVersion>();
+            versionQuery.eq(AssetVersion::getAssetId, asset.getId())
+                       .eq(AssetVersion::getStatus, "READY")
+                       .orderByDesc(AssetVersion::getVersionNo)
+                       .last("LIMIT 1");
+            
+            AssetVersion version = assetVersionMapper.selectOne(versionQuery);
+            return version != null ? version.getUrl() : null;
+            
+        } catch (Exception e) {
+            log.error("查询角色资产失败 - characterId: {}", characterId, e);
+            return null;
+        }
     }
 }

@@ -96,7 +96,8 @@ const collectAssetResources = () => {
   console.log('[VideoGeneratePanel] ========== 开始收集资源 ==========')
   
   const resources = {
-    script: currentShot.value.script || '',
+    script: currentShot.value.scriptText || '',
+    shotImage: null as { thumbnailUrl: string } | null,
     scene: null as { id: number; name: string; thumbnailUrl: string } | null,
     characters: [] as Array<{ id: number; name: string; thumbnailUrl: string }>,
     props: [] as Array<{ id: number; name: string; thumbnailUrl: string }>
@@ -105,6 +106,14 @@ const collectAssetResources = () => {
   // 收集剧本
   if (resources.script) {
     console.log('[VideoGeneratePanel] ✅ 剧本已收集')
+  }
+  
+  // 收集分镜图
+  if (currentShot.value.shotImage?.thumbnailUrl) {
+    resources.shotImage = {
+      thumbnailUrl: currentShot.value.shotImage.thumbnailUrl
+    }
+    console.log('[VideoGeneratePanel] ✅ 分镜图已收集')
   }
   
   // 收集场景
@@ -147,6 +156,7 @@ const collectAssetResources = () => {
   
   console.log('[VideoGeneratePanel] 资源收集完成:', {
     hasScript: !!resources.script,
+    hasShotImage: !!resources.shotImage,
     hasScene: !!resources.scene,
     characterCount: resources.characters.length,
     propCount: resources.props.length
@@ -224,11 +234,6 @@ const loadHistory = () => {
 
 // AI生成视频
 const handleAIGenerate = async () => {
-  if (!scriptDescription.value.trim()) {
-    window.$message?.warning('请输入自定义内容')
-    return
-  }
-  
   if (!editorStore.projectId) {
     window.$message?.error('项目ID不存在')
     return
@@ -237,7 +242,7 @@ const handleAIGenerate = async () => {
   isGenerating.value = true
   
   try {
-    // 1. 收集当前分镜的所有资源（剧本、场景、角色、道具）
+    // 1. 收集当前分镜的所有资源（剧本、分镜图、场景、角色、道具）
     const resources = collectAssetResources()
     
     if (!resources) {
@@ -245,10 +250,16 @@ const handleAIGenerate = async () => {
       return
     }
     
-    // 2. 构建完整的提示词：内嵌规则 + 分镜剧本 + 用户自定义内容
+    // 2. 构建完整的提示词：内嵌规则 + 分镜剧本
     const fixedTemplate = '根据参考图的设定，使用参考图中的角色、场景、道具，运用合理的构建分镜，合理的动作，合理的运镜，合理的环境渲染，发散你的想象力，生成保持风格一致性的2D动漫视频，要求不要字幕和BGM，没有台词时禁止说话，线条细致，人物画风保持与参考图一致，清晰不模糊，颜色鲜艳，光影效果，超清画质，电影级镜头（cinematicdvnamiccamera）,音质清晰无杂质，第一个镜头0.3秒空境，请忠实原文，不增加原文没有的内容，不减少原文包含的信息，分镜要求如下：'
     
-    const customPrompt = fixedTemplate + resources.script + ' ' + scriptDescription.value.trim()
+    // 构建prompt：内嵌规则 + 分镜剧本
+    let customPrompt = fixedTemplate
+    if (resources.script) {
+      customPrompt += resources.script
+    } else {
+      customPrompt += '（无剧本内容）'
+    }
     
     console.log('[VideoGeneratePanel] 生成参数:', {
       shotId: props.shotId,
@@ -264,6 +275,7 @@ const handleAIGenerate = async () => {
         prompt: customPrompt,
         aspectRatio: aspectRatio.value || '16:9',
         referenceImageUrl: videoReferenceUrl.value || undefined,
+        shotImage: resources.shotImage,
         scene: resources.scene,
         characters: resources.characters,
         props: resources.props
@@ -275,9 +287,11 @@ const handleAIGenerate = async () => {
     // 4. 获取返回的jobId
     const jobId = response.jobId
     
-    // 使用第一个可用的图片作为缩略图
+    // 使用第一个可用的图片作为缩略图（优先使用分镜图）
     let mockThumbnailUrl = 'https://via.placeholder.com/400x225'
-    if (resources.scene?.thumbnailUrl) {
+    if (resources.shotImage?.thumbnailUrl) {
+      mockThumbnailUrl = resources.shotImage.thumbnailUrl
+    } else if (resources.scene?.thumbnailUrl) {
       mockThumbnailUrl = resources.scene.thumbnailUrl
     } else if (resources.characters.length > 0) {
       mockThumbnailUrl = resources.characters[0].thumbnailUrl

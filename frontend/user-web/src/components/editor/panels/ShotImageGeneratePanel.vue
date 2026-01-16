@@ -36,9 +36,6 @@ const aspectRatioOptions = [
   { label: '9:16', value: '9:16' },
 ]
 
-// 用户输入的剧本描述
-const scriptDescription = ref('')
-
 // AI参考图（用户手动上传）
 const referenceImage = ref<File | null>(null)
 const referenceImageUrl = ref<string>('')
@@ -213,10 +210,6 @@ const mergeAssetImages = async (): Promise<string | null> => {
 
 // AI生成
 const handleAIGenerate = async () => {
-  if (!scriptDescription.value.trim()) {
-    window.$message?.warning('请输入自定义内容')
-    return
-  }
   
   if (!editorStore.projectId) {
     window.$message?.error('项目ID不存在')
@@ -230,13 +223,19 @@ const handleAIGenerate = async () => {
     const mergedImageUrl = await mergeAssetImages()
     console.log('[ShotImageGeneratePanel] 参考图拼接结果:', mergedImageUrl)
     
-    // 2. 构建完整的提示词：内嵌规则（漫画分镜师角色设定） + 用户自定义内容
+    // 2. 构建完整的提示词：内嵌规则 + 分镜剧本
     const fixedTemplate = '你是一个漫画分镜师，擅长在同一画布下，画多镜头的黑白漫画分镜图，要求布局合理，分镜图禁止出现场景、背景和文字，主要以人物和道具为主，排版格式为横向排版，接下来我会给你剧本：'
     
-    // 拼接：系统规则 + 用户自定义内容
-    const customPrompt = scriptDescription.value.trim() 
-      ? fixedTemplate + scriptDescription.value.trim()
-      : fixedTemplate + '（无剧本内容）'
+    // 获取当前分镜的剧本内容
+    const shotScript = currentShot.value?.scriptText || ''
+    
+    // 构建prompt：内嵌规则 + 分镜剧本
+    let customPrompt = fixedTemplate
+    if (shotScript) {
+      customPrompt += shotScript
+    } else {
+      customPrompt += '（无剧本内容）'
+    }
     
     console.log('[ShotImageGeneratePanel] 生成参数:', {
       shotId: props.shotId,
@@ -279,8 +278,7 @@ const handleAIGenerate = async () => {
           imageUrl: finalJob.resultUrl,
           timestamp: new Date().toLocaleString('zh-CN'),
           isSelected: false,
-          prompt: customPrompt, // 完整的prompt（包含内嵌规则）
-          userInput: scriptDescription.value, // 只保存用户的原始输入
+          prompt: customPrompt, // 完整的prompt（内嵌规则 + 分镜剧本）
           expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7天后过期
         }
         
@@ -361,12 +359,7 @@ const handleSelectHistory = async (id: number) => {
   console.log('[ShotImageGeneratePanel] 设置大图预览:', selected.imageUrl)
   generatedImageUrl.value = selected.imageUrl
   
-  // 只恢复用户的原始输入，不包含内嵌规则
-  if (selected.userInput) {
-    scriptDescription.value = selected.userInput
-  }
-  
-  // 应用图片到分镜
+// 应用图片到分镜
   await applyImageToShot(selected.imageUrl)
   
   window.$message?.success('已加载并应用历史记录')
@@ -566,57 +559,24 @@ onMounted(() => {
         >
       </div>
 
-      <!-- 中间输入区 -->
-      <div class="flex items-start gap-3 mb-6">
-        <!-- 上传AI参考图 -->
-        <div
-          @click="triggerReferenceImageInput"
-          class="w-[120px] h-[120px] flex-shrink-0 rounded border-2 border-dashed border-border-default bg-bg-subtle flex flex-col items-center justify-center cursor-pointer hover:bg-bg-subtle hover:border-border-default transition-all"
-        >
-          <template v-if="!referenceImageUrl">
-            <svg class="w-10 h-10 text-text-tertiary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            <p class="text-text-tertiary text-xs text-center px-2">上传AI参考图</p>
-          </template>
-          <template v-else>
-            <img :src="referenceImageUrl" alt="参考图" class="w-full h-full object-cover rounded">
-          </template>
-        </div>
-        <input
-          id="shot-reference-image-input"
-          type="file"
-          accept="image/*"
-          @change="handleReferenceImageUpload"
-          class="hidden"
-        >
-
-        <!-- 剧本描述输入 -->
-        <textarea
-          v-model="scriptDescription"
-          placeholder="输入自定义内容（必填）"
-          class="flex-1 h-[120px] px-4 py-3 bg-bg-subtle border border-border-default rounded text-text-primary placeholder-text-tertiary focus:outline-none focus:border-gray-900/50 resize-none text-sm"
-        ></textarea>
-      </div>
-
       <!-- 底部控制栏 -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-end gap-3 mb-8">
         <!-- 数量选择器 -->
-        <div class="flex items-center gap-0 bg-bg-hover rounded p-1">
+        <div class="flex items-center bg-bg-hover rounded-lg">
           <button
             @click="decreaseQuantity"
-            class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+            class="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
             </svg>
           </button>
-          <div class="w-12 text-center text-text-primary font-medium">{{ quantity }}</div>
+          <div class="w-8 text-center text-text-primary text-sm font-medium">{{ quantity }}</div>
           <button
             @click="increaseQuantity"
-            class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+            class="w-9 h-9 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
           </button>
@@ -625,7 +585,7 @@ onMounted(() => {
         <!-- 比例选择 -->
         <select
           v-model="aspectRatio"
-          class="px-4 py-2.5 bg-bg-hover border border-border-default rounded text-text-primary text-sm focus:outline-none focus:border-gray-900/50 cursor-pointer"
+          class="px-3 py-2 bg-bg-hover border-none rounded-lg text-text-primary text-sm focus:outline-none cursor-pointer"
         >
           <option v-for="option in aspectRatioOptions" :key="option.value" :value="option.value" class="bg-bg-elevated">
             {{ option.label }}
@@ -635,16 +595,16 @@ onMounted(() => {
         <!-- AI生成按钮 -->
         <button
           @click="handleAIGenerate"
-          :disabled="isGenerating || !scriptDescription.trim()"
+          :disabled="isGenerating"
           :class="[
-            'px-10 py-3 rounded font-semibold text-sm transition-opacity flex items-center gap-2',
-            isGenerating || !scriptDescription.trim()
-              ? 'bg-gray-500 cursor-not-allowed opacity-60'
-              : 'bg-gray-800 text-white hover:opacity-90'
+            'px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2',
+            isGenerating
+              ? 'bg-gray-600 cursor-not-allowed opacity-60 text-gray-300'
+              : 'bg-purple-600 text-white hover:bg-purple-700'
           ]"
         >
           <template v-if="isGenerating">
-            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>

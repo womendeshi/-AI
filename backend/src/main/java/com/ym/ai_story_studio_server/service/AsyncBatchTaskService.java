@@ -1,16 +1,27 @@
 package com.ym.ai_story_studio_server.service;
 
+import com.ym.ai_story_studio_server.client.VectorEngineClient;
+import com.ym.ai_story_studio_server.common.ResultCode;
 import com.ym.ai_story_studio_server.config.AiProperties;
 import com.ym.ai_story_studio_server.dto.ai.ImageGenerateRequest;
 import com.ym.ai_story_studio_server.dto.ai.VideoGenerateRequest;
 import com.ym.ai_story_studio_server.entity.Job;
+import com.ym.ai_story_studio_server.exception.BusinessException;
 import com.ym.ai_story_studio_server.mapper.JobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -70,7 +81,15 @@ public class AsyncBatchTaskService {
     private final com.ym.ai_story_studio_server.mapper.AssetVersionMapper assetVersionMapper;
     private final com.ym.ai_story_studio_server.mapper.StoryboardShotMapper storyboardShotMapper;
     private final com.ym.ai_story_studio_server.mapper.ProjectCharacterMapper projectCharacterMapper;
+    private final com.ym.ai_story_studio_server.mapper.CharacterLibraryMapper characterLibraryMapper;
+    private final com.ym.ai_story_studio_server.mapper.ShotBindingMapper shotBindingMapper;
     private final com.ym.ai_story_studio_server.mapper.ProjectSceneMapper projectSceneMapper;
+    
+    // 新增依赖：用于直接创建Asset记录
+    private final VectorEngineClient vectorEngineClient;
+    private final StorageService storageService;
+    private final AssetCreationService assetCreationService;
+    private final ChargingService chargingService;
 
     /**
      * 异步批量生成分镜图
@@ -136,7 +155,7 @@ public class AsyncBatchTaskService {
                         continue;
                     }
 
-                    // 2. 检查MISSING模式是否已有图片资产
+                    // 2. 检查MISSING模式是否已有有效的图片资产（必须有READY状态的版本）
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
                                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
@@ -145,36 +164,100 @@ public class AsyncBatchTaskService {
                                 .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
                                 .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
-                        long imageCount = assetMapper.selectCount(assetQuery);
-                        if (imageCount > 0) {
-                            log.info("MISSING模式 - 分镜已有图片资产,跳过 - shotId: {}", shotId);
+                        java.util.List<com.ym.ai_story_studio_server.entity.Asset> existingAssets = assetMapper.selectList(assetQuery);
+                        boolean hasValidVersion = false;
+                        
+                        for (com.ym.ai_story_studio_server.entity.Asset asset : existingAssets) {
+                            // 检查是否有有效版本（READY状态且URL不为空）
+                            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.AssetVersion> versionQuery =
+                                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                            versionQuery.eq(com.ym.ai_story_studio_server.entity.AssetVersion::getAssetId, asset.getId())
+                                    .eq(com.ym.ai_story_studio_server.entity.AssetVersion::getStatus, "READY")
+                                    .isNotNull(com.ym.ai_story_studio_server.entity.AssetVersion::getUrl);
+                            long validVersionCount = assetVersionMapper.selectCount(versionQuery);
+                            if (validVersionCount > 0) {
+                                hasValidVersion = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasValidVersion) {
+                            log.info("MISSING模式 - 分镜已有有效图片资产,跳过 - shotId: {}", shotId);
                             successCount.incrementAndGet();
                             continue;
                         }
                     }
 
-                    // 3. 构建图片生成请求
-                    String prompt = shot.getScriptText() != null ? shot.getScriptText() :
+                    // 3. 构建图片生成请求 - 添加2D动漫风格的内嵌规则
+                    String scriptText = shot.getScriptText() != null ? shot.getScriptText() :
                             "为分镜生成图片 - shotId: " + shotId;
+                    String prompt = buildShotImagePrompt(scriptText);
+
+                    // 4. 查询分镜绑定的角色图片作为参考图
+                    List<String> referenceImageUrls = getBoundCharacterImages(shotId);
+                    log.info("分镜绑定的角色图片数量 - shotId: {}, count: {}", shotId, referenceImageUrls.size());
 
                     // 如果需要生成多张,循环调用
                     for (int j = 0; j < countPerItem; j++) {
-                        ImageGenerateRequest request = new ImageGenerateRequest(
-                                prompt,
-                                finalModel,
-                                finalAspectRatio,
-                                null,
-                                null,
-                                projectId
-                        );
-
-                        // 4. 临时设置UserContext并调用图片生成服务
-                        com.ym.ai_story_studio_server.util.UserContext.setUserId(userId);
                         try {
-                            aiImageService.generateImage(request);
-                            log.info("分镜图生成任务已提交 [{}/{}] - shotId: {}", j + 1, countPerItem, shotId);
-                        } finally {
-                            com.ym.ai_story_studio_server.util.UserContext.clear();
+                            // 1. 调用AI生成图片，传入角色图片作为参考图
+                            log.info("调用AI生成图片 [{}/{}] - shotId: {}, prompt: {}, referenceImages: {}", 
+                                    j + 1, countPerItem, shotId, prompt, referenceImageUrls.size());
+                            VectorEngineClient.ImageApiResponse apiResponse = vectorEngineClient.generateImage(
+                                    prompt,
+                                    finalModel,
+                                    finalAspectRatio,
+                                    referenceImageUrls  // 传入绑定的角色图片作为参考图
+                            );
+
+                            if (apiResponse == null || apiResponse.data() == null || apiResponse.data().isEmpty()) {
+                                log.error("AI返回空响应 - shotId: {}", shotId);
+                                throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "AI返回空响应");
+                            }
+
+                            String imageData = apiResponse.data().get(0).url();
+                            log.info("AI生成成功 - shotId: {}, imageData类型: {}", shotId, 
+                                    isBase64(imageData) ? "base64" : "url");
+
+                            // 2. 上传到OSS
+                            String ossUrl = processImageAndUploadToOss(imageData, jobId, j);
+                            log.info("上传OSS成功 - shotId: {}, ossUrl: {}", shotId, ossUrl);
+
+                            // 3. 保存到Asset表 - 关联到分镜
+                            assetCreationService.createAssetWithVersion(
+                                    projectId,
+                                    "SHOT",
+                                    shotId,
+                                    "SHOT_IMG",
+                                    ossUrl,
+                                    prompt,
+                                    finalModel,
+                                    finalAspectRatio,
+                                    userId
+                            );
+                            log.info("Asset保存成功 - shotId: {}, ossUrl: {}", shotId, ossUrl);
+
+                            // 4. 扣积分（每张图片扣一次）
+                            Map<String, Object> metaData = new HashMap<>();
+                            metaData.put("model", finalModel);
+                            metaData.put("aspectRatio", finalAspectRatio);
+                            metaData.put("imageUrl", ossUrl);
+                            metaData.put("shotId", shotId);
+
+                            chargingService.charge(
+                                    ChargingService.ChargingRequest.builder()
+                                            .jobId(jobId)
+                                            .bizType("IMAGE_GENERATION")
+                                            .modelCode(finalModel)
+                                            .quantity(1)
+                                            .metaData(metaData)
+                                            .build()
+                            );
+                            log.info("积分扣除成功 - shotId: {}", shotId);
+
+                        } catch (Exception e) {
+                            log.error("生成单张图片失败 [{}/{}] - shotId: {}", j + 1, countPerItem, shotId, e);
+                            // 单张失败不影响其他张
                         }
                     }
 
@@ -301,7 +384,7 @@ public class AsyncBatchTaskService {
 
                     log.info("找到 {} 个参考图片 - shotId: {}, urls: {}", imageUrls.size(), shotId, imageUrls);
 
-                    // 4. 检查MISSING模式是否已有视频资产
+                    // 4. 检查MISSING模式是否已有有效的视频资产（必须有READY状态的版本）
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> videoAssetQuery =
                                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
@@ -310,9 +393,25 @@ public class AsyncBatchTaskService {
                                 .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "VIDEO")
                                 .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
-                        long videoCount = assetMapper.selectCount(videoAssetQuery);
-                        if (videoCount > 0) {
-                            log.info("MISSING模式 - 分镜已有视频资产,跳过 - shotId: {}", shotId);
+                        java.util.List<com.ym.ai_story_studio_server.entity.Asset> existingVideoAssets = assetMapper.selectList(videoAssetQuery);
+                        boolean hasValidVideoVersion = false;
+                        
+                        for (com.ym.ai_story_studio_server.entity.Asset asset : existingVideoAssets) {
+                            // 检查是否有有效版本（READY状态且URL不为空）
+                            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.AssetVersion> versionQuery =
+                                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                            versionQuery.eq(com.ym.ai_story_studio_server.entity.AssetVersion::getAssetId, asset.getId())
+                                    .eq(com.ym.ai_story_studio_server.entity.AssetVersion::getStatus, "READY")
+                                    .isNotNull(com.ym.ai_story_studio_server.entity.AssetVersion::getUrl);
+                            long validVersionCount = assetVersionMapper.selectCount(versionQuery);
+                            if (validVersionCount > 0) {
+                                hasValidVideoVersion = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasValidVideoVersion) {
+                            log.info("MISSING模式 - 分镜已有有效视频资产,跳过 - shotId: {}", shotId);
                             successCount.incrementAndGet();
                             continue;
                         }
@@ -557,11 +656,13 @@ public class AsyncBatchTaskService {
                     }
 
                     // 3. 构建图片生成请求
-                    String prompt = scene.getOverrideDescription() != null ?
+                    String baseDescription = scene.getOverrideDescription() != null ?
                             scene.getOverrideDescription() :
                             (scene.getDisplayName() != null ?
-                                    "场景画像: " + scene.getDisplayName() :
-                                    "场景画像 - sceneId: " + sceneId);
+                                    scene.getDisplayName() :
+                                    "sceneId: " + sceneId);
+                    // 加强负面提示词，禁止出现人物
+                    String prompt = String.format("纯场景背景图，%s，2D动漫风格，高质量高清，画质细腻，空无一人的场景，禁止出现任何人物、角色、人影、动物，只有纯背景环境", baseDescription);
 
                     // 如果需要生成多张,循环调用
                     for (int j = 0; j < countPerItem; j++) {
@@ -785,5 +886,257 @@ public class AsyncBatchTaskService {
             jobMapper.updateById(job);
             log.error("任务已失败 - jobId: {}, error: {}", jobId, errorMessage);
         }
+    }
+
+    // ==================== 图片处理辅助方法 ====================
+
+    /**
+     * 处理图片并上传到OSS
+     *
+     * @param imageData 图片数据（base64或URL）
+     * @param jobId 任务ID
+     * @param index 图片索引
+     * @return OSS存储的URL
+     */
+    private String processImageAndUploadToOss(String imageData, Long jobId, int index) {
+        if (isBase64(imageData)) {
+            log.debug("检测到base64图片 - index: {}", index);
+            return uploadBase64ToOss(imageData, jobId, index);
+        }
+
+        if (isUrl(imageData)) {
+            log.debug("检测到URL图片 - index: {}, url: {}", index, imageData);
+            return downloadAndUploadToOss(imageData, jobId, index);
+        }
+
+        throw new BusinessException(ResultCode.PARAM_INVALID, "无法识别的图片数据格式");
+    }
+
+    /**
+     * 上传base64图片到OSS
+     */
+    private String uploadBase64ToOss(String base64Data, Long jobId, int index) {
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+            InputStream inputStream = new ByteArrayInputStream(imageBytes);
+            String fileName = String.format("ai_image_%d_%d.png", jobId, index);
+            String ossUrl = storageService.upload(inputStream, fileName, "image/png");
+            log.debug("Base64图片上传成功 - index: {}, ossUrl: {}", index, ossUrl);
+            return ossUrl;
+        } catch (Exception e) {
+            log.error("Base64图片上传失败", e);
+            throw new BusinessException(ResultCode.OSS_ERROR, "base64图片上传失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 从URL下载图片并上传到OSS
+     */
+    private String downloadAndUploadToOss(String imageUrl, Long jobId, int index) {
+        try {
+            URL url = new URL(imageUrl);
+            URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(60000);
+
+            String contentType = connection.getContentType();
+            if (contentType == null) {
+                contentType = "image/jpeg";
+            }
+
+            String extension = getExtensionFromContentType(contentType);
+            String fileName = String.format("ai_image_%d_%d%s", jobId, index, extension);
+
+            try (InputStream inputStream = connection.getInputStream()) {
+                String ossUrl = storageService.upload(inputStream, fileName, contentType);
+                log.debug("URL图片下载并上传成功 - ossUrl: {}", ossUrl);
+                return ossUrl;
+            }
+        } catch (Exception e) {
+            log.error("图片下载或上传失败 - url: {}", imageUrl, e);
+            throw new BusinessException(ResultCode.OSS_ERROR, "图片下载失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 判断是否为base64
+     */
+    private boolean isBase64(String data) {
+        if (data == null || data.isBlank()) {
+            return false;
+        }
+        return data.length() > 100
+                && !data.startsWith("http://")
+                && !data.startsWith("https://");
+    }
+
+    /**
+     * 判断是否为URL
+     */
+    private boolean isUrl(String data) {
+        if (data == null || data.isBlank()) {
+            return false;
+        }
+        return data.startsWith("http://") || data.startsWith("https://");
+    }
+
+    /**
+     * 根据ContentType获取文件扩展名
+     */
+    private String getExtensionFromContentType(String contentType) {
+        if (contentType == null) {
+            return ".jpg";
+        }
+        return switch (contentType.toLowerCase()) {
+            case "image/png" -> ".png";
+            case "image/jpeg", "image/jpg" -> ".jpg";
+            case "image/webp" -> ".webp";
+            case "image/gif" -> ".gif";
+            default -> ".jpg";
+        };
+    }
+
+    // ==================== 分镜图生成内嵌规则 ====================
+
+    /**
+     * 分镜图生成的内嵌规则前缀
+     * 指定2D动漫风格，确保生成的图片风格一致
+     */
+    private static final String SHOT_IMAGE_PROMPT_PREFIX = 
+            "根据参考图的设定，使用参考图中的角色、场景、道具，" +
+            "运用合理的构建分镜，合理的动作，合理的运镜，合理的环境渲染，" +
+            "发散你的想象力，生成保持风格一致性的2D动漫图片，" +
+            "要求线条细致，人物画风保持与参考图一致，" +
+            "清晰不模糊，颜色鲜艳，光影效果，超清画质，电影级镜头（cinematic dynamic camera），" +
+            "请忠实原文，不增加原文没有的内容，不减少原文包含的信息。" +
+            "分镜要求如下：";
+
+    /**
+     * 构建分镜图生成的完整提示词
+     * 
+     * @param scriptText 分镜剧本文本
+     * @return 带风格前缀的完整提示词
+     */
+    private String buildShotImagePrompt(String scriptText) {
+        return SHOT_IMAGE_PROMPT_PREFIX + scriptText;
+    }
+
+    // ==================== 分镜绑定角色图片查询 ====================
+
+    /**
+     * 查询分镜绑定的角色图片URL列表
+     * 
+     * <p>优先级：项目角色缩略图 > 角色库缩略图 > 角色资产图片
+     * 
+     * @param shotId 分镜ID
+     * @return 角色图片URL列表
+     */
+    private List<String> getBoundCharacterImages(Long shotId) {
+        List<String> imageUrls = new java.util.ArrayList<>();
+        
+        try {
+            // 1. 查询shot_bindings表中bind_type=PCHAR的绑定记录
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.ShotBinding> bindingQuery =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            bindingQuery.eq(com.ym.ai_story_studio_server.entity.ShotBinding::getShotId, shotId)
+                    .eq(com.ym.ai_story_studio_server.entity.ShotBinding::getBindType, "PCHAR");
+            
+            List<com.ym.ai_story_studio_server.entity.ShotBinding> bindings = shotBindingMapper.selectList(bindingQuery);
+            
+            if (bindings.isEmpty()) {
+                log.debug("分镜没有绑定角色 - shotId: {}", shotId);
+                return imageUrls;
+            }
+            
+            log.debug("找到 {} 个绑定角色 - shotId: {}", bindings.size(), shotId);
+            
+            // 2. 获取绑定的角色ID列表
+            List<Long> characterIds = bindings.stream()
+                    .map(com.ym.ai_story_studio_server.entity.ShotBinding::getRefId)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // 3. 批量查询项目角色
+            List<com.ym.ai_story_studio_server.entity.ProjectCharacter> characters = 
+                    projectCharacterMapper.selectBatchIds(characterIds);
+            
+            // 4. 为每个角色获取缩略图URL
+            for (com.ym.ai_story_studio_server.entity.ProjectCharacter character : characters) {
+                String imageUrl = null;
+                
+                // 优先级1: 项目角色的thumbnailUrl
+                if (character.getThumbnailUrl() != null && !character.getThumbnailUrl().isEmpty()) {
+                    imageUrl = character.getThumbnailUrl();
+                    log.debug("使用项目角色缩略图 - characterId: {}, url: {}", character.getId(), imageUrl);
+                }
+                // 优先级2: 从角色库获取缩略图
+                else if (character.getCharacterLibraryId() != null) {
+                    com.ym.ai_story_studio_server.entity.CharacterLibrary libraryChar = 
+                            characterLibraryMapper.selectById(character.getCharacterLibraryId());
+                    if (libraryChar != null && libraryChar.getThumbnailUrl() != null && !libraryChar.getThumbnailUrl().isEmpty()) {
+                        imageUrl = libraryChar.getThumbnailUrl();
+                        log.debug("使用角色库缩略图 - characterId: {}, libraryId: {}, url: {}", 
+                                character.getId(), character.getCharacterLibraryId(), imageUrl);
+                    }
+                }
+                // 优先级3: 从角色资产表获取
+                if (imageUrl == null) {
+                    imageUrl = getCharacterAssetUrl(character.getId());
+                    if (imageUrl != null) {
+                        log.debug("使用角色资产图片 - characterId: {}, url: {}", character.getId(), imageUrl);
+                    }
+                }
+                
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    imageUrls.add(imageUrl);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("查询分镜绑定角色图片失败 - shotId: {}", shotId, e);
+        }
+        
+        return imageUrls;
+    }
+
+    /**
+     * 获取角色的资产图片URL
+     * 
+     * @param characterId 项目角色ID
+     * @return 角色资产图片URL，如果没有则返回null
+     */
+    private String getCharacterAssetUrl(Long characterId) {
+        try {
+            // 查询角色的CHAR_IMG类型资产
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "PCHAR")
+                    .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, characterId)
+                    .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "CHAR_IMG")
+                    .orderByDesc(com.ym.ai_story_studio_server.entity.Asset::getCreatedAt)
+                    .last("LIMIT 1");
+            
+            com.ym.ai_story_studio_server.entity.Asset asset = assetMapper.selectOne(assetQuery);
+            
+            if (asset != null) {
+                // 查询最新的READY状态版本
+                com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.AssetVersion> versionQuery =
+                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                versionQuery.eq(com.ym.ai_story_studio_server.entity.AssetVersion::getAssetId, asset.getId())
+                        .eq(com.ym.ai_story_studio_server.entity.AssetVersion::getStatus, "READY")
+                        .isNotNull(com.ym.ai_story_studio_server.entity.AssetVersion::getUrl)
+                        .orderByDesc(com.ym.ai_story_studio_server.entity.AssetVersion::getVersionNo)
+                        .last("LIMIT 1");
+                
+                com.ym.ai_story_studio_server.entity.AssetVersion version = assetVersionMapper.selectOne(versionQuery);
+                
+                if (version != null) {
+                    return version.getUrl();
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取角色资产URL失败 - characterId: {}", characterId, e);
+        }
+        
+        return null;
     }
 }

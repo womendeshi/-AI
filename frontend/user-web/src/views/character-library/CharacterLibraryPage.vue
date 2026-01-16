@@ -52,36 +52,6 @@ const toggleSelectAll = () => {
   }
 }
 
-// 批量选择模式
-const isSelectionMode = ref(false)
-const selectedIds = ref<Set<number>>(new Set())
-
-// 切换选择模式
-const toggleSelectionMode = () => {
-  isSelectionMode.value = !isSelectionMode.value
-  if (!isSelectionMode.value) {
-    selectedIds.value.clear()
-  }
-}
-
-// 切换单个选择
-const toggleSelection = (id: number) => {
-  if (selectedIds.value.has(id)) {
-    selectedIds.value.delete(id)
-  } else {
-    selectedIds.value.add(id)
-  }
-}
-
-// 全选/取消全选
-const toggleSelectAll = () => {
-  if (selectedIds.value.size === filteredCharacters.value.length) {
-    selectedIds.value.clear()
-  } else {
-    selectedIds.value = new Set(filteredCharacters.value.map(c => c.id))
-  }
-}
-
 // Load data
 onMounted(async () => {
   await loadData()

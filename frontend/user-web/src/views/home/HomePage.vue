@@ -1,4 +1,4 @@
-<script setup lang="ts">
+xiang mm画<script setup lang="ts">
 // {{CODE-Cycle-Integration:
 //   Task_ID: [#问题1]
 //   Timestamp: 2026-01-03T08:05:00+08:00
@@ -212,10 +212,10 @@ const handleShowAllProjects = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-bg-base">
-    <div class="max-w-[1400px] mx-auto px-8 py-6">
-      <!-- 轮播图区域 -->
-      <div class="mb-6 rounded-2xl overflow-hidden h-[266cpx] relative">
+  <div class="h-screen bg-bg-base overflow-hidden">
+    <div class="h-full max-w-[1400px] mx-auto px-6 py-3 flex flex-col">
+      <!-- 轮播图区域：占据剩余空间 -->
+      <div class="flex-1 mb-2 rounded-xl overflow-hidden min-h-[120px]">
         <img 
           src="@/assets/images/轮播图.jpg" 
           alt="轮播图" 
@@ -223,9 +223,9 @@ const handleShowAllProjects = async () => {
         />
       </div>
 
-      <!-- 项目区域 -->
-      <div>
-        <div class="flex items-center justify-between mb-4">
+      <!-- 项目区域：固定高度，内部可滚动 -->
+      <div class="flex-shrink-0 flex flex-col overflow-hidden" style="height: 300px;">
+        <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-3">
             <button
               v-if="selectedFolder"
@@ -238,10 +238,10 @@ const handleShowAllProjects = async () => {
               返回
             </button>
             <div>
-              <h2 class="text-lg font-semibold text-text-primary">
+              <h2 class="text-base font-semibold text-text-primary">
                 {{ selectedFolder ? `${selectedFolder.name} 中的项目` : '所有项目' }}
               </h2>
-              <p class="text-xs text-text-tertiary mt-0.5">
+              <p class="text-xs text-text-tertiary">
                 共 {{ projectStore.total }} 个项目 · {{ projectStore.folders.length }} 个文件夹
               </p>
             </div>
@@ -312,12 +312,14 @@ const handleShowAllProjects = async () => {
             </div>
           </div>
         </div>
-        <ProjectTable
-          @edit-folder="handleEditFolder"
-          @delete-folder="handleDeleteFolder"
-          @delete-project="handleDeleteProject"
-          @move-project="handleMoveProject"
-        />
+        <div class="flex-1 min-h-0">
+          <ProjectTable
+            @edit-folder="handleEditFolder"
+            @delete-folder="handleDeleteFolder"
+            @delete-project="handleDeleteProject"
+            @move-project="handleMoveProject"
+          />
+        </div>
       </div>
     </div>
 

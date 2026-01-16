@@ -194,10 +194,10 @@ public class VectorEngineClient {
     ) {
         log.info("Routing image generation - model: {}, aspectRatio: {}", model, aspectRatio);
 
-        // 路由1: 即梦模型 → 使用即梦反代
-        if (aiProperties.getImage().getJimengModel().equals(model)) {
-            log.debug("Using Jimeng proxy for model: {}", model);
-            return generateImageViaJimeng(prompt, model, aspectRatio, referenceImageUrls);
+        // 路由1: 即梦模型 → 转发到Gemini(禁用即梦反代)
+        if (aiProperties.getImage().getJimengModel().equals(model) || model.startsWith("jimeng")) {
+            log.info("即梦模型已禁用，转发到Gemini: {} -> gemini-3-pro-image-preview", model);
+            return generateImageViaGeminiChat(prompt, "gemini-3-pro-image-preview", aspectRatio, referenceImageUrls);
         }
 
         // 路由2: Gemini图片模型 → 使用Chat兼容格式
@@ -502,14 +502,14 @@ public class VectorEngineClient {
 
         log.debug("选择的端点: {} ({})", endpoint, isImageToImage ? "图生图" : "文生图");
 
-        // 构建即梦反代专用RestClient - 使用正确的认证方式 + 超时配置
+        // 构建即梦反代专用RestClient - 使用Authorization Bearer认证 + 超时配置
         RestClient jimengClient = RestClient.builder()
                 .baseUrl(jimengConfig.getBaseUrl())
-                .defaultHeader("Authorization", "Bearer " + jimengConfig.getSessionid())
+                .defaultHeader("Authorization", "Bearer " + jimengConfig.getSessionid())  // Bearer Token认证
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {{
-                    setConnectTimeout(Duration.ofSeconds(30));
-                    setReadTimeout(Duration.ofSeconds(120));  // 图片生成可能需要较长时间
+                    setConnectTimeout(Duration.ofSeconds(60));   // 连接超时60秒
+                    setReadTimeout(Duration.ofSeconds(180));     // 读取超时180秒(图片生成耗时较长)
                 }})
                 .build();
 
@@ -531,8 +531,8 @@ public class VectorEngineClient {
         log.debug("即梦请求体 - model: {}, ratio: {}, endpoint: {}", model, aspectRatio, endpoint);
 
         try {
-            // 调用即梦反代端点 - 先获取原始响应字符串用于诊断
-            String rawResponse = jimengClient.post()
+            // 调用即梦反代端点 - 使用字节数组读取响应，避免Content-Type解析问题
+            byte[] responseBytes = jimengClient.post()
                     .uri(endpoint)
                     .body(requestBody)
                     .retrieve()
@@ -542,7 +542,10 @@ public class VectorEngineClient {
                                 httpResponse.getStatusCode(), errorBody);
                         throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "即梦图片生成失败: " + errorBody);
                     })
-                    .body(String.class);
+                    .body(byte[].class);
+            
+            // 将字节数组转换为字符串
+            String rawResponse = new String(responseBytes, java.nio.charset.StandardCharsets.UTF_8);
 
             // 【诊断日志】打印完整的原始响应体
             log.info("===== 即梦反代原始响应 =====");
@@ -655,6 +658,16 @@ public class VectorEngineClient {
      * @return 视频生成API响应(包含任务ID)
      * @throws BusinessException 当API调用失败时抛出
      */
+    /**
+     * 最大重试次数(针对临时性网络错误)
+     */
+    private static final int MAX_VIDEO_API_RETRIES = 3;
+    
+    /**
+     * 重试间隔(毫秒)
+     */
+    private static final long VIDEO_API_RETRY_INTERVAL = 5000;
+
     public VideoApiResponse generateVideo(
             String prompt,
             String model,
@@ -691,58 +704,141 @@ public class VectorEngineClient {
             referenceMimeType = MediaType.IMAGE_PNG_VALUE;
         }
 
-        ByteArrayResource imageResource = new ByteArrayResource(imageBytes) {
-            @Override
-            public String getFilename() {
-                return "input_reference.png";
-            }
-        };
-        HttpHeaders partHeaders = new HttpHeaders();
-        partHeaders.setContentType(MediaType.parseMediaType(referenceMimeType));
-        requestBody.add("input_reference", new HttpEntity<>(imageResource, partHeaders));
+        final byte[] finalImageBytes = imageBytes;
+        final String finalMimeType = referenceMimeType;
 
         log.debug("视频生成请求体 - model: {}, size: {}, seconds: {}",
                 model, targetSize, duration);
 
-        try {
-            // 调用向量引擎视频创建端点
-            String rawResponse = restClient.post()
-                    .uri("/v1/videos")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(requestBody)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, (request, httpResponse) -> {
-                        String errorBody = new String(httpResponse.getBody().readAllBytes());
-                        log.error("视频生成API错误 - 状态码: {}, 响应体: {}",
-                                httpResponse.getStatusCode(), errorBody);
-                        
-                        // 解析错误响应,给出更友好的提示
-                        String friendlyMessage = parseVideoErrorMessage(errorBody);
-                        throw new BusinessException(ResultCode.AI_SERVICE_ERROR, friendlyMessage);
-                    })
-                    .body(String.class);
+        // 带重试的API调用(处理GOAWAY、负载饱和等临时错误)
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= MAX_VIDEO_API_RETRIES; attempt++) {
+            try {
+                // 每次重试需要重新构建请求体(因为Resource可能被消费)
+                MultiValueMap<String, Object> retryRequestBody = new LinkedMultiValueMap<>();
+                retryRequestBody.add("model", model);
+                retryRequestBody.add("prompt", prompt);
+                retryRequestBody.add("seconds", String.valueOf(normalizeVideoSeconds(duration)));
+                retryRequestBody.add("size", targetSize);
+                
+                ByteArrayResource imageResource = new ByteArrayResource(finalImageBytes) {
+                    @Override
+                    public String getFilename() {
+                        return "input_reference.png";
+                    }
+                };
+                HttpHeaders partHeaders = new HttpHeaders();
+                partHeaders.setContentType(MediaType.parseMediaType(finalMimeType));
+                retryRequestBody.add("input_reference", new HttpEntity<>(imageResource, partHeaders));
 
-            log.debug("视频生成API原始响应: {}", rawResponse);
-            
-            // 解析响应
-            ObjectMapper objectMapper = new ObjectMapper();
-            VideoApiResponse response = objectMapper.readValue(rawResponse, VideoApiResponse.class);
-            
-            // 检查是否有错误状态
-            if ("error".equals(response.status())) {
-                String friendlyMessage = parseVideoErrorMessage(rawResponse);
-                throw new BusinessException(ResultCode.AI_SERVICE_ERROR, friendlyMessage);
+                // 调用向量引擎视频创建端点
+                String rawResponse = restClient.post()
+                        .uri("/v1/videos")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .body(retryRequestBody)
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, (request, httpResponse) -> {
+                            String errorBody = new String(httpResponse.getBody().readAllBytes());
+                            log.error("视频生成API错误 - 状态码: {}, 响应体: {}",
+                                    httpResponse.getStatusCode(), errorBody);
+                            
+                            // 解析错误响应,给出更友好的提示
+                            String friendlyMessage = parseVideoErrorMessage(errorBody);
+                            throw new BusinessException(ResultCode.AI_SERVICE_ERROR, friendlyMessage);
+                        })
+                        .body(String.class);
+
+                log.debug("视频生成API原始响应: {}", rawResponse);
+                
+                // 解析响应
+                ObjectMapper objectMapper = new ObjectMapper();
+                VideoApiResponse response = objectMapper.readValue(rawResponse, VideoApiResponse.class);
+                
+                // 检查是否有错误状态
+                if ("error".equals(response.status())) {
+                    String friendlyMessage = parseVideoErrorMessage(rawResponse);
+                    throw new BusinessException(ResultCode.AI_SERVICE_ERROR, friendlyMessage);
+                }
+
+                log.info("视频生成任务已创建 - taskId: {}, 尝试次数: {}", response.id(), attempt);
+                return response;
+
+            } catch (BusinessException e) {
+                // 检查是否为可重试的错误
+                if (isRetryableError(e) && attempt < MAX_VIDEO_API_RETRIES) {
+                    log.warn("视频生成API临时错误,准备重试 - 第{}/{}次, 错误: {}", 
+                            attempt, MAX_VIDEO_API_RETRIES, e.getMessage());
+                    lastException = e;
+                    try {
+                        Thread.sleep(VIDEO_API_RETRY_INTERVAL * attempt);  // 递增等待时间
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "视频生成被中断", ie);
+                    }
+                    continue;
+                }
+                throw e;
+            } catch (Exception e) {
+                // 检查是否为可重试的网络错误(GOAWAY等)
+                if (isRetryableNetworkError(e) && attempt < MAX_VIDEO_API_RETRIES) {
+                    log.warn("视频生成API网络错误,准备重试 - 第{}/{}次, 错误: {}", 
+                            attempt, MAX_VIDEO_API_RETRIES, e.getMessage());
+                    lastException = e;
+                    try {
+                        Thread.sleep(VIDEO_API_RETRY_INTERVAL * attempt);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "视频生成被中断", ie);
+                    }
+                    continue;
+                }
+                log.error("视频生成调用失败", e);
+                throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "视频生成服务异常，请稍后重试", e);
             }
-
-            log.info("视频生成任务已创建 - taskId: {}", response.id());
-            return response;
-
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("视频生成调用失败", e);
-            throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "视频生成服务异常，请稍后重试", e);
         }
+        
+        // 所有重试都失败
+        log.error("视频生成API重试{}次后仍失败", MAX_VIDEO_API_RETRIES);
+        throw new BusinessException(ResultCode.AI_SERVICE_ERROR, 
+                "视频生成服务繁忙，已重试" + MAX_VIDEO_API_RETRIES + "次，请稍后再试", lastException);
+    }
+    
+    /**
+     * 判断是否为可重试的业务错误
+     */
+    private boolean isRetryableError(BusinessException e) {
+        String msg = e.getMessage();
+        if (msg == null) return false;
+        return msg.contains("负载已饱和") || 
+               msg.contains("繁忙") || 
+               msg.contains("稍后") ||
+               msg.contains("load") ||
+               msg.contains("saturated");
+    }
+    
+    /**
+     * 判断是否为可重试的网络错误
+     */
+    private boolean isRetryableNetworkError(Exception e) {
+        String msg = e.getMessage();
+        if (msg == null) {
+            // 检查cause
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                String causeMsg = cause.getMessage();
+                if (causeMsg != null && (causeMsg.contains("GOAWAY") || 
+                                          causeMsg.contains("Connection reset") ||
+                                          causeMsg.contains("timeout"))) {
+                    return true;
+                }
+                cause = cause.getCause();
+            }
+            return false;
+        }
+        return msg.contains("GOAWAY") || 
+               msg.contains("Connection reset") || 
+               msg.contains("timeout") ||
+               msg.contains("I/O error");
     }
 
     /**
