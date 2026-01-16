@@ -1285,23 +1285,21 @@ const handleCopyThumbnail = async (url: string) => {
                     <!-- 已在作品中标记 -->
                     <div class="absolute top-2 right-2 w-3 h-3 bg-gray-900 rounded border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
                     
-                    <!-- 悬浯操作层（移除按钮） -->
-                    <div class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        class="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
-                        :disabled="unbindingCharacterId === boundChar.bindingId"
-                        @click.stop="handleUnbindCharacter(boundChar.bindingId, boundChar.characterName)"
-                        title="移除角色"
-                      >
-                        <svg v-if="unbindingCharacterId !== boundChar.bindingId" class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        <svg v-else class="w-5 h-5 text-text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </button>
-                    </div>
+                    <!-- 悬浮操作层（移除按钮） -->
+                    <button
+                      class="absolute top-2 left-2 p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
+                      :disabled="unbindingCharacterId === boundChar.bindingId"
+                      @click.stop="handleUnbindCharacter(boundChar.bindingId, boundChar.characterName)"
+                      title="移除角色"
+                    >
+                      <svg v-if="unbindingCharacterId !== boundChar.bindingId" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      <svg v-else class="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </button>
                   </div>
                   <!-- 角色名称 -->
                   <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ boundChar.characterName }}</span>
@@ -1334,24 +1332,25 @@ const handleCopyThumbnail = async (url: string) => {
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-x-0 bottom-0 p-2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
+                        class="px-3 py-1.5 rounded-lg bg-gray-900/90 text-white text-xs font-medium hover:bg-gray-800 transition-colors"
                         @click.stop="handleBindCharacter(char.id)"
                       >
                         + 使用角色
                       </button>
-                      <button
-                        class="p-2 rounded-lg bg-red-500/20 border border-red-500/50 hover:bg-red-500/30 transition-colors"
-                        :disabled="deletingCharacterId === char.id"
-                        @click.stop="handleDeleteCharacter(char.id, $event)"
-                        title="删除角色"
-                      >
-                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
                     </div>
+                    <!-- 删除按钮 -->
+                    <button
+                      class="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
+                      :disabled="deletingCharacterId === char.id"
+                      @click.stop="handleDeleteCharacter(char.id, $event)"
+                      title="删除角色"
+                    >
+                      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
                   </div>
                   
                   <!-- 角色名称 -->
@@ -1435,22 +1434,20 @@ const handleCopyThumbnail = async (url: string) => {
                     <div class="absolute top-2 right-2 w-3 h-3 bg-gray-900 rounded border-2 border-[#1E2025] shadow-[0_0_6px_2px_rgba(0,255,204,0.7)]"></div>
                     
                     <!-- 悬浮操作层（移除按钮） -->
-                    <div class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        class="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
-                        :disabled="unbindingSceneId === shot.scene.bindingId"
-                        @click.stop="handleUnbindScene(shot.scene.bindingId, shot.scene.sceneName)"
-                        title="移除场景"
-                      >
-                        <svg v-if="unbindingSceneId !== shot.scene.bindingId" class="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        <svg v-else class="w-5 h-5 text-text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </button>
-                    </div>
+                    <button
+                      class="absolute top-2 left-2 p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
+                      :disabled="unbindingSceneId === shot.scene.bindingId"
+                      @click.stop="handleUnbindScene(shot.scene.bindingId, shot.scene.sceneName)"
+                      title="移除场景"
+                    >
+                      <svg v-if="unbindingSceneId !== shot.scene.bindingId" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      <svg v-else class="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </button>
                   </div>
                   <!-- 场景名称 -->
                   <span class="text-text-secondary text-xs text-center truncate w-full px-1">{{ shot.scene.sceneName }}</span>
@@ -1481,24 +1478,25 @@ const handleCopyThumbnail = async (url: string) => {
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-x-0 bottom-0 p-2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
+                        class="px-3 py-1.5 rounded-lg bg-gray-900/90 text-white text-xs font-medium hover:bg-gray-800 transition-colors"
                         @click.stop="handleBindScene(scene.id)"
                       >
                         + 使用场景
                       </button>
-                      <button
-                        class="p-2 rounded-lg bg-red-500/20 border border-red-500/50 hover:bg-red-500/30 transition-colors"
-                        :disabled="deletingSceneId === scene.id"
-                        @click.stop="handleDeleteScene(scene.id, $event)"
-                        title="删除场景"
-                      >
-                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
                     </div>
+                    <!-- 删除按钮 -->
+                    <button
+                      class="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
+                      :disabled="deletingSceneId === scene.id"
+                      @click.stop="handleDeleteScene(scene.id, $event)"
+                      title="删除场景"
+                    >
+                      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
                   </div>
                   
                   <!-- 场景名称 -->
@@ -1582,9 +1580,9 @@ const handleCopyThumbnail = async (url: string) => {
                     </div>
                     
                     <!-- 悬浮操作层 -->
-                    <div class="absolute inset-0 bg-gray-800 rounded flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-x-0 bottom-0 p-2 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="px-4 py-2 rounded-lg bg-bg-subtle text-text-secondary text-sm font-medium hover:bg-bg-hover transition-colors"
+                        class="px-3 py-1.5 rounded-lg bg-gray-900/90 text-white text-xs font-medium hover:bg-gray-800 transition-colors"
                         @click.stop="handleBindProp(prop.id)"
                       >
                         + 使用道具

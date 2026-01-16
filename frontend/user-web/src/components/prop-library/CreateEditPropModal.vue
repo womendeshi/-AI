@@ -1,68 +1,89 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { propApi } from '@/api/prop'
 import type { PropLibraryVO, PropCategoryVO } from '@/types/api'
 
-interface Props {
-  prop?: PropLibraryVO | null
+const props = defineProps<{
+  prop: PropLibraryVO | null
   categories: PropCategoryVO[]
-}
+}>()
 
-interface Emits {
-  (e: 'close'): void
-  (e: 'saved'): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  close: []
+  saved: []
+}>()
 
 // Form state
-const formData = ref({
-  name: props.prop?.name || '',
-  description: props.prop?.description || '',
-  categoryId: props.prop?.categoryId || null,
+const form = ref({
+  name: '',
+  categoryId: null as number | null,
+  description: '',
+})
+
+const errors = ref({
+  name: '',
 })
 
 const submitting = ref(false)
-const isEditMode = computed(() => !!props.prop)
 
-// Validation
-const nameError = computed(() => {
-  if (!formData.value.name.trim()) return '道具名称不能为空'
-  if (formData.value.name.length > 100) return '道具名称不能超过100个字符'
-  return ''
+// Initialize form when prop changes
+watch(
+  () => props.prop,
+  (newProp) => {
+    if (newProp) {
+      form.value = {
+        name: newProp.name || '',
+        categoryId: newProp.categoryId || null,
+        description: newProp.description || '',
+      }
+    } else {
+      form.value = {
+        name: '',
+        categoryId: null,
+        description: '',
+      }
+    }
+    errors.value = { name: '' }
+  },
+  { immediate: true }
+)
+
+const isEditing = computed(() => !!props.prop?.id)
+
+const isFormValid = computed(() => {
+  return form.value.name.trim().length > 0
 })
 
-const descriptionError = computed(() => {
-  if (formData.value.description && formData.value.description.length > 2000) {
-    return '道具描述不能超过2000个字符'
+const validateForm = () => {
+  errors.value = { name: '' }
+
+  if (!form.value.name.trim()) {
+    errors.value.name = '请输入道具名称'
+    return false
   }
-  return ''
-})
 
-const isValid = computed(() => {
-  return !nameError.value && !descriptionError.value
-})
+  return true
+}
 
 const handleSubmit = async () => {
-  if (!isValid.value || submitting.value) return
+  if (!validateForm() || submitting.value) return
 
   submitting.value = true
   try {
-    if (isEditMode.value && props.prop) {
+    if (isEditing.value && props.prop) {
       // Update existing prop
       await propApi.updateLibraryProp(props.prop.id, {
-        name: formData.value.name,
-        description: formData.value.description || undefined,
-        categoryId: formData.value.categoryId || null,
+        name: form.value.name.trim(),
+        categoryId: form.value.categoryId,
+        description: form.value.description.trim() || undefined,
       })
       window.$message?.success('道具更新成功')
     } else {
       // Create new prop
       await propApi.createLibraryProp({
-        categoryId: formData.value.categoryId || undefined,
-        name: formData.value.name,
-        description: formData.value.description || undefined,
+        name: form.value.name.trim(),
+        categoryId: form.value.categoryId,
+        description: form.value.description.trim() || undefined,
       })
       window.$message?.success('道具创建成功')
     }
@@ -75,9 +96,7 @@ const handleSubmit = async () => {
 }
 
 const handleClose = () => {
-  if (!submitting.value) {
-    emit('close')
-  }
+  emit('close')
 }
 </script>
 
@@ -86,18 +105,14 @@ const handleClose = () => {
     class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
     @click.self="handleClose"
   >
-    <div
-      class="bg-bg-elevated border border-border-default rounded w-[600px] max-h-[80vh] flex flex-col shadow-2xl pointer-events-auto"
-      @click.stop
-    >
+    <div class="card w-[500px] max-h-[80vh] flex flex-col shadow-2xl pointer-events-auto" @click.stop>
       <!-- Modal Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-border-default">
         <h2 class="text-lg font-bold text-text-primary">
-          {{ isEditMode ? '编辑道具' : '创建道具' }}
+          {{ isEditing ? '编辑道具' : '创建道具' }}
         </h2>
         <button
-          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-subtle hover:text-text-primary transition-colors"
-          :disabled="submitting"
+          class="p-2 rounded-lg text-text-tertiary hover:bg-bg-hover hover:text-text-primary transition-colors"
           @click="handleClose"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,31 +122,31 @@ const handleClose = () => {
       </div>
 
       <!-- Modal Content -->
-      <form class="flex-1 overflow-y-auto p-6" @submit.prevent="handleSubmit">
+      <div class="flex-1 overflow-y-auto p-6">
         <div class="space-y-4">
           <!-- Name Input -->
           <div>
             <label class="text-xs font-bold text-text-secondary mb-2 block">
-              道具名称 <span class="text-red-400">*</span>
+              道具名称 <span class="text-error">*</span>
             </label>
             <input
-              v-model="formData.name"
+              v-model="form.name"
               type="text"
               placeholder="请输入道具名称"
-              class="w-full px-4 py-3 bg-bg-subtle border rounded text-text-primary placeholder-text-tertiary focus:outline-none transition-colors"
-              :class="nameError ? 'border-red-400/50' : 'border-border-default focus:border-gray-900/50'"
+              class="input"
+              :class="{ 'border-error': errors.name }"
               :disabled="submitting"
               maxlength="100"
             >
-            <p v-if="nameError" class="text-red-400 text-xs mt-1">{{ nameError }}</p>
+            <p v-if="errors.name" class="text-error text-xs mt-1">{{ errors.name }}</p>
           </div>
 
           <!-- Category Select -->
           <div>
             <label class="text-xs font-bold text-text-secondary mb-2 block">分类</label>
             <select
-              v-model="formData.categoryId"
-              class="w-full px-4 py-3 bg-bg-subtle border border-border-default rounded text-text-primary focus:outline-none focus:border-gray-900/50 transition-colors"
+              v-model="form.categoryId"
+              class="input"
               :disabled="submitting"
             >
               <option :value="null">无分类</option>
@@ -147,43 +162,37 @@ const handleClose = () => {
 
           <!-- Description Textarea -->
           <div>
-            <label class="text-xs font-bold text-text-secondary mb-2 block">描述 / 提示词</label>
+            <label class="text-xs font-bold text-text-secondary mb-2 block">描述</label>
             <textarea
-              v-model="formData.description"
-              placeholder="请输入道具描述或AI生成提示词..."
-              rows="8"
-              class="w-full px-4 py-3 bg-bg-subtle border rounded text-text-primary placeholder-text-tertiary focus:outline-none transition-colors resize-none"
-              :class="descriptionError ? 'border-red-400/50' : 'border-border-default focus:border-gray-900/50'"
+              v-model="form.description"
+              placeholder="请输入道具描述..."
+              rows="4"
+              class="input resize-none"
               :disabled="submitting"
               maxlength="2000"
             ></textarea>
-            <div class="flex items-center justify-between mt-1">
-              <p v-if="descriptionError" class="text-red-400 text-xs">{{ descriptionError }}</p>
-              <p class="text-text-tertiary text-xs ml-auto">
-                {{ formData.description.length }} / 2000
-              </p>
-            </div>
+            <p class="text-text-tertiary text-xs mt-1 text-right">
+              {{ form.description.length }} / 2000
+            </p>
           </div>
         </div>
-      </form>
+      </div>
 
       <!-- Modal Footer -->
       <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-default">
         <button
-          type="button"
-          class="px-4 py-2 rounded border border-border-default text-text-secondary hover:bg-bg-subtle transition-colors text-sm"
+          class="btn btn-secondary text-sm"
           :disabled="submitting"
           @click="handleClose"
         >
           取消
         </button>
         <button
-          type="submit"
-          class="px-4 py-2 rounded bg-bg-subtle text-text-secondary font-medium hover:bg-bg-hover transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!isValid || submitting"
+          class="btn btn-primary text-sm"
+          :disabled="!isFormValid || submitting"
           @click="handleSubmit"
         >
-          {{ submitting ? '保存中...' : isEditMode ? '保存' : '创建' }}
+          {{ submitting ? '保存中...' : isEditing ? '保存' : '创建' }}
         </button>
       </div>
     </div>

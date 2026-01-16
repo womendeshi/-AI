@@ -148,6 +148,7 @@ public class ToolboxServiceImpl implements ToolboxService {
                 request.prompt(),
                 request.model(),  // 使用用户指定的模型
                 request.aspectRatio(),
+                request.referenceImageUrlList(),
                 request.referenceImageUrl(),
                 0L   // projectId=0表示工具箱任务
         );
@@ -178,11 +179,15 @@ public class ToolboxServiceImpl implements ToolboxService {
      */
     private ToolboxGenerateResponse generateVideo(ToolboxGenerateRequest request) {
         // 转换为VideoGenerateRequest(不需要projectId)
+        String referenceImageUrl = request.referenceImageUrlList().isEmpty()
+                ? request.referenceImageUrl()
+                : request.referenceImageUrlList().get(0);
+
         VideoGenerateRequest videoRequest = new VideoGenerateRequest(
                 request.prompt(),
                 request.aspectRatio(),
                 request.duration(),
-                request.referenceImageUrl(),
+                referenceImageUrl,
                 null   // projectId为null(工具箱不关联项目)
         );
 

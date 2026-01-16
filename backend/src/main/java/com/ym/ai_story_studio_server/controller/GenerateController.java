@@ -20,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * AI生成服务控制器
  *
@@ -617,16 +620,32 @@ public class GenerateController {
             @RequestParam(required = false) String aspectRatio,
             @RequestParam(required = false) String model,
             @RequestParam(required = false) String customPrompt,
+            @RequestParam(required = false) List<String> referenceImageUrls,
             @RequestParam(required = false) String referenceImageUrl) {
         log.info("接收到单个分镜图生成请求 - projectId: {}, shotId: {}, hasCustomPrompt: {}, hasReferenceImage: {}",
                 projectId, shotId, customPrompt != null, referenceImageUrl != null);
 
+        List<String> resolvedReferenceImageUrls = resolveReferenceImageUrls(referenceImageUrls, referenceImageUrl);
+
         BatchGenerateResponse response = batchGenerationService.generateSingleShot(
-                projectId, shotId, aspectRatio, model, customPrompt, referenceImageUrl);
+                projectId, shotId, aspectRatio, model, customPrompt, resolvedReferenceImageUrls);
 
         log.info("单个分镜图生成任务已提交 - jobId: {}", response.jobId());
 
         return Result.success(response);
+    }
+
+    private static List<String> resolveReferenceImageUrls(
+            List<String> referenceImageUrls,
+            String referenceImageUrl
+    ) {
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
+            return referenceImageUrls;
+        }
+        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
+            return List.of(referenceImageUrl);
+        }
+        return Collections.emptyList();
     }
 
     /**

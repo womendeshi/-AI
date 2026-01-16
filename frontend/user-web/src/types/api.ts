@@ -399,18 +399,21 @@ export interface SetCurrentVersionRequest {
 
 export interface JobVO {
   id: number
-  userId: number
-  type: 'GENERATE_IMAGE' | 'GENERATE_VIDEO' | 'PARSE_TEXT' | 'EXPORT'
-  status: 'PENDING' | 'RUNNING' | 'GENERATING' | 'COMPLETED' | 'SUCCEEDED' | 'FAILED'
+  projectId?: number
+  projectName?: string
+  jobType: string
+  status: 'PENDING' | 'RUNNING' | 'GENERATING' | 'COMPLETED' | 'SUCCEEDED' | 'FAILED' | 'CANCELED'
   progress: number
   totalItems: number
-  completedItems: number
+  doneItems: number
+  elapsedSeconds?: number
+  startedAt?: string
+  finishedAt?: string
   errorMessage: string | null
   resultUrl: string | null
   allImageUrls: string[] | null
   costPoints: number | null
   createdAt: string
-  completedAt: string | null
 }
 
 // ============== Generation ==============

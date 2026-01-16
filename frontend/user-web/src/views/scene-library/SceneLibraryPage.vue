@@ -21,6 +21,36 @@ const scenes = ref<SceneLibraryVO[]>([])
 const selectedCategoryId = ref<number | null>(null)
 const searchQuery = ref('')
 
+// 批量选择模式
+const isSelectionMode = ref(false)
+const selectedIds = ref<Set<number>>(new Set())
+
+// 切换选择模式
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value
+  if (!isSelectionMode.value) {
+    selectedIds.value.clear()
+  }
+}
+
+// 切换单个选择
+const toggleSelection = (id: number) => {
+  if (selectedIds.value.has(id)) {
+    selectedIds.value.delete(id)
+  } else {
+    selectedIds.value.add(id)
+  }
+}
+
+// 全选/取消全选
+const toggleSelectAll = () => {
+  if (selectedIds.value.size === filteredScenes.value.length) {
+    selectedIds.value.clear()
+  } else {
+    selectedIds.value = new Set(filteredScenes.value.map(s => s.id))
+  }
+}
+
 // Load data
 onMounted(async () => {
   await loadData()
@@ -107,6 +137,7 @@ const handleCloseCreateEdit = () => {
 
 // Delete handler
 const deleting = ref(false)
+const batchDeleting = ref(false)
 
 const handleDelete = async (scene: SceneLibraryVO) => {
   if (deleting.value) return
@@ -125,6 +156,30 @@ const handleDelete = async (scene: SceneLibraryVO) => {
     window.$message?.error(error.message || '删除场景失败')
   } finally {
     deleting.value = false
+  }
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (batchDeleting.value || selectedIds.value.size === 0) return
+
+  const confirmed = confirm(`确定要删除选中的 ${selectedIds.value.size} 个场景吗？此操作不可恢复。`)
+  if (!confirmed) return
+
+  batchDeleting.value = true
+  try {
+    const ids = Array.from(selectedIds.value)
+    for (const id of ids) {
+      await sceneApi.deleteLibraryScene(id)
+    }
+    window.$message?.success(`成功删除 ${ids.length} 个场景`)
+    selectedIds.value.clear()
+    isSelectionMode.value = false
+    await loadData()
+  } catch (error: any) {
+    window.$message?.error(error.message || '批量删除失败')
+  } finally {
+    batchDeleting.value = false
   }
 }
 
@@ -210,8 +265,36 @@ const isValidImageUrl = (url: string | null | undefined): boolean => {
           <div class="flex items-center justify-between mb-6">
             <p class="text-sm text-text-tertiary">
               共 <span class="text-text-primary font-medium">{{ filteredScenes.length }}</span> 个场景
+              <span v-if="isSelectionMode && selectedIds.size > 0" class="ml-2 text-[#8B5CF6]">
+                · 已选 {{ selectedIds.size }} 个
+              </span>
             </p>
-            <!-- Future: Sort/Filter Options -->
+            <div class="flex items-center gap-2">
+              <!-- 批量删除按钮 -->
+              <button
+                v-if="isSelectionMode && selectedIds.size > 0"
+                class="btn text-sm bg-error/10 text-error hover:bg-error/20 border-none"
+                :disabled="batchDeleting"
+                @click="handleBatchDelete"
+              >
+                {{ batchDeleting ? '删除中...' : `删除 (${selectedIds.size})` }}
+              </button>
+              <!-- 全选按钮 -->
+              <button
+                v-if="isSelectionMode"
+                class="btn btn-secondary text-sm"
+                @click="toggleSelectAll"
+              >
+                {{ selectedIds.size === filteredScenes.length ? '取消全选' : '全选' }}
+              </button>
+              <!-- 批量选择切换 -->
+              <button
+                class="btn btn-secondary text-sm"
+                @click="toggleSelectionMode"
+              >
+                {{ isSelectionMode ? '取消' : '批量选择' }}
+              </button>
+            </div>
           </div>
 
           <!-- Loading State -->
@@ -224,9 +307,28 @@ const isValidImageUrl = (url: string | null | undefined): boolean => {
             <div
               v-for="scene in filteredScenes"
               :key="scene.id"
-              class="card p-4 hover:bg-bg-hover transition-all cursor-pointer group"
-              @click="handleSceneClick(scene)"
+              class="card p-4 hover:bg-bg-hover transition-all cursor-pointer group relative"
+              :class="{ 'ring-2 ring-[#8B5CF6]': isSelectionMode && selectedIds.has(scene.id) }"
+              @click="isSelectionMode ? toggleSelection(scene.id) : handleSceneClick(scene)"
             >
+              <!-- 选择框 -->
+              <div
+                v-if="isSelectionMode"
+                class="absolute top-3 right-3 z-10"
+                @click.stop="toggleSelection(scene.id)"
+              >
+                <div
+                  class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
+                  :class="selectedIds.has(scene.id)
+                    ? 'bg-[#8B5CF6] border-[#8B5CF6]'
+                    : 'border-text-tertiary bg-bg-base hover:border-[#8B5CF6]'"
+                >
+                  <svg v-if="selectedIds.has(scene.id)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+
               <!-- Thumbnail -->
               <div class="aspect-square rounded overflow-hidden mb-3 relative bg-bg-subtle">
                 <img

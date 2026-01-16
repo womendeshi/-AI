@@ -1,6 +1,10 @@
 package com.ym.ai_story_studio_server.dto.toolbox;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * AI工具箱生成请求
@@ -52,7 +56,8 @@ import jakarta.validation.constraints.*;
  * @param model 模型名称(可选,使用配置的默认模型)
  * @param aspectRatio 画幅比例(可选,IMAGE和VIDEO时可用)
  * @param duration 视频时长(可选,VIDEO时可用,单位:秒)
- * @param referenceImageUrl 参考图URL(可选,用于图生图或图生视频)
+ * @param referenceImageUrls 参考图URL列表(可选,用于图生图或图生视频)
+ * @param referenceImageUrl 参考图URL(可选,用于图生图或图生视频，兼容旧字段)
  *
  * @author Roo (Prometheus)
  * @since 1.0.0
@@ -118,12 +123,27 @@ public record ToolboxGenerateRequest(
         Integer duration,
 
         /**
-         * 参考图URL
+         * 参考图URL列表
          *
          * <p>可选,用于图生图或图生视频
          * <p>IMAGE: 作为参考图进行图生图
          * <p>VIDEO: 作为首帧参考图进行图生视频
          */
+        List<@URL(message = "参考图URL格式不正确") String> referenceImageUrls,
+
+        /**
+         * 参考图URL(兼容旧字段)
+         */
+        @URL(message = "参考图URL格式不正确")
         String referenceImageUrl
 ) {
+    public List<String> referenceImageUrlList() {
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
+            return referenceImageUrls;
+        }
+        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
+            return List.of(referenceImageUrl);
+        }
+        return Collections.emptyList();
+    }
 }

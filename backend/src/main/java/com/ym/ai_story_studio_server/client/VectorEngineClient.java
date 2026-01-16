@@ -7,12 +7,23 @@ import com.ym.ai_story_studio_server.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.core.io.ByteArrayResource;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 /**
  * 向量引擎API客户端
@@ -51,7 +62,7 @@ import java.util.Map;
  *     "一个未来城市的景象",
  *     "gemini-3-pro-image-preview",
  *     "16:9",
- *     null
+ *     List.of()
  * );
  *
  * // 视频生成
@@ -171,7 +182,7 @@ public class VectorEngineClient {
      * @param prompt 提示词
      * @param model 模型名称(如: gemini-3-pro-image-preview, jimeng-4.5, gpt-4o-image-vip)
      * @param aspectRatio 画幅比例(如: 1:1, 16:9, 9:16, 21:9)
-     * @param referenceImageUrl 参考图URL(可选,用于图生图)
+     * @param referenceImageUrls 参考图URL列表(可选,用于图生图)
      * @return 图片生成API响应
      * @throws BusinessException 当API调用失败时抛出
      */
@@ -179,31 +190,31 @@ public class VectorEngineClient {
             String prompt,
             String model,
             String aspectRatio,
-            String referenceImageUrl
+            List<String> referenceImageUrls
     ) {
         log.info("Routing image generation - model: {}, aspectRatio: {}", model, aspectRatio);
 
         // 路由1: 即梦模型 → 使用即梦反代
         if (aiProperties.getImage().getJimengModel().equals(model)) {
             log.debug("Using Jimeng proxy for model: {}", model);
-            return generateImageViaJimeng(prompt, model, aspectRatio, referenceImageUrl);
+            return generateImageViaJimeng(prompt, model, aspectRatio, referenceImageUrls);
         }
 
         // 路由2: Gemini图片模型 → 使用Chat兼容格式
         if (model.startsWith("gemini-") && model.contains("-image-")) {
             log.debug("Using Gemini Chat format for model: {}", model);
-            return generateImageViaGeminiChat(prompt, model, aspectRatio, referenceImageUrl);
+            return generateImageViaGeminiChat(prompt, model, aspectRatio, referenceImageUrls);
         }
 
         // 路由3: GPT-4o图片模型 → 使用多模态Chat格式
         if ("gpt-4o-image-vip".equals(model)) {
             log.debug("Using GPT-4o multimodal Chat format for model: {}", model);
-            return generateImageViaGpt4oChat(prompt, model, aspectRatio, referenceImageUrl);
+            return generateImageViaGpt4oChat(prompt, model, aspectRatio, referenceImageUrls);
         }
 
         // 路由4: 其他模型 → 使用OpenAI格式(向后兼容)
         log.debug("Using OpenAI format for model: {}", model);
-        return generateImageViaOpenAI(prompt, model, aspectRatio, referenceImageUrl);
+        return generateImageViaOpenAI(prompt, model, aspectRatio, referenceImageUrls);
     }
 
     /**
@@ -233,7 +244,7 @@ public class VectorEngineClient {
      * @param prompt 提示词
      * @param model 模型名称(gpt-4o-image-vip)
      * @param aspectRatio 画幅比例(如: 4:3, 16:9),会被添加到提示词中
-     * @param referenceImageUrl 参考图URL(可选,用于图片编辑/美化)
+     * @param referenceImageUrls 参考图URL列表(可选,用于图片编辑/美化)
      * @return 图片生成API响应
      * @throws BusinessException 当API调用失败时抛出
      */
@@ -241,10 +252,10 @@ public class VectorEngineClient {
             String prompt,
             String model,
             String aspectRatio,
-            String referenceImageUrl
+            List<String> referenceImageUrls
     ) {
         log.info("调用GPT-4o多模态Chat格式图片生成 - 模型: {}, 画幅: {}, 是否有参考图: {}",
-                model, aspectRatio, referenceImageUrl != null);
+                model, aspectRatio, referenceImageUrls != null && !referenceImageUrls.isEmpty());
 
         // 构建多模态content数组
         List<Map<String, Object>> contentList = new java.util.ArrayList<>();
@@ -258,12 +269,17 @@ public class VectorEngineClient {
         log.debug("增强后的prompt: {}", enhancedPrompt);
 
         // 2. 如果有参考图片URL,添加到content中
-        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
-            contentList.add(Map.of(
-                    "type", "image_url",
-                    "image_url", Map.of("url", referenceImageUrl)
-            ));
-            log.debug("已添加参考图片URL到content: {}", referenceImageUrl);
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
+            for (String url : referenceImageUrls) {
+                if (url == null || url.isBlank()) {
+                    continue;
+                }
+                contentList.add(Map.of(
+                        "type", "image_url",
+                        "image_url", Map.of("url", url)
+                ));
+            }
+            log.debug("已添加参考图片URL到content: {}", referenceImageUrls.size());
         }
 
         // 3. 构建Chat Completions请求体
@@ -328,7 +344,7 @@ public class VectorEngineClient {
      * @param prompt 提示词
      * @param model 模型名称(如: gemini-3-pro-image-preview)
      * @param aspectRatio 画幅比例
-     * @param referenceImageUrl 参考图URL(可选,用于图生图)
+     * @param referenceImageUrls 参考图URL列表(可选,用于图生图)
      * @return 图片生成API响应(data[0].url为base64字符串)
      * @throws BusinessException 当API调用失败时抛出
      */
@@ -336,10 +352,10 @@ public class VectorEngineClient {
             String prompt,
             String model,
             String aspectRatio,
-            String referenceImageUrl
+            List<String> referenceImageUrls
     ) {
         log.info("调用Gemini原生格式图片生成 - 模型: {}, 画幅: {}, 是否有参考图: {}",
-                model, aspectRatio, referenceImageUrl != null);
+                model, aspectRatio, referenceImageUrls != null && !referenceImageUrls.isEmpty());
 
         // 构建Gemini原生格式请求体
         List<Map<String, Object>> parts = new java.util.ArrayList<>();
@@ -351,40 +367,42 @@ public class VectorEngineClient {
         log.debug("增强后的prompt: {}", enhancedPrompt);
 
         // 2. 如果有参考图片URL,下载并转换为base64添加到请求中
-        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
             try {
-                log.debug("开始下载参考图片: {}", referenceImageUrl);
+                for (String url : referenceImageUrls) {
+                    if (url == null || url.isBlank()) {
+                        continue;
+                    }
+                    log.debug("开始下载参考图片: {}", url);
 
-                // 使用RestClient下载图片
-                byte[] imageBytes = RestClient.create()
-                        .get()
-                        .uri(referenceImageUrl)
-                        .retrieve()
-                        .body(byte[].class);
+                    byte[] imageBytes = RestClient.create()
+                            .get()
+                            .uri(url)
+                            .retrieve()
+                            .body(byte[].class);
 
-                if (imageBytes == null || imageBytes.length == 0) {
-                    throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "参考图片下载失败或为空");
+                    if (imageBytes == null || imageBytes.length == 0) {
+                        throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "参考图片下载失败或为空");
+                    }
+
+                    String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+                    log.debug("参考图片下载成功 - 大小: {} bytes, base64长度: {}",
+                            imageBytes.length, base64Image.length());
+
+                    parts.add(Map.of(
+                            "inlineData", Map.of(
+                                    "mimeType", "image/jpeg",
+                                    "data", base64Image
+                            )
+                    ));
                 }
 
-                // 转换为base64
-                String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
-                log.debug("参考图片下载成功 - 大小: {} bytes, base64长度: {}",
-                        imageBytes.length, base64Image.length());
-
-                // 添加图片到请求parts
-                parts.add(Map.of(
-                        "inlineData", Map.of(
-                                "mimeType", "image/jpeg",  // 默认使用jpeg,兼容大部分图片格式
-                                "data", base64Image
-                        )
-                ));
-
-                log.info("参考图片已添加到Gemini请求中");
+                log.info("参考图片已添加到Gemini请求中 - count: {}", referenceImageUrls.size());
 
             } catch (BusinessException e) {
                 throw e;
             } catch (Exception e) {
-                log.error("下载或编码参考图片失败: {}", referenceImageUrl, e);
+                log.error("下载或编码参考图片失败", e);
                 throw new BusinessException(ResultCode.AI_SERVICE_ERROR,
                         "下载参考图片失败: " + e.getMessage(), e);
             }
@@ -453,7 +471,7 @@ public class VectorEngineClient {
      * @param prompt 提示词
      * @param model 模型名称 (如: jimeng-4.5)
      * @param aspectRatio 画幅比例 (如: 21:9)
-     * @param referenceImageUrl 参考图URL (可选,用于图生图)
+     * @param referenceImageUrls 参考图URL列表 (可选,用于图生图)
      * @return 图片生成API响应
      * @throws BusinessException 当API调用失败时抛出
      */
@@ -461,10 +479,10 @@ public class VectorEngineClient {
             String prompt,
             String model,
             String aspectRatio,
-            String referenceImageUrl
+            List<String> referenceImageUrls
     ) {
         log.info("调用即梦反代图片生成 - 模型: {}, 画幅: {}, 是否图生图: {}",
-                model, aspectRatio, referenceImageUrl != null);
+                model, aspectRatio, referenceImageUrls != null && !referenceImageUrls.isEmpty());
 
         AiProperties.JimengProxy jimengConfig = aiProperties.getImage().getJimengProxy();
 
@@ -477,7 +495,7 @@ public class VectorEngineClient {
         }
 
         // 判断是文生图还是图生图
-        boolean isImageToImage = (referenceImageUrl != null && !referenceImageUrl.isBlank());
+        boolean isImageToImage = (referenceImageUrls != null && !referenceImageUrls.isEmpty());
         String endpoint = isImageToImage
                 ? jimengConfig.getImageToImageEndpoint()
                 : jimengConfig.getTextToImageEndpoint();
@@ -505,7 +523,7 @@ public class VectorEngineClient {
 
         // 如果是图生图，添加参考图片
         if (isImageToImage) {
-            requestBody.put("images", List.of(referenceImageUrl));
+            requestBody.put("images", referenceImageUrls);
             requestBody.put("sample_strength", 0.7);  // 参考强度
             log.debug("已添加参考图片到images字段");
         }
@@ -564,7 +582,7 @@ public class VectorEngineClient {
      * @param prompt 提示词
      * @param model 模型名称
      * @param aspectRatio 画幅比例
-     * @param referenceImageUrl 参考图URL
+     * @param referenceImageUrls 参考图URL列表
      * @return 图片生成API响应
      * @throws BusinessException 当API调用失败时抛出
      */
@@ -572,19 +590,32 @@ public class VectorEngineClient {
             String prompt,
             String model,
             String aspectRatio,
-            String referenceImageUrl
+            List<String> referenceImageUrls
     ) {
         log.info("Calling OpenAI format image generation - model: {}, aspectRatio: {}", model, aspectRatio);
 
         Map<String, Object> requestBody = new java.util.HashMap<>(Map.of(
                 "model", model,
                 "prompt", prompt,
-                "aspect_ratio", aspectRatio,
                 "n", 1
         ));
 
-        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
-            requestBody.put("reference_image", referenceImageUrl);
+        if ("gpt-image-1".equals(model)) {
+            requestBody.put("size", mapAspectRatioToImageSize(aspectRatio));
+        } else {
+            requestBody.put("aspect_ratio", aspectRatio);
+        }
+
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
+            if ("gpt-image-1".equals(model)) {
+                throw new BusinessException(ResultCode.AI_SERVICE_ERROR,
+                        "gpt-image-1不支持参考图输入");
+            }
+            if (referenceImageUrls.size() == 1) {
+                requestBody.put("reference_image", referenceImageUrls.get(0));
+            } else {
+                requestBody.put("images", referenceImageUrls);
+            }
         }
 
         try {
@@ -631,44 +662,53 @@ public class VectorEngineClient {
             Integer duration,
             String referenceImageUrl
     ) {
-        log.info("调用视频生成API - 模型: {}, 画幅: {}, 时长: {}秒, 是否有参考图: {}",
+        log.info("调用视频生成API - 模型: {}, 画幅: {}, 时长: {}, 是否有参考图: {}",
                 model, aspectRatio, duration, referenceImageUrl != null);
 
-        // 将aspectRatio映射为orientation
-        String orientation = mapAspectRatioToOrientation(aspectRatio);
-        log.debug("画幅映射 - aspectRatio: {} → orientation: {}", aspectRatio, orientation);
-
-        // 构建请求体(与向量引擎API格式完全匹配)
-        Map<String, Object> requestBody = new java.util.HashMap<>();
-        requestBody.put("model", model);
-        requestBody.put("prompt", prompt);
-        requestBody.put("orientation", orientation);  // ✅ 使用orientation而非aspect_ratio
-        requestBody.put("duration", duration);
-
-        // ✅ sora-2模型必需的size参数
-        String size = mapAspectRatioToSize(aspectRatio);
-        requestBody.put("size", size);
-
-        // ✅ 添加watermark参数(false=强制无水印，遇到错误会自动重试)
-        requestBody.put("watermark", false);
-
-        // ✅ 添加images数组(如果有参考图片)
-        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
-            requestBody.put("images", List.of(referenceImageUrl));  // ✅ 使用images数组
-            log.debug("已添加参考图片到images数组");
-        } else {
-            // 没有参考图片时，抛出错误（因为API文档显示images是必需的）
-            throw new BusinessException(ResultCode.AI_SERVICE_ERROR,
-                    "sora-2模型需要提供参考图片(images参数必需)");
+        if (referenceImageUrl == null || referenceImageUrl.isBlank()) {
+            throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "视频生成需要提供参考图(input_reference)");
         }
 
-        log.debug("视频生成请求体 - model: {}, orientation: {}, duration: {}, size: {}, watermark: true",
-                model, orientation, duration, size);
+        MultiValueMap<String, Object> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("model", model);
+        requestBody.add("prompt", prompt);
+        requestBody.add("seconds", String.valueOf(normalizeVideoSeconds(duration)));
+        String targetSize = mapAspectRatioToOpenAiVideoSize(aspectRatio);
+        requestBody.add("size", targetSize);
+
+        byte[] imageBytes = RestClient.create()
+                .get()
+                .uri(referenceImageUrl)
+                .retrieve()
+                .body(byte[].class);
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new BusinessException(ResultCode.AI_SERVICE_ERROR, "参考图下载失败或为空");
+        }
+
+        String referenceMimeType = resolveReferenceMimeType(referenceImageUrl);
+        if (referenceMimeType.startsWith("image/")) {
+            imageBytes = resizeReferenceImage(imageBytes, targetSize);
+            referenceMimeType = MediaType.IMAGE_PNG_VALUE;
+        }
+
+        ByteArrayResource imageResource = new ByteArrayResource(imageBytes) {
+            @Override
+            public String getFilename() {
+                return "input_reference.png";
+            }
+        };
+        HttpHeaders partHeaders = new HttpHeaders();
+        partHeaders.setContentType(MediaType.parseMediaType(referenceMimeType));
+        requestBody.add("input_reference", new HttpEntity<>(imageResource, partHeaders));
+
+        log.debug("视频生成请求体 - model: {}, size: {}, seconds: {}",
+                model, targetSize, duration);
 
         try {
             // 调用向量引擎视频创建端点
             String rawResponse = restClient.post()
-                    .uri("/v1/video/create")
+                    .uri("/v1/videos")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(requestBody)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, httpResponse) -> {
@@ -720,10 +760,10 @@ public class VectorEngineClient {
         try {
             // ✅ 【诊断模式】先获取原始响应体，打印后再尝试反序列化
             log.info("========== 【诊断】开始查询任务状态 ==========");
-            log.info("请求URL: /v1/video/query?id={}", taskId);
+            log.info("请求URL: /v1/videos/{id}", taskId);
 
             String rawResponse = restClient.get()
-                    .uri("/v1/video/query?id={id}", taskId)
+                    .uri("/v1/videos/{id}", taskId)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, httpResponse) -> {
                         String errorBody = new String(httpResponse.getBody().readAllBytes());
@@ -809,10 +849,13 @@ public class VectorEngineClient {
      * @param status 任务状态
      * @param model 使用的模型名称
      */
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record VideoApiResponse(
             String id,         // API返回字段名为"id"而非"taskId"
             String status,
-            String model
+            String model,
+            @com.fasterxml.jackson.annotation.JsonProperty("status_update_time")
+            Long statusUpdateTime
     ) {}
 
     /**
@@ -1069,25 +1112,39 @@ public class VectorEngineClient {
     /**
      * 将画幅比例映射为sora-2的size参数
      *
-     * <p>sora-2模型要求必需的size参数,根据画幅比例返回对应的尺寸
+     * <p>OpenAI视频接口使用分辨率字符串
      *
      * @param aspectRatio 画幅比例 (如: "16:9", "9:16", "1:1")
      * @return size参数值
      */
-    private String mapAspectRatioToSize(String aspectRatio) {
+    private String mapAspectRatioToOpenAiVideoSize(String aspectRatio) {
         if (aspectRatio == null || aspectRatio.isBlank()) {
-            return "1080p";  // 默认1080p
+            return "1280x720";
+        }
+        return switch (aspectRatio) {
+            case "9:16" -> "720x1280";
+            case "1:1" -> "1024x1024";
+            default -> "1280x720";
+        };
+    }
+
+    /**
+     * 将画幅比例映射为gpt-image-1的size参数
+     *
+     * @param aspectRatio 画幅比例 (如: "16:9", "9:16", "1:1")
+     * @return size参数值
+     */
+    private String mapAspectRatioToImageSize(String aspectRatio) {
+        if (aspectRatio == null || aspectRatio.isBlank()) {
+            return "auto";
         }
 
-        // 根据画幅比例返回对应的size
         return switch (aspectRatio) {
-            case "16:9" -> "1920x1080";  // 横向16:9
-            case "9:16" -> "1080x1920";  // 竖向9:16
-            case "21:9" -> "2560x1080";  // 超宽21:9
-            case "1:1" -> "1080x1080";  // 正方形1:1
-            case "4:3" -> "1440x1080";  // 4:3标准
-            case "3:4" -> "1080x1440";  // 3:4竖向
-            default -> "1080p";  // 默认1080p
+            case "1:1" -> "1024x1024";
+            case "16:9" -> "1536x1024";
+            case "9:16" -> "1024x1536";
+            case "21:9" -> "1536x1024";
+            default -> "auto";
         };
     }
 
@@ -1114,6 +1171,82 @@ public class VectorEngineClient {
             case "1:1" -> "landscape";  // 正方形，默认横向
             default -> "landscape";     // 默认横向
         };
+    }
+
+    private String resolveReferenceMimeType(String referenceImageUrl) {
+        if (referenceImageUrl == null || referenceImageUrl.isBlank()) {
+            return MediaType.IMAGE_PNG_VALUE;
+        }
+        String cleanUrl = referenceImageUrl.split("\\?")[0].toLowerCase();
+        if (cleanUrl.endsWith(".png")) {
+            return MediaType.IMAGE_PNG_VALUE;
+        }
+        if (cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG_VALUE;
+        }
+        if (cleanUrl.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (cleanUrl.endsWith(".mp4")) {
+            return "video/mp4";
+        }
+        return MediaType.IMAGE_PNG_VALUE;
+    }
+
+    private byte[] resizeReferenceImage(byte[] imageBytes, String targetSize) {
+        try {
+            BufferedImage source = ImageIO.read(new ByteArrayInputStream(imageBytes));
+            if (source == null) {
+                return imageBytes;
+            }
+
+            int[] size = parseSize(targetSize);
+            int targetWidth = size[0];
+            int targetHeight = size[1];
+
+            if (source.getWidth() == targetWidth && source.getHeight() == targetHeight) {
+                return imageBytes;
+            }
+
+            BufferedImage scaled = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = scaled.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(source, 0, 0, targetWidth, targetHeight, null);
+            g2d.dispose();
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(scaled, "png", outputStream);
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            return imageBytes;
+        }
+    }
+
+    private int[] parseSize(String size) {
+        if (size == null || !size.contains("x")) {
+            return new int[] { 1280, 720 };
+        }
+        String[] parts = size.split("x");
+        try {
+            return new int[] { Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) };
+        } catch (NumberFormatException e) {
+            return new int[] { 1280, 720 };
+        }
+    }
+
+    private int normalizeVideoSeconds(Integer duration) {
+        if (duration == null) {
+            return 4;
+        }
+        if (duration <= 4) {
+            return 4;
+        }
+        if (duration <= 8) {
+            return 8;
+        }
+        return 12;
     }
 
     /**
