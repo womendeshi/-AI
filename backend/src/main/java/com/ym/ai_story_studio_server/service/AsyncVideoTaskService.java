@@ -356,6 +356,7 @@ public class AsyncVideoTaskService {
                 job.setStatus("SUCCEEDED");
                 job.setProgress(100);
                 job.setDoneItems(1);
+                job.setResultUrl(ossVideoUrl);
                 job.setFinishedAt(java.time.LocalDateTime.now());
 
                 // ✅ 修复: 使用 ObjectMapper 安全地序列化 JSON

@@ -6,9 +6,15 @@ import com.ym.ai_story_studio_server.dto.ai.BatchGenerateResponse;
 import com.ym.ai_story_studio_server.dto.ai.ParseTextRequest;
 import com.ym.ai_story_studio_server.dto.ai.ShotVideoGenerateRequest;
 import com.ym.ai_story_studio_server.entity.Job;
+import com.ym.ai_story_studio_server.entity.JobItem;
 import com.ym.ai_story_studio_server.entity.Project;
+import com.ym.ai_story_studio_server.entity.ProjectCharacter;
+import com.ym.ai_story_studio_server.entity.ProjectProp;
+import com.ym.ai_story_studio_server.entity.ProjectScene;
+import com.ym.ai_story_studio_server.entity.StoryboardShot;
 import com.ym.ai_story_studio_server.exception.BusinessException;
 import com.ym.ai_story_studio_server.mapper.JobMapper;
+import com.ym.ai_story_studio_server.mapper.JobItemMapper;
 import com.ym.ai_story_studio_server.mapper.ProjectCharacterMapper;
 import com.ym.ai_story_studio_server.mapper.ProjectMapper;
 import com.ym.ai_story_studio_server.mapper.ProjectSceneMapper;
@@ -19,6 +25,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 /**
  * 批量生成服务
  *
@@ -88,6 +98,7 @@ public class BatchGenerationService {
     // private final AsyncBatchTaskService asyncBatchTaskService;  // 替换为MQ
     private final com.ym.ai_story_studio_server.mq.MQProducer mqProducer;  // 使用MQ生产者
     private final JobMapper jobMapper;
+    private final JobItemMapper jobItemMapper;
     private final ProjectMapper projectMapper;
     private final StoryboardShotMapper storyboardShotMapper;
     private final ProjectCharacterMapper projectCharacterMapper;
@@ -131,8 +142,8 @@ public class BatchGenerationService {
         // 1. 验证项目存在性和权限
         Project project = validateProjectAccess(userId, projectId);
 
-        // 2. 验证分镜ID列表(这里应该查询数据库验证,简化处理)
-        // TODO: 验证分镜ID是否属于该项目且存在
+        // 2. 验证分镜ID列表
+        validateShotIds(projectId, request.targetIds());
 
         // 3. 创建Job任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_SHOT_IMG",
@@ -194,6 +205,9 @@ public class BatchGenerationService {
         // 1. 验证项目存在性和权限
         Project project = validateProjectAccess(userId, projectId);
 
+        // 2. 验证分镜ID列表
+        validateShotIds(projectId, request.targetIds());
+
         // 2. 创建Job任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_VIDEO",
                 request.targetIds().size());
@@ -254,6 +268,9 @@ public class BatchGenerationService {
         // 1. 验证项目存在性和权限
         Project project = validateProjectAccess(userId, projectId);
 
+        // 2. 验证角色ID列表
+        validateProjectCharacterIds(projectId, request.targetIds());
+
         // 2. 创建Job任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_CHAR_IMG",
                 request.targetIds().size());
@@ -313,6 +330,9 @@ public class BatchGenerationService {
 
         // 1. 验证项目存在性和权限
         Project project = validateProjectAccess(userId, projectId);
+
+        // 2. 验证场景ID列表
+        validateProjectSceneIds(projectId, request.targetIds());
 
         // 2. 创建Job任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_SCENE_IMG",
@@ -415,6 +435,9 @@ public class BatchGenerationService {
         // 1. 验证项目存在性和权限
         Project project = validateProjectAccess(userId, projectId);
 
+        // 2. 验证道具ID列表
+        validateProjectPropIds(projectId, request.targetIds());
+
         // 2. 创建Job任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_PROP_IMG",
                 request.targetIds().size());
@@ -482,13 +505,15 @@ public class BatchGenerationService {
      * @throws BusinessException 当项目不存在、无权限或分镜ID无效时抛出
      */
     public BatchGenerateResponse generateSingleShot(Long projectId, Long shotId,
-                                                     String aspectRatio, String model, String customPrompt, String referenceImageUrl) {
+                                                     String aspectRatio, String model, String customPrompt, List<String> referenceImageUrls) {
         Long userId = UserContext.getUserId();
-        log.info("单个分镜生成 - userId: {}, projectId: {}, shotId: {}, customPrompt: {}, referenceImageUrl: {}",
-                userId, projectId, shotId, customPrompt != null ? "自定义" : "默认", referenceImageUrl != null ? "有" : "无");
+        log.info("单个分镜生成 - userId: {}, projectId: {}, shotId: {}, customPrompt: {}, referenceImageUrls: {}",
+                userId, projectId, shotId, customPrompt != null ? "自定义" : "默认",
+                referenceImageUrls != null ? referenceImageUrls.size() : 0);
 
         // 验证项目存在性和权限
         validateProjectAccess(userId, projectId);
+        validateShotIds(projectId, java.util.List.of(shotId));
 
         // 创建 Job 任务
         Job job = createBatchJob(userId, projectId, "BATCH_GEN_SHOT_IMG", 1);
@@ -503,7 +528,7 @@ public class BatchGenerationService {
                 aspectRatio,
                 model,
                 customPrompt,
-                referenceImageUrl
+                referenceImageUrls
         );
 
         log.info("单个分镜生成任务已提交 - jobId: {}", job.getId());
@@ -606,6 +631,7 @@ public class BatchGenerationService {
                 shotId,
                 request.prompt(),
                 request.aspectRatio(),
+                request.referenceImageUrl(),
                 request.scene(),
                 request.characters(),
                 request.props()
@@ -638,16 +664,91 @@ public class BatchGenerationService {
         return project;
     }
 
+    private void validateShotIds(Long projectId, List<Long> shotIds) {
+        if (shotIds == null || shotIds.isEmpty()) {
+            return;
+        }
+
+        List<StoryboardShot> shots = storyboardShotMapper.selectBatchIds(shotIds).stream()
+                .filter(shot -> projectId.equals(shot.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (shots.size() != shotIds.size()) {
+            List<Long> validIds = shots.stream()
+                    .map(StoryboardShot::getId)
+                    .collect(Collectors.toList());
+            List<Long> invalidIds = shotIds.stream()
+                    .filter(id -> !validIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new BusinessException(ResultCode.PARAM_INVALID, "部分分镜ID无效: " + invalidIds);
+        }
+    }
+
+    private void validateProjectCharacterIds(Long projectId, List<Long> characterIds) {
+        if (characterIds == null || characterIds.isEmpty()) {
+            return;
+        }
+
+        List<ProjectCharacter> characters = projectCharacterMapper.selectBatchIds(characterIds).stream()
+                .filter(character -> projectId.equals(character.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (characters.size() != characterIds.size()) {
+            List<Long> validIds = characters.stream()
+                    .map(ProjectCharacter::getId)
+                    .collect(Collectors.toList());
+            List<Long> invalidIds = characterIds.stream()
+                    .filter(id -> !validIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new BusinessException(ResultCode.PARAM_INVALID, "部分角色ID无效: " + invalidIds);
+        }
+    }
+
+    private void validateProjectSceneIds(Long projectId, List<Long> sceneIds) {
+        if (sceneIds == null || sceneIds.isEmpty()) {
+            return;
+        }
+
+        List<ProjectScene> scenes = projectSceneMapper.selectBatchIds(sceneIds).stream()
+                .filter(scene -> projectId.equals(scene.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (scenes.size() != sceneIds.size()) {
+            List<Long> validIds = scenes.stream()
+                    .map(ProjectScene::getId)
+                    .collect(Collectors.toList());
+            List<Long> invalidIds = sceneIds.stream()
+                    .filter(id -> !validIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new BusinessException(ResultCode.PARAM_INVALID, "部分场景ID无效: " + invalidIds);
+        }
+    }
+
+    private void validateProjectPropIds(Long projectId, List<Long> propIds) {
+        if (propIds == null || propIds.isEmpty()) {
+            return;
+        }
+
+        List<ProjectProp> props = projectPropMapper.selectBatchIds(propIds).stream()
+                .filter(prop -> projectId.equals(prop.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (props.size() != propIds.size()) {
+            List<Long> validIds = props.stream()
+                    .map(ProjectProp::getId)
+                    .collect(Collectors.toList());
+            List<Long> invalidIds = propIds.stream()
+                    .filter(id -> !validIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new BusinessException(ResultCode.PARAM_INVALID, "部分道具ID无效: " + invalidIds);
+        }
+    }
+
+
     /**
-     * 创建批量任务记录
-     *
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param jobType 任务类型
-     * @param totalItems 总目标数量
-     * @return 任务对象
+     * Create a batch job record.
      */
-    private Job createBatchJob(Long userId, Long projectId, String jobType, Integer totalItems) {
+    private Job createBatchJob(Long userId, Long projectId, String jobType, int totalItems) {
         Job job = new Job();
         job.setUserId(userId);
         job.setProjectId(projectId);
@@ -656,9 +757,24 @@ public class BatchGenerationService {
         job.setProgress(0);
         job.setTotalItems(totalItems);
         job.setDoneItems(0);
-        job.setMetaJson("{}");
-
         jobMapper.insert(job);
         return job;
+    }
+
+    /**
+     * Create job items for batch jobs.
+     */
+    private void createJobItems(Long jobId, String targetType, List<Long> targetIds) {
+        if (targetIds == null || targetIds.isEmpty()) {
+            return;
+        }
+        for (Long targetId : targetIds) {
+            JobItem item = new JobItem();
+            item.setJobId(jobId);
+            item.setTargetType(targetType);
+            item.setTargetId(targetId);
+            item.setStatus("PENDING");
+            jobItemMapper.insert(item);
+        }
     }
 }

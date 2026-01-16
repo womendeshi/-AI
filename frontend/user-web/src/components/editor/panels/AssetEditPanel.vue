@@ -2073,9 +2073,9 @@ const handleCopyImage = async () => {
             <!-- 删除按钮 -->
             <button
               @click="clearReferenceImage"
-              class="absolute inset-0 bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              class="absolute top-1 right-1 p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
             >
-              <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -2092,13 +2092,13 @@ const handleCopyImage = async () => {
         <!-- 右侧：描述输入框 -->
         <div class="flex-1 relative">
           <!-- 解析中覆盖层 -->
-          <div v-if="isParsing" class="absolute inset-0 bg-gray-800 rounded flex items-center justify-center z-10">
-            <div class="flex items-center gap-2 text-text-secondary">
+          <div v-if="isParsing" class="absolute inset-0 bg-bg-subtle rounded flex items-center justify-center z-10">
+            <div class="flex items-center gap-2 text-gray-600">
               <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span class="text-sm">AI正在解析{{ assetType === 'scene' ? '场景环境' : assetType === 'prop' ? '道具外观' : '人物形象' }}...</span>
+              <span class="text-sm font-medium">AI正在解析{{ assetType === 'scene' ? '场景环境' : assetType === 'prop' ? '道具外观' : '人物形象' }}...</span>
             </div>
           </div>
           <textarea
@@ -2164,9 +2164,9 @@ const handleCopyImage = async () => {
             @click="handleLibraryAssetClick(asset)"
           >
             <img :src="asset.thumbnailUrl" :alt="asset.name" class="w-full h-full object-cover">
-            <!-- 悬浮时显示信息 -->
-            <div class="absolute inset-0 bg-gray-800 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span class="text-text-primary text-xs font-medium px-2 text-center">{{ asset.name }}</span>
+            <!-- 底部名称标签 -->
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+              <span class="text-white text-xs font-medium truncate block">{{ asset.name }}</span>
             </div>
           </div>
         </div>
@@ -2237,9 +2237,9 @@ const handleCopyImage = async () => {
             class="group aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#00FFCC]/50 transition-all relative"
           >
             <img :src="record.url" :alt="record.prompt || '历史记录'" class="w-full h-full object-cover" @click="handleHistoryImageClick(record)">
-            <!-- 悬浮时显示信息 -->
-            <div class="absolute inset-0 bg-gray-800 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <span class="text-text-primary text-xs font-medium">{{ record.source === 'local' ? '本地上传' : `v${record.versionNo}` }}</span>
+            <!-- 底部版本标签 -->
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+              <span class="text-white text-xs font-medium">{{ record.source === 'local' ? '本地上传' : `v${record.versionNo}` }}</span>
             </div>
             <!-- 本地上传标记 -->
             <div v-if="record.source === 'local'" class="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500/80 rounded text-text-primary text-[10px] pointer-events-none">本地</div>

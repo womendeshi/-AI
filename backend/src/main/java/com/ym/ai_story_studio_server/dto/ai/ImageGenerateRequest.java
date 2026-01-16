@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.Collections;
+import java.util.List;
 /**
  * 图片生成请求DTO
  *
@@ -50,11 +52,13 @@ public record ImageGenerateRequest(
         @Size(min = 1, max = 2000, message = "提示词长度必须在1-2000个字符之间")
         String prompt,
 
-        @Pattern(regexp = "gemini-3-pro-image-preview|jimeng-4.5", message = "不支持的图片生成模型")
+        @Pattern(regexp = "gemini-3-pro-image-preview|jimeng-4.5|gpt-image-1|gpt-4o-image-vip", message = "不支持的图片生成模型")
         String model,
 
         @Pattern(regexp = "1:1|16:9|9:16|21:9", message = "不支持的画幅比例")
         String aspectRatio,
+
+        List<@URL(message = "参考图URL格式不正确") String> referenceImageUrls,
 
         @URL(message = "参考图URL格式不正确")
         String referenceImageUrl,
@@ -62,4 +66,13 @@ public record ImageGenerateRequest(
         @NotNull(message = "项目ID不能为空")
         Long projectId
 ) {
+    public List<String> referenceImageUrlList() {
+        if (referenceImageUrls != null && !referenceImageUrls.isEmpty()) {
+            return referenceImageUrls;
+        }
+        if (referenceImageUrl != null && !referenceImageUrl.isBlank()) {
+            return List.of(referenceImageUrl);
+        }
+        return Collections.emptyList();
+    }
 }

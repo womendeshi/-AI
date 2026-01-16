@@ -129,7 +129,7 @@ public class AsyncBatchTaskService {
                 try {
                     // 1. 查询分镜信息,获取prompt
                     com.ym.ai_story_studio_server.entity.StoryboardShot shot =
-                        storyboardShotMapper.selectById(shotId);
+                            storyboardShotMapper.selectById(shotId);
                     if (shot == null) {
                         log.warn("分镜不存在,跳过 - shotId: {}", shotId);
                         failCount.incrementAndGet();
@@ -139,11 +139,11 @@ public class AsyncBatchTaskService {
                     // 2. 检查MISSING模式是否已有图片资产
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                         assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "SHOT")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
                         long imageCount = assetMapper.selectCount(assetQuery);
                         if (imageCount > 0) {
@@ -155,7 +155,7 @@ public class AsyncBatchTaskService {
 
                     // 3. 构建图片生成请求
                     String prompt = shot.getScriptText() != null ? shot.getScriptText() :
-                                   "为分镜生成图片 - shotId: " + shotId;
+                            "为分镜生成图片 - shotId: " + shotId;
 
                     // 如果需要生成多张,循环调用
                     for (int j = 0; j < countPerItem; j++) {
@@ -163,6 +163,7 @@ public class AsyncBatchTaskService {
                                 prompt,
                                 finalModel,
                                 finalAspectRatio,
+                                null,
                                 null,
                                 projectId
                         );
@@ -250,7 +251,7 @@ public class AsyncBatchTaskService {
                 try {
                     // 1. 查询分镜信息,获取prompt
                     com.ym.ai_story_studio_server.entity.StoryboardShot shot =
-                        storyboardShotMapper.selectById(shotId);
+                            storyboardShotMapper.selectById(shotId);
                     if (shot == null) {
                         log.warn("分镜不存在,跳过 - shotId: {}", shotId);
                         failCount.incrementAndGet();
@@ -259,11 +260,11 @@ public class AsyncBatchTaskService {
 
                     // 2. 查询分镜的图片资产(视频生成需要参考图)
                     com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
-                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                     assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "SHOT")
-                              .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
-                              .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
-                              .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
+                            .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
+                            .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SHOT_IMG")
+                            .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
                     List<com.ym.ai_story_studio_server.entity.Asset> assets = assetMapper.selectList(assetQuery);
 
@@ -278,14 +279,14 @@ public class AsyncBatchTaskService {
                     for (com.ym.ai_story_studio_server.entity.Asset asset : assets) {
                         // 查询该资产的最新版本
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.AssetVersion> versionQuery =
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                         versionQuery.eq(com.ym.ai_story_studio_server.entity.AssetVersion::getAssetId, asset.getId())
-                                   .eq(com.ym.ai_story_studio_server.entity.AssetVersion::getStatus, "READY")
-                                   .orderByDesc(com.ym.ai_story_studio_server.entity.AssetVersion::getVersionNo)
-                                   .last("LIMIT 1");
+                                .eq(com.ym.ai_story_studio_server.entity.AssetVersion::getStatus, "READY")
+                                .orderByDesc(com.ym.ai_story_studio_server.entity.AssetVersion::getVersionNo)
+                                .last("LIMIT 1");
 
                         com.ym.ai_story_studio_server.entity.AssetVersion latestVersion =
-                            assetVersionMapper.selectOne(versionQuery);
+                                assetVersionMapper.selectOne(versionQuery);
 
                         if (latestVersion != null && latestVersion.getUrl() != null) {
                             imageUrls.add(latestVersion.getUrl());
@@ -303,11 +304,11 @@ public class AsyncBatchTaskService {
                     // 4. 检查MISSING模式是否已有视频资产
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> videoAssetQuery =
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                         videoAssetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "SHOT")
-                                      .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
-                                      .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "VIDEO")
-                                      .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, shotId)
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "VIDEO")
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
                         long videoCount = assetMapper.selectCount(videoAssetQuery);
                         if (videoCount > 0) {
@@ -319,7 +320,7 @@ public class AsyncBatchTaskService {
 
                     // 5. 构建视频生成请求
                     String prompt = shot.getScriptText() != null ? shot.getScriptText() :
-                                   "根据分镜图生成视频 - shotId: " + shotId;
+                            "根据分镜图生成视频 - shotId: " + shotId;
 
                     // 注意: VideoGenerateRequest只支持单张参考图,取第一张
                     String referenceImageUrl = !imageUrls.isEmpty() ? imageUrls.get(0) : null;
@@ -378,8 +379,8 @@ public class AsyncBatchTaskService {
      */
     @Async("taskExecutor")
     public void executeBatchCharacterImageGeneration(Long jobId, List<Long> characterIds, String mode,
-                                                      Integer countPerItem, String aspectRatio,
-                                                      String model, Long userId, Long projectId) {
+                                                     Integer countPerItem, String aspectRatio,
+                                                     String model, Long userId, Long projectId) {
         log.info("========== 异步批量生成角色画像任务开始 ==========");
         log.info("jobId: {}, characterCount: {}, mode: {}, thread: {}",
                 jobId, characterIds.size(), mode, Thread.currentThread().getName());
@@ -409,7 +410,7 @@ public class AsyncBatchTaskService {
                 try {
                     // 1. 查询角色信息,获取prompt
                     com.ym.ai_story_studio_server.entity.ProjectCharacter character =
-                        projectCharacterMapper.selectById(characterId);
+                            projectCharacterMapper.selectById(characterId);
                     if (character == null) {
                         log.warn("角色不存在,跳过 - characterId: {}", characterId);
                         failCount.incrementAndGet();
@@ -419,11 +420,11 @@ public class AsyncBatchTaskService {
                     // 2. 检查MISSING模式是否已有角色画像资产
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                         assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "PCHAR")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, characterId)
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "CHAR_IMG")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, characterId)
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "CHAR_IMG")
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
                         long imageCount = assetMapper.selectCount(assetQuery);
                         if (imageCount > 0) {
@@ -435,10 +436,10 @@ public class AsyncBatchTaskService {
 
                     // 3. 构建图片生成请求
                     String prompt = character.getOverrideDescription() != null ?
-                                   character.getOverrideDescription() :
-                                   (character.getDisplayName() != null ?
-                                   "角色画像: " + character.getDisplayName() :
-                                   "角色画像 - characterId: " + characterId);
+                            character.getOverrideDescription() :
+                            (character.getDisplayName() != null ?
+                                    "角色画像: " + character.getDisplayName() :
+                                    "角色画像 - characterId: " + characterId);
 
                     // 如果需要生成多张,循环调用
                     for (int j = 0; j < countPerItem; j++) {
@@ -446,6 +447,7 @@ public class AsyncBatchTaskService {
                                 prompt,
                                 finalModel,
                                 finalAspectRatio,
+                                null,
                                 null,
                                 projectId
                         );
@@ -499,8 +501,8 @@ public class AsyncBatchTaskService {
      */
     @Async("taskExecutor")
     public void executeBatchSceneImageGeneration(Long jobId, List<Long> sceneIds, String mode,
-                                                  Integer countPerItem, String aspectRatio,
-                                                  String model, Long userId, Long projectId) {
+                                                 Integer countPerItem, String aspectRatio,
+                                                 String model, Long userId, Long projectId) {
         log.info("========== 异步批量生成场景画像任务开始 ==========");
         log.info("jobId: {}, sceneCount: {}, mode: {}, thread: {}",
                 jobId, sceneIds.size(), mode, Thread.currentThread().getName());
@@ -530,7 +532,7 @@ public class AsyncBatchTaskService {
                 try {
                     // 1. 查询场景信息,获取prompt
                     com.ym.ai_story_studio_server.entity.ProjectScene scene =
-                        projectSceneMapper.selectById(sceneId);
+                            projectSceneMapper.selectById(sceneId);
                     if (scene == null) {
                         log.warn("场景不存在,跳过 - sceneId: {}", sceneId);
                         failCount.incrementAndGet();
@@ -540,11 +542,11 @@ public class AsyncBatchTaskService {
                     // 2. 检查MISSING模式是否已有场景画像资产
                     if ("MISSING".equals(mode)) {
                         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.ym.ai_story_studio_server.entity.Asset> assetQuery =
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
                         assetQuery.eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerType, "PSCENE")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, sceneId)
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SCENE_IMG")
-                                  .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getOwnerId, sceneId)
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getAssetType, "SCENE_IMG")
+                                .eq(com.ym.ai_story_studio_server.entity.Asset::getProjectId, projectId);
 
                         long imageCount = assetMapper.selectCount(assetQuery);
                         if (imageCount > 0) {
@@ -556,10 +558,10 @@ public class AsyncBatchTaskService {
 
                     // 3. 构建图片生成请求
                     String prompt = scene.getOverrideDescription() != null ?
-                                   scene.getOverrideDescription() :
-                                   (scene.getDisplayName() != null ?
-                                   "场景画像: " + scene.getDisplayName() :
-                                   "场景画像 - sceneId: " + sceneId);
+                            scene.getOverrideDescription() :
+                            (scene.getDisplayName() != null ?
+                                    "场景画像: " + scene.getDisplayName() :
+                                    "场景画像 - sceneId: " + sceneId);
 
                     // 如果需要生成多张,循环调用
                     for (int j = 0; j < countPerItem; j++) {
@@ -567,6 +569,7 @@ public class AsyncBatchTaskService {
                                 prompt,
                                 finalModel,
                                 finalAspectRatio,
+                                null,
                                 null,
                                 projectId
                         );

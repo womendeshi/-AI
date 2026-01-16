@@ -553,7 +553,7 @@ onMounted(() => {
         <!-- 本地图片按钮 -->
         <button
           @click="triggerLocalImageInput"
-          class="absolute bottom-3 right-3 px-4 py-2 bg-gray-800 rounded text-white text-sm font-medium hover:bg-gray-600 transition-colors"
+          class="absolute bottom-3 right-3 px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg text-white text-sm font-medium transition-all border border-border-subtle"
         >
           本地图片
         </button>

@@ -24,6 +24,7 @@ import com.ym.ai_story_studio_server.mapper.SceneLibraryMapper;
 import com.ym.ai_story_studio_server.mapper.StoryboardShotMapper;
 import com.ym.ai_story_studio_server.service.AiTextService;
 import com.ym.ai_story_studio_server.service.AiVideoService;
+import com.ym.ai_story_studio_server.service.AsyncVideoTaskService;
 import com.ym.ai_story_studio_server.service.AssetCreationService;
 import com.ym.ai_story_studio_server.service.ChargingService;
 import com.ym.ai_story_studio_server.service.StorageService;
@@ -39,6 +40,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,7 @@ public class MQConsumer {
     private final AssetCreationService assetCreationService;
     private final ChargingService chargingService;
     private final AiVideoService aiVideoService;
+    private final AsyncVideoTaskService asyncVideoTaskService;
     private final AiTextService aiTextService;
     private final JobMapper jobMapper;
     private final AiProperties aiProperties;
@@ -82,9 +85,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_BATCH_SHOT_IMAGE)
     public void handleBatchShotImage(BatchTaskMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_BATCH_SHOT_IMAGE);
         log.info("========== 消费消息: 批量生成分镜图 ==========");
-        log.info("队列: {}, jobId: {}, shotCount: {}", 
+        log.info("队列: {}, jobId: {}, shotCount: {}",
                 MQConstant.QUEUE_BATCH_SHOT_IMAGE, msg.getJobId(), msg.getTargetIds().size());
 
         try {
@@ -111,10 +115,11 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_SINGLE_SHOT_IMAGE)
     public void handleSingleShotImage(SingleShotImageMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_SINGLE_SHOT_IMAGE);
         log.info("========== 消费消息: 单个分镜图生成 ==========");
-        log.info("队列: {}, jobId: {}, shotId: {}, customPrompt: {}", 
-                MQConstant.QUEUE_SINGLE_SHOT_IMAGE, msg.jobId(), msg.shotId(), 
+        log.info("队列: {}, jobId: {}, shotId: {}, customPrompt: {}",
+                MQConstant.QUEUE_SINGLE_SHOT_IMAGE, msg.jobId(), msg.shotId(),
                 msg.customPrompt() != null ? "自定义" : "默认");
 
         try {
@@ -141,9 +146,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_BATCH_VIDEO)
     public void handleBatchVideo(BatchTaskMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_BATCH_VIDEO);
         log.info("========== 消费消息: 批量生成视频 ==========");
-        log.info("队列: {}, jobId: {}, shotCount: {}", 
+        log.info("队列: {}, jobId: {}, shotCount: {}",
                 MQConstant.QUEUE_BATCH_VIDEO, msg.getJobId(), msg.getTargetIds().size());
 
         try {
@@ -164,9 +170,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_BATCH_CHARACTER_IMAGE)
     public void handleBatchCharacterImage(BatchTaskMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_BATCH_CHARACTER_IMAGE);
         log.info("========== 消费消息: 批量生成角色画像 ==========");
-        log.info("队列: {}, jobId: {}, characterCount: {}", 
+        log.info("队列: {}, jobId: {}, characterCount: {}",
                 MQConstant.QUEUE_BATCH_CHARACTER_IMAGE, msg.getJobId(), msg.getTargetIds().size());
 
         try {
@@ -187,9 +194,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_BATCH_SCENE_IMAGE)
     public void handleBatchSceneImage(BatchTaskMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_BATCH_SCENE_IMAGE);
         log.info("========== 消费消息: 批量生成场景画像 ==========");
-        log.info("队列: {}, jobId: {}, sceneCount: {}", 
+        log.info("队列: {}, jobId: {}, sceneCount: {}",
                 MQConstant.QUEUE_BATCH_SCENE_IMAGE, msg.getJobId(), msg.getTargetIds().size());
 
         try {
@@ -210,9 +218,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_BATCH_PROP_IMAGE)
     public void handleBatchPropImage(BatchTaskMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_BATCH_PROP_IMAGE);
         log.info("========== 消费消息: 批量生成道具画像 ==========");
-        log.info("队列: {}, jobId: {}, propCount: {}", 
+        log.info("队列: {}, jobId: {}, propCount: {}",
                 MQConstant.QUEUE_BATCH_PROP_IMAGE, msg.getJobId(), msg.getTargetIds().size());
 
         try {
@@ -233,10 +242,11 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_SINGLE_SHOT_VIDEO)
     public void handleSingleShotVideo(SingleShotVideoMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_SINGLE_SHOT_VIDEO);
         log.info("========== 消费消息: 单个分镜视频生成 ==========");
-        log.info("队列: {}, jobId: {}, shotId: {}, promptLength: {}", 
-                MQConstant.QUEUE_SINGLE_SHOT_VIDEO, msg.getJobId(), msg.getShotId(), 
+        log.info("队列: {}, jobId: {}, shotId: {}, promptLength: {}",
+                MQConstant.QUEUE_SINGLE_SHOT_VIDEO, msg.getJobId(), msg.getShotId(),
                 msg.getPrompt() != null ? msg.getPrompt().length() : 0);
 
         try {
@@ -263,9 +273,10 @@ public class MQConsumer {
     @RabbitListener(queues = MQConstant.QUEUE_TEXT_PARSING)
     public void handleTextParsing(TextParsingMessage msg, Message message, Channel channel) throws Exception {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        
+
+        log.info("RECEIVED message - queue: {}", MQConstant.QUEUE_TEXT_PARSING);
         log.info("========== 消费消息: 文本解析 ==========");
-        log.info("队列: {}, jobId: {}, textLength: {}", 
+        log.info("队列: {}, jobId: {}, textLength: {}",
                 MQConstant.QUEUE_TEXT_PARSING, msg.getJobId(), msg.getRawText().length());
 
         try {
@@ -291,10 +302,11 @@ public class MQConsumer {
         Long userId = msg.userId();
         Long projectId = msg.projectId();
         String customPrompt = msg.customPrompt();
-        String referenceImageUrl = msg.referenceImageUrl();
+        List<String> referenceImageUrls = msg.referenceImageUrls();
     
-        log.info("执行单个分镜图生成 - jobId: {}, shotId: {}, customPrompt: {}, referenceImageUrl: {}", 
-                jobId, shotId, customPrompt != null ? "[自定义内容]" : "使用分镜剧本", referenceImageUrl != null ? "有" : "无");
+        log.info("执行单个分镜图生成 - jobId: {}, shotId: {}, customPrompt: {}, referenceImageUrls: {}", 
+                jobId, shotId, customPrompt != null ? "[自定义内容]" : "使用分镜剧本",
+                referenceImageUrls != null ? referenceImageUrls.size() : 0);
         updateJobRunning(jobId);
     
         // 应用配置
@@ -321,14 +333,15 @@ public class MQConsumer {
     
             // 日志中不显示完整的内嵌提示词，只显示用户自定义部分
             String logPrompt = customPrompt != null ? "[自定义内容]" : prompt;
-            log.info("调用AI生成图片 - shotId: {}, prompt: {}, referenceImageUrl: {}", shotId, logPrompt, referenceImageUrl != null ? "有" : "无");
+            log.info("调用AI生成图片 - shotId: {}, prompt: {}, referenceImageUrls: {}", shotId, logPrompt,
+                    referenceImageUrls != null ? referenceImageUrls.size() : 0);
     
             // 3. 调用AI生成图片(支持参考图)
             VectorEngineClient.ImageApiResponse apiResponse = vectorEngineClient.generateImage(
                     prompt,
                     finalModel,
                     finalAspectRatio,
-                    referenceImageUrl  // 传入参考图，实现图生图
+                    referenceImageUrls  // 传入参考图，实现图生图
             );
 
             if (apiResponse == null || apiResponse.data() == null || apiResponse.data().isEmpty()) {
@@ -453,7 +466,7 @@ public class MQConsumer {
                                 prompt,
                                 finalModel,
                                 finalAspectRatio,
-                                null
+                                Collections.emptyList()
                         );
 
                         if (apiResponse == null || apiResponse.data() == null || apiResponse.data().isEmpty()) {
@@ -592,17 +605,19 @@ public class MQConsumer {
         Long projectId = msg.getProjectId();
         String prompt = msg.getPrompt();
         String aspectRatio = msg.getAspectRatio();
+        String referenceImageUrl = msg.getReferenceImageUrl();
 
-        log.info("执行单个分镜视频生成 - jobId: {}, shotId: {}, promptLength: {}",
-                jobId, shotId, prompt != null ? prompt.length() : 0);
+        log.info("执行单个分镜视频生成 - jobId: {}, shotId: {}, promptLength: {}, hasReference: {}",
+                jobId, shotId, prompt != null ? prompt.length() : 0, referenceImageUrl != null);
         updateJobRunning(jobId);
 
         // 应用配置
         String finalAspectRatio = aspectRatio != null ? aspectRatio :
                 aiProperties.getVideo().getDefaultAspectRatio();
         String finalModel = aiProperties.getVideo().getModel();
+        Integer finalDuration = aiProperties.getVideo().getDefaultDuration();
 
-        log.info("应用配置 - aspectRatio: {}, model: {}", finalAspectRatio, finalModel);
+        log.info("应用配置 - aspectRatio: {}, model: {}, duration: {}", finalAspectRatio, finalModel, finalDuration);
 
         try {
             // 1. 查询分镜
@@ -618,41 +633,46 @@ public class MQConsumer {
 
             log.info("调用AI生成视频 - shotId: {}, promptLength: {}", shotId, finalPrompt.length());
 
-            // 3. 调用AI生成视频
-            VideoGenerateRequest request = new VideoGenerateRequest(
-                    finalPrompt,
-                    finalAspectRatio,
-                    aiProperties.getVideo().getDefaultDuration(),
-                    null,  // referenceImageUrl - 可以后续扩展支持参考图
-                    projectId
-            );
-
             UserContext.setUserId(userId);
             try {
-                // 调用视频生成服务（异步处理）
-                aiVideoService.generateVideo(request);
-                log.info("视频生成任务已提交 - shotId: {}", shotId);
-
-                // 4. 扣积分
-                Map<String, Object> metaData = new HashMap<>();
-                metaData.put("model", finalModel);
-                metaData.put("aspectRatio", finalAspectRatio);
-                metaData.put("shotId", shotId);
-                metaData.put("customPrompt", prompt != null);
-
-                chargingService.charge(
-                        ChargingService.ChargingRequest.builder()
-                                .jobId(jobId)
-                                .bizType("VIDEO_GENERATION")
-                                .modelCode(finalModel)
-                                .quantity(1)
-                                .metaData(metaData)
-                                .build()
+                VectorEngineClient.VideoApiResponse apiResponse = vectorEngineClient.generateVideo(
+                        finalPrompt,
+                        finalModel,
+                        finalAspectRatio,
+                        finalDuration,
+                        referenceImageUrl
                 );
-                log.info("积分扣除成功 - shotId: {}", shotId);
 
-                // 5. 更新Job为成功（注意：视频生成是异步的，这里只是任务提交成功）
-                updateJobSuccess(jobId, 1, 0);
+                String apiTaskId = apiResponse.id();
+                log.info("视频生成任务已提交 - jobId: {}, apiTaskId: {}", jobId, apiTaskId);
+
+                // 4. 保存taskId到metaJson
+                try {
+                    Map<String, Object> metaData = new HashMap<>();
+                    metaData.put("model", finalModel);
+                    metaData.put("aspectRatio", finalAspectRatio);
+                    metaData.put("duration", finalDuration);
+                    metaData.put("prompt", finalPrompt);
+                    metaData.put("apiTaskId", apiTaskId);
+                    Job job = jobMapper.selectById(jobId);
+                    if (job != null) {
+                        job.setMetaJson(objectMapper.writeValueAsString(metaData));
+                        jobMapper.updateById(job);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to update meta_json for single shot video jobId: {}", jobId, e);
+                }
+
+                // 5. 启动异步轮询，最终结果写回同一个jobId
+                asyncVideoTaskService.pollVideoGenerationTask(
+                        jobId,
+                        apiTaskId,
+                        finalModel,
+                        finalAspectRatio,
+                        finalDuration,
+                        userId
+                );
+
                 log.info("单个分镜视频生成任务提交完成 - shotId: {}", shotId);
 
             } finally {
@@ -729,7 +749,7 @@ public class MQConsumer {
                             prompt,
                             finalModel,
                             finalAspectRatio,
-                            null  // 无参考图片
+                            Collections.emptyList()  // 无参考图片
                     );
 
                     // 6. 解析图片结果
@@ -868,7 +888,7 @@ public class MQConsumer {
                             prompt,
                             finalModel,
                             finalAspectRatio,
-                            null  // 无参考图片
+                            Collections.emptyList()  // 无参考图片
                     );
 
                     // 6. 解析图片结果
@@ -992,7 +1012,7 @@ public class MQConsumer {
                             prompt,
                             finalModel,
                             finalAspectRatio,
-                            null  // 无参考图片
+                            Collections.emptyList()  // 无参考图片
                     );
 
                     // 6. 解析图片结果
@@ -1104,6 +1124,11 @@ public class MQConsumer {
     }
 
     private void updateJobSuccess(Long jobId, Integer successCount, Integer failCount) {
+        if (successCount == 0 && failCount > 0) {
+            updateJobFailedWithCounts(jobId, successCount, failCount, "All items failed");
+            return;
+        }
+
         Job job = new Job();
         job.setId(jobId);
         job.setStatus("SUCCEEDED");
@@ -1125,6 +1150,11 @@ public class MQConsumer {
      * @param allImageUrls 所有生成的图片URL列表
      */
     private void updateJobSuccessWithImages(Long jobId, Integer successCount, Integer failCount, List<String> allImageUrls) {
+        if (successCount == 0 && failCount > 0) {
+            updateJobFailedWithCounts(jobId, successCount, failCount, "All items failed");
+            return;
+        }
+
         Job job = jobMapper.selectById(jobId);
         if (job == null) {
             log.error("任务不存在 - jobId: {}", jobId);
@@ -1166,6 +1196,17 @@ public class MQConsumer {
         job.setErrorMessage(errorMessage);
         jobMapper.updateById(job);
         log.error("Job状态更新为FAILED - jobId: {}, error: {}", jobId, errorMessage);
+    }
+
+    private void updateJobFailedWithCounts(Long jobId, Integer successCount, Integer failCount, String errorMessage) {
+        Job job = new Job();
+        job.setId(jobId);
+        job.setStatus("FAILED");
+        job.setDoneItems(successCount + failCount);
+        job.setProgress(100);
+        job.setErrorMessage(errorMessage);
+        jobMapper.updateById(job);
+        log.error("Job状态更新为FAILED - jobId: {}, success: {}, fail: {}, error: {}", jobId, successCount, failCount, errorMessage);
     }
 
     // ==================== 图片处理辅助方法 ====================

@@ -65,12 +65,12 @@ public class MQProducer {
      * @param aspectRatio 画幅比例
      * @param model 模型名称
      * @param customPrompt 自定义提示词(可选)
-     * @param referenceImageUrl 参考图URL(可选)
+     * @param referenceImageUrls 参考图URL列表(可选)
      */
     public void sendSingleShotImageTask(Long jobId, Long userId, Long projectId, Long shotId,
-                                        String aspectRatio, String model, String customPrompt, String referenceImageUrl) {
+                                        String aspectRatio, String model, String customPrompt, List<String> referenceImageUrls) {
         SingleShotImageMessage message = new SingleShotImageMessage(
-                jobId, userId, projectId, shotId, aspectRatio, model, customPrompt, referenceImageUrl
+                jobId, userId, projectId, shotId, aspectRatio, model, customPrompt, referenceImageUrls
         );
         
         log.info("发送消息 - 交换机: {}, 路由键: {}, jobId: {}, shotId: {}, customPrompt: {}", 
@@ -178,15 +178,17 @@ public class MQProducer {
      * @param shotId 分镜ID
      * @param prompt 完整提示词(内嵌规则 + 剧本 + 用户自定义)
      * @param aspectRatio 画幅比例
+     * @param referenceImageUrl 首帧参考图URL(可选)
      * @param scene 场景信息(可选)
      * @param characters 角色列表(可选)
      * @param props 道具列表(可选)
      */
     public void sendSingleShotVideoTask(Long jobId, Long userId, Long projectId, Long shotId,
-                                        String prompt, String aspectRatio, AssetResource scene,
-                                        java.util.List<AssetResource> characters, java.util.List<AssetResource> props) {
+                                        String prompt, String aspectRatio, String referenceImageUrl,
+                                        AssetResource scene, java.util.List<AssetResource> characters,
+                                        java.util.List<AssetResource> props) {
         SingleShotVideoMessage message = new SingleShotVideoMessage(
-                jobId, userId, projectId, shotId, prompt, aspectRatio, scene, characters, props
+                jobId, userId, projectId, shotId, prompt, aspectRatio, referenceImageUrl, scene, characters, props
         );
         
         log.info("发送消息 - 交换机: {}, 路由键: {}, jobId: {}, shotId: {}, promptLength: {}, hasScene: {}, characterCount: {}, propCount: {}", 

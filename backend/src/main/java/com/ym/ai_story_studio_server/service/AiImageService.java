@@ -176,7 +176,7 @@ public class AiImageService {
                     request.prompt(),
                     model,
                     aspectRatio,
-                    request.referenceImageUrl()
+                    request.referenceImageUrlList()
             );
 
             // 空值安全检查
@@ -283,8 +283,8 @@ public class AiImageService {
             chargingMetaData.put("model", model);
             chargingMetaData.put("aspectRatio", aspectRatio);
             chargingMetaData.put("prompt", request.prompt());
-            if (request.referenceImageUrl() != null) {
-                chargingMetaData.put("referenceImage", request.referenceImageUrl());
+            if (!request.referenceImageUrlList().isEmpty()) {
+                chargingMetaData.put("referenceImages", request.referenceImageUrlList());
             }
 
             ChargingService.ChargingResult chargingResult = chargingService.charge(
@@ -306,7 +306,7 @@ public class AiImageService {
                     request.prompt(),
                     model,
                     aspectRatio,
-                    request.referenceImageUrl()
+                    request.referenceImageUrlList()
             );
 
             // 空值安全检查: 验证API响应的完整性

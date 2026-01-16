@@ -32,6 +32,7 @@ public class MQInitConfig {
         SimpleMessageConverter converter = new SimpleMessageConverter();
         // 允许反序列化的类模式
         converter.setAllowedListPatterns(List.of(
+                "com.ym.ai_story_studio_server.dto.ai.*",
                 "com.ym.ai_story_studio_server.mq.*",
                 "java.util.*",
                 "java.lang.*"

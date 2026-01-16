@@ -54,6 +54,11 @@ public class SingleShotVideoMessage implements Serializable {
     private String aspectRatio;
 
     /**
+     * 首帧参考图URL(可选)
+     */
+    private String referenceImageUrl;
+
+    /**
      * 场景信息(可选)
      */
     private AssetResource scene;
