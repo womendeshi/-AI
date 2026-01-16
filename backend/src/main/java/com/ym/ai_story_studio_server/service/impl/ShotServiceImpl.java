@@ -1201,9 +1201,16 @@ public class ShotServiceImpl implements ShotService {
                     System.out.println("场景名称: " + projectScene.getDisplayName());
                     System.out.println("场景ID: " + projectScene.getId());
                     System.out.println("库场景ID: " + projectScene.getLibrarySceneId());
+                    System.out.println("项目场景thumbnailUrl: " + projectScene.getThumbnailUrl());
                     
-                    // 优先使用库的缩略图
-                    if (projectScene.getLibrarySceneId() != null) {
+                    // 优先使用项目场景的缩略图
+                    if (projectScene.getThumbnailUrl() != null) {
+                        sceneThumbnailUrl = projectScene.getThumbnailUrl();
+                        System.out.println("使用项目场景缩略图: " + sceneThumbnailUrl);
+                        log.debug("场景[{}] 使用项目场景缩略图:{}", projectScene.getDisplayName(), sceneThumbnailUrl);
+                    }
+                    // 其次使用库的缩略图
+                    else if (projectScene.getLibrarySceneId() != null) {
                         SceneLibrary sceneLibrary = sceneLibraryMapper.selectById(projectScene.getLibrarySceneId());
                         if (sceneLibrary != null) {
                             sceneThumbnailUrl = sceneLibrary.getThumbnailUrl();

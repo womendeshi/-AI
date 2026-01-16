@@ -343,18 +343,35 @@ const handleCharacterClick = (characterId: number) => {
   }
 }
 
-// Scene thumbnail click handler
+// Scene thumbnail click handler - 跟角色一样，没有图片时传入剧本让AI解析
 const handleSceneClick = (sceneId: number) => {
   // 从 editorStore 获取完整的场景信息
   const scene = editorStore.scenes.find(s => s.id === sceneId)
   
-  panelManagerStore.openPanel('asset-edit', {
-    assetType: 'scene',
-    assetId: sceneId,
-    sceneName: (scene as any)?.displayName || scene?.name,
-    existingThumbnailUrl: scene?.thumbnailUrl,
-    existingDescription: (scene as any)?.finalDescription || (scene as any)?.description
-  })
+  // 如果场景没有图片，传递剧本文本让AI解析
+  if (!scene?.thumbnailUrl) {
+    let scriptText = editorStore.originalScript || props.shot.scriptText
+    if (scriptText.length > 2000) {
+      scriptText = scriptText.substring(0, 2000) + '...'
+    }
+    
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'scene',
+      assetId: sceneId,
+      sceneName: (scene as any)?.displayName || scene?.name,
+      prefillDescription: scriptText,  // 让AI解析
+      existingDescription: (scene as any)?.finalDescription || (scene as any)?.description
+    })
+  } else {
+    // 已有图片，正常打开编辑面板
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'scene',
+      assetId: sceneId,
+      sceneName: (scene as any)?.displayName || scene?.name,
+      existingThumbnailUrl: scene?.thumbnailUrl,
+      existingDescription: (scene as any)?.finalDescription || (scene as any)?.description
+    })
+  }
 }
 
 // 点击新建场景 - 第一次带AI描述，后续自定义
@@ -646,15 +663,32 @@ const handleDeleteScene = async (sceneId: number, event: Event) => {
   }
 }
 
-// 点击场景卡片 - 跳转到编辑面板
+// 点击场景卡片 - 跳转到编辑面板，跟角色一样处理
 const handleSceneCardClick = (scene: any) => {
-  panelManagerStore.openPanel('asset-edit', {
-    assetType: 'scene',
-    assetId: scene.id,
-    sceneName: scene.displayName || scene.name,
-    existingThumbnailUrl: scene.thumbnailUrl,
-    existingDescription: (scene as any).finalDescription || (scene as any).description
-  })
+  // 如果场景没有图片，传递剧本文本让AI解析
+  if (!scene.thumbnailUrl) {
+    let scriptText = editorStore.originalScript || props.shot.scriptText
+    if (scriptText.length > 2000) {
+      scriptText = scriptText.substring(0, 2000) + '...'
+    }
+    
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'scene',
+      assetId: scene.id,
+      sceneName: scene.displayName || scene.name,
+      prefillDescription: scriptText,  // 让AI解析
+      existingDescription: (scene as any).finalDescription || (scene as any).description
+    })
+  } else {
+    // 已有图片，正常打开编辑面板
+    panelManagerStore.openPanel('asset-edit', {
+      assetType: 'scene',
+      assetId: scene.id,
+      sceneName: scene.displayName || scene.name,
+      existingThumbnailUrl: scene.thumbnailUrl,
+      existingDescription: (scene as any).finalDescription || (scene as any).description
+    })
+  }
 }
 
 // 从表格中解绑角色（不需要确认）
@@ -870,31 +904,7 @@ const handleCopyThumbnail = async (url: string) => {
               >
                 {{ char.characterName?.[0] || '?' }}
               </div>
-              <!-- 悬浮按钮（仅在有缩略图时显示） -->
-              <div
-                v-if="char.thumbnailUrl"
-                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
-                @click.stop
-              >
-                <button
-                  @click.stop="handleDownloadThumbnail(char.thumbnailUrl, char.characterName)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="下载"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
-                <button
-                  @click.stop="handleCopyThumbnail(char.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="复制"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
+
             </div>
             <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ char.characterName }}</span>
           </div>
@@ -932,30 +942,7 @@ const handleCopyThumbnail = async (url: string) => {
                 :alt="charName"
                 class="w-6 h-6 rounded object-cover"
               >
-              <!-- 悬浮按钮 -->
-              <div
-                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
-                @click.stop
-              >
-                <button
-                  @click.stop="handleDownloadThumbnail(getCharacterByName(charName)!.thumbnailUrl!, charName)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="下载"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
-                <button
-                  @click.stop="handleCopyThumbnail(getCharacterByName(charName)!.thumbnailUrl!)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="复制"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
+
             </div>
             <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ charName }}</span>
           </div>
@@ -1023,31 +1010,7 @@ const handleCopyThumbnail = async (url: string) => {
               >
                 🏞️
               </div>
-              <!-- 悬浮按钮（仅在有缩略图时显示） -->
-              <div
-                v-if="shot.scene.thumbnailUrl"
-                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
-                @click.stop
-              >
-                <button
-                  @click.stop="handleDownloadThumbnail(shot.scene.thumbnailUrl, shot.scene.sceneName)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="下载"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
-                <button
-                  @click.stop="handleCopyThumbnail(shot.scene.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="复制"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
+
             </div>
             <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ shot.scene.sceneName }}</span>
           </div>
@@ -1107,31 +1070,7 @@ const handleCopyThumbnail = async (url: string) => {
               >
                 🔧
               </div>
-              <!-- 悬浮按钮（仅在有缩略图时显示） -->
-              <div
-                v-if="prop.thumbnailUrl"
-                class="absolute inset-0 bg-gray-800 rounded opacity-0 group-hover/thumbnail:opacity-100 transition-opacity flex items-center justify-center gap-0.5"
-                @click.stop
-              >
-                <button
-                  @click.stop="handleDownloadThumbnail(prop.thumbnailUrl, prop.propName)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="下载"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
-                <button
-                  @click.stop="handleCopyThumbnail(prop.thumbnailUrl)"
-                  class="p-0.5 rounded hover:bg-bg-hover transition-colors"
-                  title="复制"
-                >
-                  <svg class="w-3 h-3 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
+
             </div>
             <span class="text-text-secondary text-xs font-medium truncate flex-1">{{ prop.propName }}</span>
           </div>

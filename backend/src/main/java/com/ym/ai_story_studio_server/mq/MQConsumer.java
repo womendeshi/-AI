@@ -1069,32 +1069,43 @@ public class MQConsumer {
                     continue;
                 }
 
-                // 2. 查询场景库中的场景
-                SceneLibrary scene = sceneLibraryMapper.selectById(projectScene.getLibrarySceneId());
-                if (scene == null) {
-                    log.warn("场景库场景不存在 - librarySceneId: {}", projectScene.getLibrarySceneId());
-                    failCount.incrementAndGet();
-                    continue;
+                // 2. 查询场景库中的场景（可能为null，自定义场景不关联场景库）
+                SceneLibrary scene = null;
+                if (projectScene.getLibrarySceneId() != null) {
+                    scene = sceneLibraryMapper.selectById(projectScene.getLibrarySceneId());
                 }
 
-                // 3. MISSING模式：检查是否已有图片
-                if ("MISSING".equals(msg.getMode()) && scene.getThumbnailUrl() != null) {
-                    log.info("MISSING模式 - 场景已有图片,跳过 - sceneId: {}", scene.getId());
+                // 3. 获取场景名称和描述（优先使用项目场景覆盖，其次使用场景库）
+                String sceneName = projectScene.getDisplayName();
+                String description = projectScene.getOverrideDescription();
+                if (sceneName == null && scene != null) {
+                    sceneName = scene.getName();
+                }
+                if (description == null && scene != null) {
+                    description = scene.getDescription();
+                }
+                if (sceneName == null) {
+                    sceneName = "场景";
+                }
+
+                // 4. MISSING模式：检查是否已有图片（优先检查项目场景，其次场景库）
+                String existingThumbnail = projectScene.getThumbnailUrl();
+                if (existingThumbnail == null && scene != null) {
+                    existingThumbnail = scene.getThumbnailUrl();
+                }
+                if ("MISSING".equals(msg.getMode()) && existingThumbnail != null) {
+                    log.info("MISSING模式 - 场景已有图片,跳过 - projectSceneId: {}", projectSceneId);
                     successCount.incrementAndGet();
                     continue;
                 }
 
-                // 4. 构建提示词：使用场景描述生成场景图
-                String description = projectScene.getOverrideDescription() != null ?
-                        projectScene.getOverrideDescription() : scene.getDescription();
-                String sceneName = projectScene.getDisplayName() != null ?
-                        projectScene.getDisplayName() : scene.getName();
+                // 5. 构建提示词：使用场景描述生成场景图
                 String prompt = String.format("纯场景背景图，%s，%s，2D动漫风格，高质量高清，画质细腻，空无一人的场景，禁止出现任何人物、角色、人影、动物，只有纯背景环境",
                         sceneName, description != null ? description : "");
 
-                log.info("生成场景图片 - sceneId: {}, name: {}, prompt: {}", scene.getId(), sceneName, prompt);
+                log.info("生成场景图片 - projectSceneId: {}, name: {}, prompt: {}", projectSceneId, sceneName, prompt);
 
-                // 5. 调用向量引擎生成图片
+                // 6. 调用向量引擎生成图片
                 UserContext.setUserId(userId);
                 try {
                     ImageApiResponse response = vectorEngineClient.generateImage(
@@ -1104,7 +1115,7 @@ public class MQConsumer {
                             Collections.emptyList()  // 无参考图片
                     );
 
-                    // 6. 解析图片结果
+                    // 7. 解析图片结果
                     if (response == null || response.data() == null || response.data().isEmpty()) {
                         throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.AI_SERVICE_ERROR, "图片生成结果为空");
                     }
@@ -1117,18 +1128,23 @@ public class MQConsumer {
                         throw new BusinessException(com.ym.ai_story_studio_server.common.ResultCode.AI_SERVICE_ERROR, "无法获取图片数据");
                     }
 
-                    // 7. 上传到OSS
+                    // 8. 上传到OSS
                     String ossUrl = processImageAndUploadToOss(imageData, jobId, i);
 
-                    // 8. 更新场景库的缩略图URL
-                    scene.setThumbnailUrl(ossUrl);
-                    sceneLibraryMapper.updateById(scene);
+                    // 9. 保存缩略图URL（优先保存到项目场景）
+                    projectScene.setThumbnailUrl(ossUrl);
+                    projectSceneMapper.updateById(projectScene);
+                    // 如果关联了场景库，也更新场景库
+                    if (scene != null) {
+                        scene.setThumbnailUrl(ossUrl);
+                        sceneLibraryMapper.updateById(scene);
+                    }
 
-                    log.info("场景图片生成成功 - sceneId: {}, ossUrl: {}", scene.getId(), ossUrl);
+                    log.info("场景图片生成成功 - projectSceneId: {}, ossUrl: {}", projectSceneId, ossUrl);
 
-                    // 9. 扣除积分
+                    // 10. 扣除积分
                     Map<String, Object> metaData = new HashMap<>();
-                    metaData.put("sceneId", scene.getId());
+                    metaData.put("projectSceneId", projectSceneId);
                     metaData.put("sceneName", sceneName);
                     metaData.put("model", finalModel);
 
