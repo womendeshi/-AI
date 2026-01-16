@@ -366,53 +366,52 @@ const handleSaveProfile = async () => {
     >
       <div class="space-y-6 py-2">
         <!-- 头像区域 -->
-        <div class="flex flex-col items-center gap-4">
-          <!-- 头像预览 -->
-          <div class="relative group">
-            <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center overflow-hidden border-2 border-border-subtle">
-              <img
-                v-if="editAvatarUrl"
-                :src="editAvatarUrl"
-                class="w-full h-full object-cover"
-                alt="avatar preview"
-              />
-              <span v-else class="text-3xl font-bold text-text-primary">
-                {{ editNickname.charAt(0) || '?' }}
-              </span>
-            </div>
-            <!-- 删除头像按钮 -->
-            <button
-              v-if="editAvatarUrl"
-              class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-              @click="editAvatarUrl = ''"
-            >
-              <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- 上传按钮 -->
+        <div class="flex flex-col items-center">
+          <!-- 头像预览与上传 -->
           <NUpload
             accept="image/*"
             :show-file-list="false"
             :custom-request="handleAvatarUpload"
+            class="avatar-upload-wrapper"
           >
-            <button
-              class="px-6 py-2 rounded-lg bg-bg-elevated hover:bg-bg-hover border border-border-default hover:border-[#8B5CF6] text-text-secondary hover:text-[#8B5CF6] text-sm font-medium transition-all"
-              :disabled="uploading"
-            >
-              <span v-if="uploading" class="flex items-center gap-2">
-                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <div class="relative group cursor-pointer">
+              <!-- 头像容器 -->
+              <div class="w-28 h-28 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center overflow-hidden border-2 border-border-subtle group-hover:border-[#8B5CF6]/50 transition-all">
+                <img
+                  v-if="editAvatarUrl"
+                  :src="editAvatarUrl"
+                  class="w-full h-full object-cover"
+                  alt="avatar preview"
+                />
+                <span v-else class="text-4xl font-bold text-text-primary">
+                  {{ editNickname.charAt(0) || '?' }}
+                </span>
+              </div>
+              <!-- 悬浮遮罩 -->
+              <div class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                <svg v-if="!uploading" class="w-6 h-6 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                </svg>
+                <svg v-else class="w-6 h-6 text-white animate-spin mb-1" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                上传中...
-              </span>
-              <span v-else>更换头像</span>
-            </button>
+                <span class="text-white text-xs">{{ uploading ? '上传中...' : '更换头像' }}</span>
+              </div>
+              <!-- 删除头像按钮 -->
+              <button
+                v-if="editAvatarUrl && !uploading"
+                class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg z-10"
+                @click.stop="editAvatarUrl = ''"
+              >
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </NUpload>
-          <p class="text-text-tertiary text-xs">支持 JPG、PNG 格式，最大 5MB</p>
+          <p class="text-text-tertiary text-xs mt-3">支持 JPG、PNG 格式，最大 5MB</p>
         </div>
 
         <!-- 昵称输入 -->
